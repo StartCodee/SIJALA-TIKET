@@ -1,96 +1,120 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
-All colors MUST be HSL.
-*/
+/* Raja Ampat Conservation Fee Admin Dashboard - Ocean Tropical Theme */
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
-
+    /* Core Ocean Palette */
+    --background: 195 30% 98%;
+    --foreground: 210 50% 15%;
+    
     --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
-
+    --card-foreground: 210 50% 15%;
+    
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
-
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
-
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
-
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
-
-    --radius: 0.5rem;
-
-    --sidebar-background: 0 0% 98%;
-
-    --sidebar-foreground: 240 5.3% 26.1%;
-
-    --sidebar-primary: 240 5.9% 10%;
-
-    --sidebar-primary-foreground: 0 0% 98%;
-
-    --sidebar-accent: 240 4.8% 95.9%;
-
-    --sidebar-accent-foreground: 240 5.9% 10%;
-
-    --sidebar-border: 220 13% 91%;
-
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --popover-foreground: 210 50% 15%;
+    
+    /* Primary - Teal from logo */
+    --primary: 174 62% 40%;
+    --primary-foreground: 0 0% 100%;
+    
+    /* Secondary - Dark Navy from logo */
+    --secondary: 210 55% 25%;
+    --secondary-foreground: 0 0% 100%;
+    
+    /* Muted - Soft gray-blue */
+    --muted: 200 20% 94%;
+    --muted-foreground: 210 20% 45%;
+    
+    /* Accent - Light aqua */
+    --accent: 185 50% 92%;
+    --accent-foreground: 185 60% 30%;
+    
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+    
+    --border: 200 20% 88%;
+    --input: 200 20% 88%;
+    --ring: 174 62% 40%;
+    
+    --radius: 0.75rem;
+    
+    /* Sidebar - Ocean gradient inspired */
+    --sidebar-background: 210 55% 18%;
+    --sidebar-foreground: 200 30% 90%;
+    --sidebar-primary: 174 62% 50%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 210 45% 25%;
+    --sidebar-accent-foreground: 200 30% 95%;
+    --sidebar-border: 210 40% 25%;
+    --sidebar-ring: 174 62% 50%;
+    
+    /* Custom Status Colors */
+    --status-pending: 45 93% 47%;
+    --status-pending-bg: 45 93% 94%;
+    --status-approved: 160 84% 39%;
+    --status-approved-bg: 160 60% 92%;
+    --status-rejected: 0 72% 51%;
+    --status-rejected-bg: 0 60% 94%;
+    --status-revision: 25 95% 53%;
+    --status-revision-bg: 25 80% 94%;
+    --status-info: 199 89% 48%;
+    --status-info-bg: 199 80% 94%;
+    
+    /* Ocean gradients */
+    --gradient-ocean: linear-gradient(135deg, hsl(185 60% 45%) 0%, hsl(174 62% 40%) 50%, hsl(165 55% 35%) 100%);
+    --gradient-ocean-light: linear-gradient(135deg, hsl(185 50% 96%) 0%, hsl(174 40% 94%) 100%);
+    --gradient-sidebar: linear-gradient(180deg, hsl(210 55% 18%) 0%, hsl(210 60% 12%) 100%);
+    --gradient-card-hover: linear-gradient(135deg, hsl(185 50% 98%) 0%, hsl(174 40% 96%) 100%);
+    
+    /* Shadows */
+    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.04);
+    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05);
+    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.06), 0 4px 6px -4px rgb(0 0 0 / 0.06);
+    --shadow-card: 0 2px 8px -2px rgb(0 60 80 / 0.08), 0 4px 16px -4px rgb(0 60 80 / 0.06);
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
+    --background: 210 55% 8%;
+    --foreground: 200 30% 95%;
+    
+    --card: 210 50% 12%;
+    --card-foreground: 200 30% 95%;
+    
+    --popover: 210 50% 12%;
+    --popover-foreground: 200 30% 95%;
+    
+    --primary: 174 62% 50%;
+    --primary-foreground: 0 0% 100%;
+    
+    --secondary: 210 45% 30%;
+    --secondary-foreground: 200 30% 95%;
+    
+    --muted: 210 40% 18%;
+    --muted-foreground: 200 20% 60%;
+    
+    --accent: 185 50% 20%;
+    --accent-foreground: 185 40% 80%;
+    
+    --destructive: 0 62% 45%;
+    --destructive-foreground: 0 0% 100%;
+    
+    --border: 210 40% 20%;
+    --input: 210 40% 20%;
+    --ring: 174 62% 50%;
+    
+    --sidebar-background: 210 55% 10%;
+    --sidebar-foreground: 200 30% 85%;
+    --sidebar-primary: 174 62% 50%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --sidebar-accent: 210 45% 18%;
+    --sidebar-accent-foreground: 200 30% 90%;
+    --sidebar-border: 210 40% 18%;
+    --sidebar-ring: 174 62% 50%;
   }
 }
 
@@ -98,8 +122,156 @@ All colors MUST be HSL.
   * {
     @apply border-border;
   }
-
+  
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground font-sans antialiased;
+    font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+    @apply font-semibold tracking-tight;
+  }
+}
+
+@layer components {
+  /* Ocean wave pattern - very subtle background */
+  .ocean-pattern {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 320'%3E%3Cpath fill='%230D9488' fill-opacity='0.02' d='M0,192L48,181.3C96,171,192,149,288,154.7C384,160,480,192,576,197.3C672,203,768,181,864,181.3C960,181,1056,203,1152,197.3C1248,192,1344,160,1392,144L1440,128L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z'%3E%3C/path%3E%3C/svg%3E");
+    background-position: bottom;
+    background-repeat: repeat-x;
+    background-size: 100% 120px;
+  }
+  
+  /* Card with ocean hover effect */
+  .card-ocean {
+    @apply bg-card rounded-xl border border-border transition-all duration-300;
+    box-shadow: var(--shadow-card);
+  }
+  
+  .card-ocean:hover {
+    @apply border-primary/20;
+    background: var(--gradient-card-hover);
+    box-shadow: var(--shadow-lg);
+  }
+  
+  /* KPI Card styles */
+  .kpi-card {
+    @apply bg-card rounded-xl border border-border p-5 transition-all duration-300;
+    box-shadow: var(--shadow-card);
+  }
+  
+  .kpi-card:hover {
+    @apply border-primary/30 -translate-y-0.5;
+    box-shadow: var(--shadow-lg);
+  }
+  
+  /* Status chip base */
+  .status-chip {
+    @apply inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium transition-all;
+  }
+  
+  .status-chip-pending {
+    background-color: hsl(var(--status-pending-bg));
+    color: hsl(var(--status-pending));
+  }
+  
+  .status-chip-approved {
+    background-color: hsl(var(--status-approved-bg));
+    color: hsl(var(--status-approved));
+  }
+  
+  .status-chip-rejected {
+    background-color: hsl(var(--status-rejected-bg));
+    color: hsl(var(--status-rejected));
+  }
+  
+  .status-chip-revision {
+    background-color: hsl(var(--status-revision-bg));
+    color: hsl(var(--status-revision));
+  }
+  
+  .status-chip-info {
+    background-color: hsl(var(--status-info-bg));
+    color: hsl(var(--status-info));
+  }
+  
+  /* Sidebar nav item */
+  .nav-item {
+    @apply flex items-center gap-3 px-3 py-2.5 rounded-lg text-sidebar-foreground/80 transition-all duration-200;
+  }
+  
+  .nav-item:hover {
+    @apply bg-sidebar-accent text-sidebar-foreground;
+  }
+  
+  .nav-item.active {
+    @apply bg-sidebar-primary/15 text-sidebar-primary font-medium;
+  }
+  
+  /* Table styles */
+  .data-table {
+    @apply w-full text-sm;
+  }
+  
+  .data-table th {
+    @apply px-4 py-3 text-left font-medium text-muted-foreground bg-muted/50 border-b;
+  }
+  
+  .data-table td {
+    @apply px-4 py-3.5 border-b border-border/50;
+  }
+  
+  .data-table tbody tr {
+    @apply transition-colors hover:bg-muted/30;
+  }
+  
+  /* Ocean gradient button */
+  .btn-ocean {
+    background: var(--gradient-ocean);
+    @apply text-white font-medium px-4 py-2 rounded-lg transition-all duration-200 hover:opacity-90 hover:shadow-md;
+  }
+  
+  /* Scrollbar styling */
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  
+  .custom-scrollbar::-webkit-scrollbar-track {
+    @apply bg-transparent;
+  }
+  
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    @apply bg-border rounded-full;
+  }
+  
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    @apply bg-muted-foreground/30;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+  
+  /* Animation utilities */
+  .animate-fade-in {
+    animation: fadeIn 0.3s ease-out;
+  }
+  
+  .animate-slide-up {
+    animation: slideUp 0.3s ease-out;
+  }
+  
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
   }
 }
