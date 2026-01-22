@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { AdminLayout } from '@/components/AdminLayout';
 import { AdminHeader } from '@/components/AdminHeader';
 import { UserStatusChip, RoleBadge } from '@/components/StatusChip';
-import { dummyAdminUsers, formatDateTime, ROLE_LABELS, type AdminUser } from '@/data/dummyData';
+import { dummyAdminUsers, formatDateTime, formatShortId, type AdminUser } from '@/data/dummyData';
 import {
   Search,
   Plus,
@@ -41,7 +41,6 @@ import {
   DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
 import { Label } from '@/components/ui/label';
-import { cn } from '@/lib/utils';
 
 export default function UserManagementPage() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -83,8 +82,8 @@ export default function UserManagementPage() {
   return (
     <AdminLayout>
       <AdminHeader
-        title="User Management"
-        subtitle="Kelola akun admin dan role permissions"
+        title="Manajemen Pengguna"
+        subtitle="Kelola akun admin dan izin peran"
         showSearch={false}
         showDateFilter={false}
       />
@@ -96,7 +95,7 @@ export default function UserManagementPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-2xl font-bold">{stats.total}</p>
-                <p className="text-xs text-muted-foreground">Total Users</p>
+                <p className="text-xs text-muted-foreground">Total Pengguna</p>
               </div>
               <Shield className="w-8 h-8 text-primary/30" />
             </div>
@@ -105,7 +104,7 @@ export default function UserManagementPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-2xl font-bold text-status-approved">{stats.active}</p>
-                <p className="text-xs text-muted-foreground">Active</p>
+                <p className="text-xs text-muted-foreground">Aktif</p>
               </div>
               <UserCheck className="w-8 h-8 text-status-approved/30" />
             </div>
@@ -114,7 +113,7 @@ export default function UserManagementPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-2xl font-bold text-status-rejected">{stats.disabled}</p>
-                <p className="text-xs text-muted-foreground">Disabled</p>
+                <p className="text-xs text-muted-foreground">Nonaktif</p>
               </div>
               <UserX className="w-8 h-8 text-status-rejected/30" />
             </div>
@@ -134,19 +133,19 @@ export default function UserManagementPage() {
           </div>
           <Select value={roleFilter} onValueChange={setRoleFilter}>
             <SelectTrigger className="w-[180px] bg-card">
-              <SelectValue placeholder="Role" />
+              <SelectValue placeholder="Peran" />
             </SelectTrigger>
             <SelectContent className="bg-popover border-border">
-              <SelectItem value="all">Semua Role</SelectItem>
-              <SelectItem value="super_admin">Super Admin</SelectItem>
-              <SelectItem value="finance_admin">Finance Admin</SelectItem>
-              <SelectItem value="approver_admin">Approver Admin</SelectItem>
-              <SelectItem value="viewer">Viewer</SelectItem>
+              <SelectItem value="all">Semua Peran</SelectItem>
+              <SelectItem value="super_admin">Admin Utama</SelectItem>
+              <SelectItem value="finance_admin">Admin Keuangan</SelectItem>
+              <SelectItem value="approver_admin">Admin Persetujuan</SelectItem>
+              <SelectItem value="viewer">Peninjau</SelectItem>
             </SelectContent>
           </Select>
           <Button className="btn-ocean gap-2" onClick={() => setShowAddDialog(true)}>
             <Plus className="w-4 h-4" />
-            Add User
+            Tambah Pengguna
           </Button>
         </div>
 
@@ -156,12 +155,12 @@ export default function UserManagementPage() {
             <table className="data-table">
               <thead>
                 <tr>
-                  <th>User</th>
+                  <th>Pengguna</th>
                   <th>Email</th>
-                  <th>Role</th>
+                  <th>Peran</th>
                   <th>Status</th>
-                  <th>Last Login</th>
-                  <th>Created</th>
+                  <th>Login Terakhir</th>
+                  <th>Dibuat Pada</th>
                   <th className="text-center">Aksi</th>
                 </tr>
               </thead>
@@ -177,7 +176,7 @@ export default function UserManagementPage() {
                         </Avatar>
                         <div>
                           <p className="text-sm font-medium">{user.name}</p>
-                          <p className="text-xs text-muted-foreground">{user.id}</p>
+                          <p className="text-xs text-muted-foreground">{formatShortId(user.id)}</p>
                         </div>
                       </div>
                     </td>
@@ -208,22 +207,22 @@ export default function UserManagementPage() {
                               onClick={() => openEdit(user)}
                             >
                               <Edit className="w-4 h-4" />
-                              Edit User
+                              Ubah Pengguna
                             </DropdownMenuItem>
                             <DropdownMenuItem className="gap-2 cursor-pointer">
                               <Key className="w-4 h-4" />
-                              Reset Password
+                              Atur Ulang Sandi
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
                             {user.status === 'active' ? (
                               <DropdownMenuItem className="gap-2 cursor-pointer text-status-rejected">
                                 <UserX className="w-4 h-4" />
-                                Disable User
+                                Nonaktifkan Pengguna
                               </DropdownMenuItem>
                             ) : (
                               <DropdownMenuItem className="gap-2 cursor-pointer text-status-approved">
                                 <UserCheck className="w-4 h-4" />
-                                Enable User
+                                Aktifkan Pengguna
                               </DropdownMenuItem>
                             )}
                           </DropdownMenuContent>
@@ -237,35 +236,35 @@ export default function UserManagementPage() {
           </div>
         </Card>
 
-        {/* Permission Matrix */}
+        {/* Permission Matrix
         <Card className="card-ocean mt-6">
           <CardHeader>
-            <CardTitle className="text-base font-semibold">Permission Matrix</CardTitle>
+            <CardTitle className="text-base font-semibold">Matriks Izin</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-border">
-                    <th className="text-left py-2 font-medium">Permission</th>
-                    <th className="text-center py-2 font-medium">Super Admin</th>
-                    <th className="text-center py-2 font-medium">Finance Admin</th>
-                    <th className="text-center py-2 font-medium">Approver Admin</th>
-                    <th className="text-center py-2 font-medium">Viewer</th>
+                    <th className="text-left py-2 font-medium">Izin</th>
+                    <th className="text-center py-2 font-medium">Admin Utama</th>
+                    <th className="text-center py-2 font-medium">Admin Keuangan</th>
+                    <th className="text-center py-2 font-medium">Admin Persetujuan</th>
+                    <th className="text-center py-2 font-medium">Peninjau</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
                   {[
-                    { perm: 'View Dashboard', super: true, finance: true, approver: true, viewer: true },
-                    { perm: 'View Tickets', super: true, finance: true, approver: true, viewer: true },
-                    { perm: 'Approve/Reject Tickets', super: true, finance: false, approver: true, viewer: false },
-                    { perm: 'Process Refunds', super: true, finance: true, approver: false, viewer: false },
-                    { perm: 'View Finance Reports', super: true, finance: true, approver: false, viewer: true },
-                    { perm: 'Export Data', super: true, finance: true, approver: true, viewer: false },
-                    { perm: 'Manage Users', super: true, finance: false, approver: false, viewer: false },
-                    { perm: 'View Audit Logs', super: true, finance: true, approver: true, viewer: true },
-                    { perm: 'Override OCR', super: true, finance: false, approver: true, viewer: false },
-                    { perm: 'Change Settings', super: true, finance: false, approver: false, viewer: false },
+                    { perm: 'Lihat Dasbor', super: true, finance: true, approver: true, viewer: true },
+                    { perm: 'Lihat Tiket', super: true, finance: true, approver: true, viewer: true },
+                    { perm: 'Setujui/Tolak Tiket', super: true, finance: false, approver: true, viewer: false },
+                    { perm: 'Proses Pengembalian Dana', super: true, finance: true, approver: false, viewer: false },
+                    { perm: 'Lihat Laporan Keuangan', super: true, finance: true, approver: false, viewer: true },
+                    { perm: 'Ekspor Data', super: true, finance: true, approver: true, viewer: false },
+                    { perm: 'Kelola Pengguna', super: true, finance: false, approver: false, viewer: false },
+                    { perm: 'Lihat Log Aktivitas', super: true, finance: true, approver: true, viewer: true },
+                    { perm: 'Ubah Hasil OCR', super: true, finance: false, approver: true, viewer: false },
+                    { perm: 'Ubah Pengaturan', super: true, finance: false, approver: false, viewer: false },
                   ].map((row, i) => (
                     <tr key={i}>
                       <td className="py-2 text-muted-foreground">{row.perm}</td>
@@ -303,36 +302,36 @@ export default function UserManagementPage() {
               </table>
             </div>
           </CardContent>
-        </Card>
+        </Card> */}
       </div>
 
       {/* Add User Dialog */}
       <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
         <DialogContent className="bg-card border-border">
           <DialogHeader>
-            <DialogTitle>Add New User</DialogTitle>
-            <DialogDescription>Tambahkan admin user baru ke sistem</DialogDescription>
+            <DialogTitle>Tambah Pengguna Baru</DialogTitle>
+            <DialogDescription>Tambahkan admin baru ke sistem</DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
               <Label>Nama Lengkap</Label>
-              <Input placeholder="John Doe" />
+              <Input placeholder="Budi Santoso" />
             </div>
             <div className="space-y-2">
               <Label>Email</Label>
-              <Input type="email" placeholder="john@rajaampat.go.id" />
+              <Input type="email" placeholder="budi@rajaampat.go.id" />
             </div>
             <div className="space-y-2">
-              <Label>Role</Label>
+              <Label>Peran</Label>
               <Select>
                 <SelectTrigger>
-                  <SelectValue placeholder="Pilih role" />
+                  <SelectValue placeholder="Pilih peran" />
                 </SelectTrigger>
                 <SelectContent className="bg-popover border-border">
-                  <SelectItem value="super_admin">Super Admin</SelectItem>
-                  <SelectItem value="finance_admin">Finance Admin</SelectItem>
-                  <SelectItem value="approver_admin">Approver Admin</SelectItem>
-                  <SelectItem value="viewer">Viewer/Auditor</SelectItem>
+                  <SelectItem value="super_admin">Admin Utama</SelectItem>
+                  <SelectItem value="finance_admin">Admin Keuangan</SelectItem>
+                  <SelectItem value="approver_admin">Admin Persetujuan</SelectItem>
+                  <SelectItem value="viewer">Peninjau/Auditor</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -353,8 +352,8 @@ export default function UserManagementPage() {
       <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
         <DialogContent className="bg-card border-border">
           <DialogHeader>
-            <DialogTitle>Edit User</DialogTitle>
-            <DialogDescription>Edit informasi user</DialogDescription>
+            <DialogTitle>Ubah Pengguna</DialogTitle>
+            <DialogDescription>Ubah informasi pengguna</DialogDescription>
           </DialogHeader>
           {selectedUser && (
             <div className="space-y-4 py-4">
@@ -367,16 +366,16 @@ export default function UserManagementPage() {
                 <Input type="email" defaultValue={selectedUser.email} />
               </div>
               <div className="space-y-2">
-                <Label>Role</Label>
+                <Label>Peran</Label>
                 <Select defaultValue={selectedUser.role}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent className="bg-popover border-border">
-                    <SelectItem value="super_admin">Super Admin</SelectItem>
-                    <SelectItem value="finance_admin">Finance Admin</SelectItem>
-                    <SelectItem value="approver_admin">Approver Admin</SelectItem>
-                    <SelectItem value="viewer">Viewer/Auditor</SelectItem>
+                    <SelectItem value="super_admin">Admin Utama</SelectItem>
+                    <SelectItem value="finance_admin">Admin Keuangan</SelectItem>
+                    <SelectItem value="approver_admin">Admin Persetujuan</SelectItem>
+                    <SelectItem value="viewer">Peninjau/Auditor</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

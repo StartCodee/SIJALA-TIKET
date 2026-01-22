@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Search, Bell, Calendar, ChevronDown } from 'lucide-react';
+import { Search, Bell, Calendar, ChevronDown, Menu } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import {
@@ -9,6 +9,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { cn } from '@/lib/utils';
+import { useAdminSidebar } from '@/components/AdminSidebarContext';
 
 interface AdminHeaderProps {
   title: string;
@@ -19,10 +20,10 @@ interface AdminHeaderProps {
 }
 
 const dateFilters = [
-  { label: 'Today', value: 'today' },
-  { label: 'This Week', value: 'week' },
-  { label: 'This Month', value: 'month' },
-  { label: 'Custom Range', value: 'custom' },
+  { label: 'Hari Ini', value: 'today' },
+  { label: 'Minggu Ini', value: 'week' },
+  { label: 'Bulan Ini', value: 'month' },
+  { label: 'Rentang Kustom', value: 'custom' },
 ];
 
 export function AdminHeader({
@@ -34,16 +35,28 @@ export function AdminHeader({
 }: AdminHeaderProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedDateFilter, setSelectedDateFilter] = useState('month');
+  const { toggleMobile } = useAdminSidebar();
 
   return (
     <header className={cn('bg-card border-b border-border px-6 py-4', className)}>
       <div className="flex items-center justify-between gap-4">
         {/* Title */}
-        <div>
-          <h1 className="text-xl font-bold text-foreground">{title}</h1>
-          {subtitle && (
-            <p className="text-sm text-muted-foreground mt-0.5">{subtitle}</p>
-          )}
+        <div className="flex items-center gap-3">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-9 w-9 md:hidden"
+            onClick={toggleMobile}
+            aria-label="Buka sidebar"
+          >
+            <Menu className="w-5 h-5" />
+          </Button>
+          <div>
+            <h1 className="text-xl font-bold text-foreground">{title}</h1>
+            {subtitle && (
+              <p className="text-sm text-muted-foreground mt-0.5">{subtitle}</p>
+            )}
+          </div>
         </div>
 
         {/* Actions */}
@@ -53,7 +66,7 @@ export function AdminHeader({
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
-                placeholder="Cari Ticket ID, nama, email..."
+                placeholder="Cari ID Tiket, nama, email..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-[280px] pl-9 h-9 bg-background border-border"

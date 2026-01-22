@@ -80,7 +80,6 @@ export function ApprovalStatusChip({ status }: { status: string }) {
     menunggu: { variant: 'pending', label: 'Menunggu' },
     disetujui: { variant: 'approved', label: 'Disetujui' },
     ditolak: { variant: 'rejected', label: 'Ditolak' },
-    revisi: { variant: 'revision', label: 'Revisi' },
   };
   
   const { variant, label } = config[status] || { variant: 'info', label: status };
@@ -92,8 +91,8 @@ export function PaymentStatusChip({ status }: { status: string }) {
   const config: Record<string, { variant: ChipVariant; label: string; icon?: React.ElementType }> = {
     belum_bayar: { variant: 'pending', label: 'Belum Bayar', icon: CreditCard },
     sudah_bayar: { variant: 'approved', label: 'Sudah Bayar', icon: CheckCircle },
-    refund_diproses: { variant: 'revision', label: 'Refund Diproses', icon: RefreshCw },
-    refund_selesai: { variant: 'info', label: 'Refund Selesai', icon: CheckCircle },
+    refund_diproses: { variant: 'revision', label: 'Pengembalian Diproses', icon: RefreshCw },
+    refund_selesai: { variant: 'info', label: 'Pengembalian Selesai', icon: CheckCircle },
   };
   
   const { variant, label } = config[status] || { variant: 'info', label: status };
@@ -126,11 +125,11 @@ export function RealisasiStatusChip({ status }: { status: string }) {
 // Refund Status Chip
 export function RefundStatusChip({ status }: { status: string }) {
   const config: Record<string, { variant: ChipVariant; label: string }> = {
-    requested: { variant: 'pending', label: 'Requested' },
-    processing: { variant: 'revision', label: 'Processing' },
-    completed: { variant: 'approved', label: 'Completed' },
-    rejected: { variant: 'rejected', label: 'Rejected' },
-    cancelled: { variant: 'info', label: 'Cancelled' },
+    requested: { variant: 'pending', label: 'Diajukan' },
+    processing: { variant: 'revision', label: 'Diproses' },
+    completed: { variant: 'approved', label: 'Selesai' },
+    rejected: { variant: 'rejected', label: 'Ditolak' },
+    cancelled: { variant: 'info', label: 'Dibatalkan' },
   };
   
   const { variant, label } = config[status] || { variant: 'info', label: status };
@@ -140,8 +139,8 @@ export function RefundStatusChip({ status }: { status: string }) {
 // User Status Chip
 export function UserStatusChip({ status }: { status: 'active' | 'disabled' }) {
   const config = {
-    active: { variant: 'approved' as ChipVariant, label: 'Active' },
-    disabled: { variant: 'rejected' as ChipVariant, label: 'Disabled' },
+    active: { variant: 'approved' as ChipVariant, label: 'Aktif' },
+    disabled: { variant: 'rejected' as ChipVariant, label: 'Nonaktif' },
   };
   
   const { variant, label } = config[status];
@@ -151,10 +150,10 @@ export function UserStatusChip({ status }: { status: 'active' | 'disabled' }) {
 // Role Badge
 export function RoleBadge({ role }: { role: string }) {
   const config: Record<string, { variant: ChipVariant; label: string }> = {
-    super_admin: { variant: 'rejected', label: 'Super Admin' },
-    finance_admin: { variant: 'approved', label: 'Finance Admin' },
-    approver_admin: { variant: 'revision', label: 'Approver Admin' },
-    viewer: { variant: 'info', label: 'Viewer' },
+    super_admin: { variant: 'rejected', label: 'Admin Utama' },
+    finance_admin: { variant: 'approved', label: 'Admin Keuangan' },
+    approver_admin: { variant: 'revision', label: 'Admin Persetujuan' },
+    viewer: { variant: 'info', label: 'Peninjau' },
   };
   
   const { variant, label } = config[role] || { variant: 'info', label: role };

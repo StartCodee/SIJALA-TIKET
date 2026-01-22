@@ -8,6 +8,7 @@ import TicketListPage from "./pages/TicketListPage";
 import TicketDetailPage from "./pages/TicketDetailPage";
 import ApprovalQueuePage from "./pages/ApprovalQueuePage";
 import PaymentsPage from "./pages/PaymentsPage";
+import ServiceRatesPage from "./pages/ServiceRatesPage";
 import GateMonitorPage from "./pages/GateMonitorPage";
 import FinanceReportsPage from "./pages/FinanceReportsPage";
 import RefundCenterPage from "./pages/RefundCenterPage";
@@ -29,6 +30,7 @@ const App = () => (
           <Route path="/tickets/:ticketId" element={<TicketDetailPage />} />
           <Route path="/approval" element={<ApprovalQueuePage />} />
           <Route path="/payments" element={<PaymentsPage />} />
+          <Route path="/tarif" element={<ServiceRatesPage />} />
           <Route path="/gate" element={<GateMonitorPage />} />
           <Route path="/reports" element={<FinanceReportsPage />} />
           <Route path="/refunds" element={<RefundCenterPage />} />

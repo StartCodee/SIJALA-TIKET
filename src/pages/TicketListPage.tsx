@@ -10,8 +10,9 @@ import {
 import {
   dummyTickets,
   formatRupiah,
-  formatDateTime,
+  formatShortId,
   FEE_PRICING,
+  BOOKING_TYPE_LABELS,
   DOMISILI_LABELS,
   type Ticket,
 } from '@/data/dummyData';
@@ -20,9 +21,6 @@ import {
   Filter,
   Download,
   Eye,
-  CheckCircle,
-  XCircle,
-  RotateCcw,
   ChevronDown,
   ChevronUp,
   Users,
@@ -32,7 +30,6 @@ import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import {
   Select,
   SelectContent,
@@ -40,14 +37,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-  DropdownMenuSeparator,
-} from '@/components/ui/dropdown-menu';
-import { cn } from '@/lib/utils';
 
 export default function TicketListPage() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -99,12 +88,11 @@ export default function TicketListPage() {
       <ChevronDown className="w-3.5 h-3.5" />
     );
   };
-
   return (
     <AdminLayout>
       <AdminHeader 
-        title="Ticket List" 
-        subtitle="Master data semua tiket conservation fee"
+        title="Daftar Tiket" 
+        subtitle="Data master semua tiket biaya konservasi"
         showSearch={false}
       />
 
@@ -114,7 +102,7 @@ export default function TicketListPage() {
           <div className="relative flex-1 max-w-md">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
-              placeholder="Cari Ticket ID, nama, atau email..."
+              placeholder="Cari ID Tiket, nama, atau email..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-9 bg-card"
@@ -132,7 +120,7 @@ export default function TicketListPage() {
           </Button>
           <Button variant="outline" size="sm" className="gap-2">
             <Download className="w-4 h-4" />
-            Export
+            Ekspor
           </Button>
         </div>
 
@@ -143,7 +131,7 @@ export default function TicketListPage() {
               <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
                 <div>
                   <label className="text-xs font-medium text-muted-foreground mb-1.5 block">
-                    Approval Status
+                    Status Persetujuan
                   </label>
                   <Select value={approvalFilter} onValueChange={setApprovalFilter}>
                     <SelectTrigger className="bg-background">
@@ -154,13 +142,12 @@ export default function TicketListPage() {
                       <SelectItem value="menunggu">Menunggu</SelectItem>
                       <SelectItem value="disetujui">Disetujui</SelectItem>
                       <SelectItem value="ditolak">Ditolak</SelectItem>
-                      <SelectItem value="revisi">Revisi</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
                 <div>
                   <label className="text-xs font-medium text-muted-foreground mb-1.5 block">
-                    Payment Status
+                    Status Pembayaran
                   </label>
                   <Select value={paymentFilter} onValueChange={setPaymentFilter}>
                     <SelectTrigger className="bg-background">
@@ -170,14 +157,14 @@ export default function TicketListPage() {
                       <SelectItem value="all">Semua</SelectItem>
                       <SelectItem value="belum_bayar">Belum Bayar</SelectItem>
                       <SelectItem value="sudah_bayar">Sudah Bayar</SelectItem>
-                      <SelectItem value="refund_diproses">Refund Diproses</SelectItem>
-                      <SelectItem value="refund_selesai">Refund Selesai</SelectItem>
+                      <SelectItem value="refund_diproses">Pengembalian Diproses</SelectItem>
+                      <SelectItem value="refund_selesai">Pengembalian Selesai</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
                 <div>
                   <label className="text-xs font-medium text-muted-foreground mb-1.5 block">
-                    Gate Status
+                    Status Gerbang
                   </label>
                   <Select value={gateFilter} onValueChange={setGateFilter}>
                     <SelectTrigger className="bg-background">
@@ -193,7 +180,7 @@ export default function TicketListPage() {
                 </div>
                 <div>
                   <label className="text-xs font-medium text-muted-foreground mb-1.5 block">
-                    Kategori Fee
+                    Kategori Biaya
                   </label>
                   <Select value={categoryFilter} onValueChange={setCategoryFilter}>
                     <SelectTrigger className="bg-background">
@@ -221,7 +208,7 @@ export default function TicketListPage() {
                     }}
                     className="text-xs"
                   >
-                    Reset Filter
+                    Atur Ulang Filter
                   </Button>
                 </div>
               </div>
@@ -248,39 +235,28 @@ export default function TicketListPage() {
                     onClick={() => handleSort('id')}
                   >
                     <div className="flex items-center gap-1">
-                      Ticket ID <SortIcon field="id" />
+                      ID Tiket <SortIcon field="id" />
                     </div>
                   </th>
                   <th>Tipe</th>
-                  <th>Kategori Fee</th>
-                  <th>Domisili OCR</th>
-                  <th>Jumlah</th>
+                  <th>Domisili</th>
                   <th className="text-right">Total Biaya</th>
-                  <th>Approval</th>
-                  <th>Payment</th>
-                  <th>Gate</th>
+                  <th>Persetujuan</th>
+                  <th>Pembayaran</th>
+                  <th>Gerbang</th>
                   <th>Realisasi</th>
-                  <th>Approved By</th>
-                  <th 
-                    className="cursor-pointer hover:bg-muted/70 transition-colors"
-                    onClick={() => handleSort('createdAt')}
-                  >
-                    <div className="flex items-center gap-1">
-                      Created <SortIcon field="createdAt" />
-                    </div>
-                  </th>
                   <th className="text-center">Aksi</th>
                 </tr>
               </thead>
               <tbody>
                 {sortedTickets.map((ticket) => (
                   <tr key={ticket.id} className="group">
-                    <td>
+                    <td className="whitespace-nowrap">
                       <Link 
                         to={`/tickets/${ticket.id}`}
-                        className="font-mono text-sm font-medium text-primary hover:underline"
+                        className="font-mono text-sm font-medium text-primary hover:underline whitespace-nowrap"
                       >
-                        {ticket.id}
+                        {formatShortId(ticket.id)}
                       </Link>
                     </td>
                     <td>
@@ -290,30 +266,11 @@ export default function TicketListPage() {
                         ) : (
                           <User className="w-3.5 h-3.5 text-muted-foreground" />
                         )}
-                        <span className="capitalize text-sm">{ticket.bookingType}</span>
+                        <span className="text-sm">{BOOKING_TYPE_LABELS[ticket.bookingType]}</span>
                       </div>
                     </td>
                     <td>
-                      <span className="text-sm">{FEE_PRICING[ticket.feeCategory].label}</span>
-                    </td>
-                    <td>
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm">{DOMISILI_LABELS[ticket.domisiliOCR]}</span>
-                        <Badge variant="outline" className="text-[10px] px-1.5 py-0">
-                          {ticket.ocrConfidence}%
-                        </Badge>
-                      </div>
-                    </td>
-                    <td>
-                      {ticket.bookingType === 'group' ? (
-                        <div className="text-sm">
-                          <span className="text-foreground">{ticket.jumlahDomestik || 0} dom</span>
-                          <span className="text-muted-foreground"> + </span>
-                          <span className="text-foreground">{ticket.jumlahMancanegara || 0} man</span>
-                        </div>
-                      ) : (
-                        <span className="text-sm text-muted-foreground">1</span>
-                      )}
+                      <span className="text-sm">{DOMISILI_LABELS[ticket.domisiliOCR]}</span>
                     </td>
                     <td className="text-right">
                       <span className="font-medium text-sm">{formatRupiah(ticket.totalBiaya)}</span>
@@ -331,57 +288,12 @@ export default function TicketListPage() {
                       <RealisasiStatusChip status={ticket.realisasiStatus} />
                     </td>
                     <td>
-                      {ticket.approvedBy ? (
-                        <div className="text-sm">
-                          <p className="text-foreground">{ticket.approvedBy}</p>
-                          <p className="text-xs text-muted-foreground">
-                            {ticket.approvedAt && formatDateTime(ticket.approvedAt)}
-                          </p>
-                        </div>
-                      ) : (
-                        <span className="text-sm text-muted-foreground">-</span>
-                      )}
-                    </td>
-                    <td>
-                      <span className="text-sm text-muted-foreground">
-                        {formatDateTime(ticket.createdAt)}
-                      </span>
-                    </td>
-                    <td>
                       <div className="flex items-center justify-center gap-1">
                         <Link to={`/tickets/${ticket.id}`}>
                           <Button variant="ghost" size="icon" className="h-8 w-8">
                             <Eye className="w-4 h-4" />
                           </Button>
                         </Link>
-                        {ticket.needsApproval && ticket.approvalStatus === 'menunggu' && (
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="icon" className="h-8 w-8">
-                                <ChevronDown className="w-4 h-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="bg-popover border-border">
-                              <DropdownMenuItem className="gap-2 cursor-pointer">
-                                <CheckCircle className="w-4 h-4 text-status-approved" />
-                                Approve
-                              </DropdownMenuItem>
-                              <DropdownMenuItem className="gap-2 cursor-pointer">
-                                <XCircle className="w-4 h-4 text-status-rejected" />
-                                Reject
-                              </DropdownMenuItem>
-                              <DropdownMenuItem className="gap-2 cursor-pointer">
-                                <RotateCcw className="w-4 h-4 text-status-revision" />
-                                Request Revision
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        )}
-                        {ticket.paymentStatus === 'sudah_bayar' && ticket.gateStatus === 'belum_masuk' && (
-                          <Button variant="ghost" size="icon" className="h-8 w-8" title="Initiate Refund">
-                            <RotateCcw className="w-4 h-4 text-muted-foreground" />
-                          </Button>
-                        )}
                       </div>
                     </td>
                   </tr>

@@ -20,8 +20,6 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
@@ -53,9 +51,19 @@ import {
   Cell,
   Legend,
 } from 'recharts';
-import { cn } from '@/lib/utils';
 
-const COLORS = ['#0D9488', '#14B8A6', '#5EEAD4', '#2DD4BF', '#99F6E4'];
+const COLORS = [
+  'hsl(213 70% 35%)',
+  'hsl(213 65% 45%)',
+  'hsl(213 60% 55%)',
+  'hsl(213 60% 65%)',
+  'hsl(213 70% 75%)',
+];
+
+const CHART_COLORS = {
+  total: 'hsl(var(--primary))',
+  realized: 'hsl(213 70% 52%)',
+};
 
 export default function FinanceReportsPage() {
   const [showSettings, setShowSettings] = useState(false);
@@ -91,7 +99,7 @@ export default function FinanceReportsPage() {
   return (
     <AdminLayout>
       <AdminHeader
-        title="Finance Reports"
+        title="Laporan Keuangan"
         subtitle={`Laporan Keuangan - ${period}`}
         showSearch={false}
       />
@@ -108,19 +116,19 @@ export default function FinanceReportsPage() {
           <div className="flex items-center gap-2">
             <Button variant="outline" size="sm" className="gap-2" onClick={() => setShowSettings(true)}>
               <Settings className="w-4 h-4" />
-              Report Settings
+              Pengaturan Laporan
             </Button>
             <Button variant="outline" size="sm" className="gap-2">
               <Download className="w-4 h-4" />
-              Export CSV
+              Ekspor CSV
             </Button>
             <Button variant="outline" size="sm" className="gap-2">
               <FileText className="w-4 h-4" />
-              Export PDF
+              Ekspor PDF
             </Button>
             <Button variant="outline" size="sm" className="gap-2">
               <Printer className="w-4 h-4" />
-              Print
+              Cetak
             </Button>
           </div>
         </div>
@@ -128,35 +136,34 @@ export default function FinanceReportsPage() {
         {/* Summary KPIs */}
         <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
           <KPICard
-            title="Total Paid"
+            title="Total Terbayar"
             value={formatRupiah(totalPaid)}
             icon={Wallet}
-            variant="primary"
+            variant="brand"
           />
           <KPICard
-            title="Total Realized"
+            title="Total Terealisasi"
             value={formatRupiah(totalRealized)}
             icon={TrendingUp}
-            variant="success"
+            variant="brand"
           />
           <KPICard
-            title="Total Unrealized"
+            title="Total Belum Terealisasi"
             value={formatRupiah(totalUnrealized)}
             icon={TrendingDown}
-            variant="warning"
+            variant="brand"
           />
           <KPICard
-            title="Total Refunds"
+            title="Total Pengembalian"
             value={formatRupiah(totalRefunds)}
             icon={RotateCcw}
-            variant="danger"
+            variant="brand"
           />
           <KPICard
-            title="Net Realized"
+            title="Bersih Terealisasi"
             value={formatRupiah(netRealized)}
             icon={TrendingUp}
-            variant="success"
-            trend={{ value: 8, label: 'vs bulan lalu' }}
+            variant="brand"
           />
         </div>
 
@@ -165,7 +172,7 @@ export default function FinanceReportsPage() {
           {/* Trend Chart */}
           <Card className="card-ocean">
             <CardHeader>
-              <CardTitle className="text-base font-semibold">Tren Harian: Paid vs Realized</CardTitle>
+              <CardTitle className="text-base font-semibold">Tren Harian: Terbayar vs Terealisasi</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="h-[300px]">
@@ -173,12 +180,12 @@ export default function FinanceReportsPage() {
                   <AreaChart data={trendData}>
                     <defs>
                       <linearGradient id="colorTotal2" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#0D9488" stopOpacity={0.4} />
-                        <stop offset="95%" stopColor="#0D9488" stopOpacity={0} />
+                        <stop offset="5%" stopColor={CHART_COLORS.total} stopOpacity={0.35} />
+                        <stop offset="95%" stopColor={CHART_COLORS.total} stopOpacity={0} />
                       </linearGradient>
                       <linearGradient id="colorRealized2" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#22C55E" stopOpacity={0.4} />
-                        <stop offset="95%" stopColor="#22C55E" stopOpacity={0} />
+                        <stop offset="5%" stopColor={CHART_COLORS.realized} stopOpacity={0.35} />
+                        <stop offset="95%" stopColor={CHART_COLORS.realized} stopOpacity={0} />
                       </linearGradient>
                     </defs>
                     <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
@@ -205,18 +212,18 @@ export default function FinanceReportsPage() {
                     <Area
                       type="monotone"
                       dataKey="total"
-                      stroke="#0D9488"
+                      stroke={CHART_COLORS.total}
                       strokeWidth={2}
                       fill="url(#colorTotal2)"
-                      name="Total Paid"
+                      name="Total Terbayar"
                     />
                     <Area
                       type="monotone"
                       dataKey="realized"
-                      stroke="#22C55E"
+                      stroke={CHART_COLORS.realized}
                       strokeWidth={2}
                       fill="url(#colorRealized2)"
-                      name="Realized"
+                      name="Terealisasi"
                     />
                   </AreaChart>
                 </ResponsiveContainer>
@@ -227,7 +234,7 @@ export default function FinanceReportsPage() {
           {/* Category Breakdown */}
           <Card className="card-ocean">
             <CardHeader>
-              <CardTitle className="text-base font-semibold">Breakdown by Kategori</CardTitle>
+              <CardTitle className="text-base font-semibold">Rincian per Kategori</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="h-[300px]">
@@ -274,7 +281,7 @@ export default function FinanceReportsPage() {
           {/* By Category */}
           <Card className="card-ocean">
             <CardHeader>
-              <CardTitle className="text-base font-semibold">Detail per Kategori Fee</CardTitle>
+            <CardTitle className="text-base font-semibold">Detail per Kategori Biaya</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
@@ -326,7 +333,7 @@ export default function FinanceReportsPage() {
       <Dialog open={showSettings} onOpenChange={setShowSettings}>
         <DialogContent className="bg-card border-border">
           <DialogHeader>
-            <DialogTitle>Report Settings</DialogTitle>
+            <DialogTitle>Pengaturan Laporan</DialogTitle>
             <DialogDescription>Konfigurasi aturan realisasi pendapatan</DialogDescription>
           </DialogHeader>
           <div className="space-y-6 py-4">
@@ -342,8 +349,8 @@ export default function FinanceReportsPage() {
                     className="accent-primary"
                   />
                   <div>
-                    <p className="text-sm font-medium">Saat Gate = Masuk</p>
-                    <p className="text-xs text-muted-foreground">Pendapatan terealisasi ketika pengunjung scan masuk gate</p>
+                    <p className="text-sm font-medium">Saat Gerbang = Masuk</p>
+                    <p className="text-xs text-muted-foreground">Pendapatan terealisasi ketika pengunjung memindai di gerbang masuk</p>
                   </div>
                 </label>
                 <label className="flex items-center gap-3 p-3 rounded-lg border border-border hover:bg-muted/50 cursor-pointer transition-colors">
@@ -392,7 +399,7 @@ export default function FinanceReportsPage() {
               <Label className="text-sm font-semibold">Pengaturan Lain</Label>
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm">Cut-off Time</p>
+                  <p className="text-sm">Batas Waktu</p>
                   <p className="text-xs text-muted-foreground">Waktu penutupan laporan harian</p>
                 </div>
                 <Select defaultValue="23:59">
@@ -407,7 +414,7 @@ export default function FinanceReportsPage() {
               </div>
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm">Timezone</p>
+                  <p className="text-sm">Zona Waktu</p>
                   <p className="text-xs text-muted-foreground">Zona waktu laporan</p>
                 </div>
                 <Select defaultValue="WIT">

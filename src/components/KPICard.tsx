@@ -10,7 +10,7 @@ interface KPICardProps {
     value: number;
     label: string;
   };
-  variant?: 'default' | 'primary' | 'success' | 'warning' | 'danger';
+  variant?: 'default' | 'primary' | 'success' | 'warning' | 'danger' | 'brand';
   className?: string;
 }
 
@@ -35,6 +35,10 @@ const variantStyles = {
     iconBg: 'bg-status-rejected-bg',
     iconColor: 'text-status-rejected',
   },
+  brand: {
+    iconBg: 'bg-primary/10',
+    iconColor: 'text-primary',
+  },
 };
 
 export function KPICard({
@@ -57,47 +61,49 @@ export function KPICard({
     : null;
   
   const trendColor = trend
-    ? trend.value > 0
-      ? 'text-status-approved'
-      : trend.value < 0
-        ? 'text-status-rejected'
-        : 'text-muted-foreground'
+    ? variant === 'brand'
+      ? 'text-primary'
+      : trend.value > 0
+        ? 'text-status-approved'
+        : trend.value < 0
+          ? 'text-status-rejected'
+          : 'text-muted-foreground'
     : '';
 
   return (
     <div className={cn('kpi-card group', className)}>
-      <div className="flex items-start justify-between">
-        <div className="flex-1 min-w-0">
-          <p className="text-sm font-medium text-muted-foreground truncate">
-            {title}
-          </p>
-          <p className="mt-2 text-2xl font-bold text-foreground tracking-tight">
-            {value}
-          </p>
-          {subtitle && (
-            <p className="mt-1 text-xs text-muted-foreground">
-              {subtitle}
-            </p>
+      <div className="flex items-center justify-between gap-3">
+        <p className="text-sm font-medium text-muted-foreground truncate">
+          {title}
+        </p>
+        <div
+          className={cn(
+            'flex-shrink-0 h-10 w-10 rounded-full flex items-center justify-center',
+            styles.iconBg
           )}
-          {trend && TrendIcon && (
-            <div className={cn('flex items-center gap-1 mt-2', trendColor)}>
-              <TrendIcon className="w-3.5 h-3.5" />
-              <span className="text-xs font-medium">
-                {trend.value > 0 ? '+' : ''}{trend.value}%
-              </span>
-              <span className="text-xs text-muted-foreground ml-1">
-                {trend.label}
-              </span>
-            </div>
-          )}
-        </div>
-        <div className={cn(
-          'flex-shrink-0 p-3 rounded-xl transition-transform duration-300 group-hover:scale-110',
-          styles.iconBg
-        )}>
-          <Icon className={cn('w-5 h-5', styles.iconColor)} />
+        >
+          <Icon className={cn('w-5 h-5', styles.iconColor)} strokeWidth={1.75} />
         </div>
       </div>
+      <p className="mt-2 text-2xl font-bold text-foreground tracking-tight">
+        {value}
+      </p>
+      {subtitle && (
+        <p className="mt-1 text-xs text-muted-foreground">
+          {subtitle}
+        </p>
+      )}
+      {trend && TrendIcon && (
+        <div className={cn('flex items-center gap-1 mt-2', trendColor)}>
+          <TrendIcon className="w-3.5 h-3.5" />
+          <span className="text-xs font-medium">
+            {trend.value > 0 ? '+' : ''}{trend.value}%
+          </span>
+          <span className="text-xs text-muted-foreground ml-1">
+            {trend.label}
+          </span>
+        </div>
+      )}
     </div>
   );
 }

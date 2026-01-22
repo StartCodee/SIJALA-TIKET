@@ -4,54 +4,54 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Raja Ampat Conservation Fee Admin Dashboard - Ocean Tropical Theme */
+/* Raja Ampat Conservation Fee Admin Dashboard - Clean Blue Theme */
 
 @layer base {
   :root {
-    /* Core Ocean Palette */
-    --background: 195 30% 98%;
-    --foreground: 210 50% 15%;
+    /* Core Clean Blue Palette */
+    --background: 210 30% 98%;
+    --foreground: 214 45% 15%;
     
     --card: 0 0% 100%;
-    --card-foreground: 210 50% 15%;
+    --card-foreground: 214 45% 15%;
     
     --popover: 0 0% 100%;
-    --popover-foreground: 210 50% 15%;
+    --popover-foreground: 214 45% 15%;
     
-    /* Primary - Teal from logo */
-    --primary: 174 62% 40%;
+    /* Primary - Blue from KKP logo text */
+    --primary: 213 64% 33%;
     --primary-foreground: 0 0% 100%;
     
-    /* Secondary - Dark Navy from logo */
-    --secondary: 210 55% 25%;
+    /* Secondary - Deep Blue */
+    --secondary: 217 55% 22%;
     --secondary-foreground: 0 0% 100%;
     
     /* Muted - Soft gray-blue */
-    --muted: 200 20% 94%;
-    --muted-foreground: 210 20% 45%;
+    --muted: 210 25% 94%;
+    --muted-foreground: 214 18% 45%;
     
-    /* Accent - Light aqua */
-    --accent: 185 50% 92%;
-    --accent-foreground: 185 60% 30%;
+    /* Accent - Light blue */
+    --accent: 212 60% 93%;
+    --accent-foreground: 214 55% 30%;
     
     --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
     
-    --border: 200 20% 88%;
-    --input: 200 20% 88%;
-    --ring: 174 62% 40%;
+    --border: 210 22% 88%;
+    --input: 210 22% 88%;
+    --ring: 213 64% 33%;
     
     --radius: 0.75rem;
     
-    /* Sidebar - Ocean gradient inspired */
-    --sidebar-background: 210 55% 18%;
-    --sidebar-foreground: 200 30% 90%;
-    --sidebar-primary: 174 62% 50%;
+    /* Sidebar - Clean blue gradient */
+    --sidebar-background: 216 55% 16%;
+    --sidebar-foreground: 210 30% 92%;
+    --sidebar-primary: 213 70% 48%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 210 45% 25%;
-    --sidebar-accent-foreground: 200 30% 95%;
-    --sidebar-border: 210 40% 25%;
-    --sidebar-ring: 174 62% 50%;
+    --sidebar-accent: 216 45% 22%;
+    --sidebar-accent-foreground: 210 30% 96%;
+    --sidebar-border: 214 40% 22%;
+    --sidebar-ring: 213 70% 48%;
     
     /* Custom Status Colors */
     --status-pending: 45 93% 47%;
@@ -62,59 +62,59 @@
     --status-rejected-bg: 0 60% 94%;
     --status-revision: 25 95% 53%;
     --status-revision-bg: 25 80% 94%;
-    --status-info: 199 89% 48%;
-    --status-info-bg: 199 80% 94%;
+    --status-info: 212 80% 45%;
+    --status-info-bg: 212 70% 94%;
     
-    /* Ocean gradients */
-    --gradient-ocean: linear-gradient(135deg, hsl(185 60% 45%) 0%, hsl(174 62% 40%) 50%, hsl(165 55% 35%) 100%);
-    --gradient-ocean-light: linear-gradient(135deg, hsl(185 50% 96%) 0%, hsl(174 40% 94%) 100%);
-    --gradient-sidebar: linear-gradient(180deg, hsl(210 55% 18%) 0%, hsl(210 60% 12%) 100%);
-    --gradient-card-hover: linear-gradient(135deg, hsl(185 50% 98%) 0%, hsl(174 40% 96%) 100%);
+    /* Blue gradients */
+    --gradient-ocean: linear-gradient(135deg, hsl(213 64% 33%) 0%, hsl(215 60% 36%) 50%, hsl(220 55% 32%) 100%);
+    --gradient-ocean-light: linear-gradient(135deg, hsl(210 60% 97%) 0%, hsl(210 45% 95%) 100%);
+    --gradient-sidebar: linear-gradient(180deg, hsl(216 55% 16%) 0%, hsl(220 60% 10%) 100%);
+    --gradient-card-hover: linear-gradient(180deg, hsl(0 0% 100%) 0%, hsl(210 35% 98%) 100%);
     
     /* Shadows */
-    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.04);
-    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05);
-    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.06), 0 4px 6px -4px rgb(0 0 0 / 0.06);
-    --shadow-card: 0 2px 8px -2px rgb(0 60 80 / 0.08), 0 4px 16px -4px rgb(0 60 80 / 0.06);
+    --shadow-sm: 0 1px 2px 0 rgb(15 23 42 / 0.06);
+    --shadow-md: 0 4px 10px -6px rgb(15 23 42 / 0.18);
+    --shadow-lg: 0 12px 20px -12px rgb(15 23 42 / 0.25);
+    --shadow-card: 0 2px 10px -6px rgb(15 23 42 / 0.16);
   }
 
   .dark {
-    --background: 210 55% 8%;
-    --foreground: 200 30% 95%;
+    --background: 215 50% 8%;
+    --foreground: 210 30% 95%;
     
-    --card: 210 50% 12%;
+    --card: 215 45% 12%;
     --card-foreground: 200 30% 95%;
     
-    --popover: 210 50% 12%;
+    --popover: 215 45% 12%;
     --popover-foreground: 200 30% 95%;
     
-    --primary: 174 62% 50%;
+    --primary: 213 70% 52%;
     --primary-foreground: 0 0% 100%;
     
-    --secondary: 210 45% 30%;
+    --secondary: 217 45% 30%;
     --secondary-foreground: 200 30% 95%;
     
-    --muted: 210 40% 18%;
+    --muted: 214 35% 18%;
     --muted-foreground: 200 20% 60%;
     
-    --accent: 185 50% 20%;
-    --accent-foreground: 185 40% 80%;
+    --accent: 212 40% 20%;
+    --accent-foreground: 210 40% 85%;
     
     --destructive: 0 62% 45%;
     --destructive-foreground: 0 0% 100%;
     
-    --border: 210 40% 20%;
-    --input: 210 40% 20%;
-    --ring: 174 62% 50%;
+    --border: 214 35% 20%;
+    --input: 214 35% 20%;
+    --ring: 213 70% 52%;
     
-    --sidebar-background: 210 55% 10%;
-    --sidebar-foreground: 200 30% 85%;
-    --sidebar-primary: 174 62% 50%;
+    --sidebar-background: 216 55% 10%;
+    --sidebar-foreground: 210 30% 85%;
+    --sidebar-primary: 213 70% 52%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 210 45% 18%;
-    --sidebar-accent-foreground: 200 30% 90%;
-    --sidebar-border: 210 40% 18%;
-    --sidebar-ring: 174 62% 50%;
+    --sidebar-accent: 216 45% 18%;
+    --sidebar-accent-foreground: 210 30% 90%;
+    --sidebar-border: 214 35% 18%;
+    --sidebar-ring: 213 70% 52%;
   }
 }
 
@@ -135,9 +135,9 @@
 }
 
 @layer components {
-  /* Ocean wave pattern - very subtle background */
+  /* Subtle blue wave pattern */
   .ocean-pattern {
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 320'%3E%3Cpath fill='%230D9488' fill-opacity='0.02' d='M0,192L48,181.3C96,171,192,149,288,154.7C384,160,480,192,576,197.3C672,203,768,181,864,181.3C960,181,1056,203,1152,197.3C1248,192,1344,160,1392,144L1440,128L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z'%3E%3C/path%3E%3C/svg%3E");
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 320'%3E%3Cpath fill='%231E4F8A' fill-opacity='0.02' d='M0,192L48,181.3C96,171,192,149,288,154.7C384,160,480,192,576,197.3C672,203,768,181,864,181.3C960,181,1056,203,1152,197.3C1248,192,1344,160,1392,144L1440,128L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z'%3E%3C/path%3E%3C/svg%3E");
     background-position: bottom;
     background-repeat: repeat-x;
     background-size: 100% 120px;
@@ -152,7 +152,7 @@
   .card-ocean:hover {
     @apply border-primary/20;
     background: var(--gradient-card-hover);
-    box-shadow: var(--shadow-lg);
+    box-shadow: var(--shadow-md);
   }
   
   /* KPI Card styles */
@@ -163,12 +163,12 @@
   
   .kpi-card:hover {
     @apply border-primary/30 -translate-y-0.5;
-    box-shadow: var(--shadow-lg);
+    box-shadow: var(--shadow-md);
   }
   
   /* Status chip base */
   .status-chip {
-    @apply inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium transition-all;
+    @apply inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium transition-all whitespace-nowrap;
   }
   
   .status-chip-pending {
@@ -198,7 +198,7 @@
   
   /* Sidebar nav item */
   .nav-item {
-    @apply flex items-center gap-3 px-3 py-2.5 rounded-lg text-sidebar-foreground/80 transition-all duration-200;
+    @apply flex items-center gap-3 px-4 py-2.5 rounded-lg text-sidebar-foreground/80 transition-all duration-200;
   }
   
   .nav-item:hover {

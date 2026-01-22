@@ -2,7 +2,6 @@ import { AdminLayout } from '@/components/AdminLayout';
 import { AdminHeader } from '@/components/AdminHeader';
 import { KPICard } from '@/components/KPICard';
 import { 
-  ApprovalStatusChip, 
   PaymentStatusChip, 
   GateStatusChip 
 } from '@/components/StatusChip';
@@ -11,7 +10,7 @@ import {
   dummyRefunds,
   financeReportSummary,
   formatRupiah,
-  formatDateTime,
+  formatShortId,
   FEE_PRICING
 } from '@/data/dummyData';
 import {
@@ -23,9 +22,6 @@ import {
   TrendingUp,
   TrendingDown,
   RotateCcw,
-  Users,
-  Ticket,
-  ArrowUpRight,
   ArrowRight,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -84,26 +80,26 @@ export default function OverviewPage() {
   return (
     <AdminLayout>
       <AdminHeader 
-        title="Dashboard Overview" 
-        subtitle="Monitor aktivitas dan performa sistem ticketing"
+        title="Ringkasan Dasbor" 
+        subtitle="Pantau aktivitas dan performa sistem tiket"
       />
       
       <div className="flex-1 overflow-auto p-6">
         {/* KPI Cards */}
         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4 mb-6">
           <KPICard
-            title="Pending Approval"
+            title="Menunggu Persetujuan"
             value={kpis.pendingApproval}
             icon={ClipboardCheck}
             variant="warning"
-            subtitle="Menunggu review"
+            subtitle="Menunggu tinjauan"
           />
           <KPICard
             title="Belum Bayar"
             value={kpis.unpaid}
             icon={CreditCard}
             variant="danger"
-            subtitle="Tiket pending payment"
+            subtitle="Tiket menunggu pembayaran"
           />
           <KPICard
             title="Sudah Bayar"
@@ -113,14 +109,14 @@ export default function OverviewPage() {
             trend={{ value: 12, label: 'vs minggu lalu' }}
           />
           <KPICard
-            title="Gate Masuk"
+            title="Gerbang Masuk"
             value={kpis.gateMasuk}
             icon={DoorOpen}
             variant="primary"
             subtitle="Saat ini di area"
           />
           <KPICard
-            title="Gate Keluar"
+            title="Gerbang Keluar"
             value={kpis.gateKeluar}
             icon={DoorClosed}
             variant="default"
@@ -130,28 +126,28 @@ export default function OverviewPage() {
         {/* Revenue KPIs */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
           <KPICard
-            title="Revenue Belum Terealisasi"
+            title="Pendapatan Belum Terealisasi"
             value={formatRupiah(kpis.revenueUnrealized)}
             icon={TrendingDown}
             variant="warning"
-            subtitle="Belum masuk gate"
+            subtitle="Belum masuk gerbang"
           />
           <KPICard
-            title="Revenue Sudah Terealisasi"
+            title="Pendapatan Terealisasi"
             value={formatRupiah(kpis.revenueRealized)}
             icon={TrendingUp}
             variant="success"
             trend={{ value: 8, label: 'vs bulan lalu' }}
           />
           <KPICard
-            title="Refund Requested"
+            title="Pengembalian Diajukan"
             value={kpis.refundRequested}
             icon={RotateCcw}
             variant="warning"
             subtitle="Menunggu proses"
           />
           <KPICard
-            title="Refund Completed"
+            title="Pengembalian Selesai"
             value={kpis.refundCompleted}
             icon={RotateCcw}
             variant="default"
@@ -217,7 +213,7 @@ export default function OverviewPage() {
                       stroke="#14B8A6"
                       strokeWidth={2}
                       fill="url(#colorRealized)"
-                      name="Realized"
+                      name="Terealisasi"
                     />
                   </AreaChart>
                 </ResponsiveContainer>
@@ -228,7 +224,7 @@ export default function OverviewPage() {
           {/* Category Breakdown */}
           <Card className="card-ocean">
             <CardHeader className="pb-2">
-              <CardTitle className="text-base font-semibold">Breakdown Kategori</CardTitle>
+              <CardTitle className="text-base font-semibold">Rincian Kategori</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="h-[180px]">
@@ -297,7 +293,9 @@ export default function OverviewPage() {
                   <div key={ticket.id} className="flex items-center gap-4 px-6 py-3 hover:bg-muted/30 transition-colors">
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
-                        <span className="font-mono text-sm font-medium text-primary">{ticket.id}</span>
+                        <span className="font-mono text-sm font-medium text-primary">
+                          {formatShortId(ticket.id)}
+                        </span>
                         <span className="text-xs text-muted-foreground">•</span>
                         <span className="text-sm text-foreground truncate">{ticket.namaLengkap}</span>
                       </div>
@@ -320,7 +318,7 @@ export default function OverviewPage() {
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
                 <CardTitle className="text-base font-semibold">
-                  Menunggu Approval
+                  Menunggu Persetujuan
                   <span className="ml-2 px-2 py-0.5 bg-status-pending-bg text-status-pending text-xs font-medium rounded-full">
                     {pendingApprovalTickets.length}
                   </span>
@@ -339,7 +337,9 @@ export default function OverviewPage() {
                     <div key={ticket.id} className="flex items-center gap-4 px-6 py-3 hover:bg-muted/30 transition-colors">
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2">
-                          <span className="font-mono text-sm font-medium text-primary">{ticket.id}</span>
+                          <span className="font-mono text-sm font-medium text-primary">
+                            {formatShortId(ticket.id)}
+                          </span>
                         </div>
                         <p className="text-sm text-foreground truncate">{ticket.namaLengkap}</p>
                         <p className="text-xs text-muted-foreground mt-0.5">
@@ -354,7 +354,7 @@ export default function OverviewPage() {
                       </div>
                       <Link to={`/tickets/${ticket.id}`}>
                         <Button size="sm" className="btn-ocean text-xs">
-                          Review
+                          Tinjau
                         </Button>
                       </Link>
                     </div>
@@ -363,7 +363,7 @@ export default function OverviewPage() {
               ) : (
                 <div className="flex flex-col items-center justify-center py-12 text-center">
                   <ClipboardCheck className="w-12 h-12 text-muted-foreground/30 mb-3" />
-                  <p className="text-sm text-muted-foreground">Tidak ada tiket pending approval</p>
+                  <p className="text-sm text-muted-foreground">Tidak ada tiket menunggu persetujuan</p>
                 </div>
               )}
             </CardContent>

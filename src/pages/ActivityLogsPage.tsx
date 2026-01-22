@@ -2,13 +2,11 @@ import { useState } from 'react';
 import { AdminLayout } from '@/components/AdminLayout';
 import { AdminHeader } from '@/components/AdminHeader';
 import { RoleBadge } from '@/components/StatusChip';
-import { dummyAuditLogs, formatDateTime, ROLE_LABELS, type AuditLog } from '@/data/dummyData';
+import { dummyAuditLogs, formatDateTime, formatShortId } from '@/data/dummyData';
 import {
   Search,
-  Filter,
   Download,
   History,
-  ChevronDown,
   User,
   Ticket,
   CreditCard,
@@ -37,6 +35,38 @@ const entityIcons: Record<string, typeof Ticket> = {
   User: User,
   Settings: Settings,
 };
+
+const entityLabels: Record<string, string> = {
+  Ticket: 'Tiket',
+  Payment: 'Pembayaran',
+  Refund: 'Pengembalian Dana',
+  User: 'Pengguna',
+  Settings: 'Pengaturan',
+};
+
+const actionLabels: Record<string, string> = {
+  ticket_created: 'Tiket dibuat',
+  ticket_approved: 'Tiket disetujui',
+  ticket_rejected: 'Tiket ditolak',
+  payment_received: 'Pembayaran diterima',
+  refund_requested: 'Pengembalian diajukan',
+  refund_processing: 'Pengembalian diproses',
+  refund_completed: 'Pengembalian selesai',
+  user_disabled: 'Pengguna dinonaktifkan',
+  user_enabled: 'Pengguna diaktifkan',
+};
+
+const valueLabels: Record<string, string> = {
+  requested: 'diajukan',
+  processing: 'diproses',
+  completed: 'selesai',
+  rejected: 'ditolak',
+  cancelled: 'dibatalkan',
+  active: 'aktif',
+  disabled: 'nonaktif',
+};
+
+const formatLogValue = (value?: string) => (value ? valueLabels[value] ?? value : value);
 
 const actionColors: Record<string, string> = {
   ticket_created: 'bg-status-info-bg text-status-info',
@@ -78,8 +108,8 @@ export default function ActivityLogsPage() {
   return (
     <AdminLayout>
       <AdminHeader
-        title="Activity Logs"
-        subtitle="Audit trail semua aktivitas admin"
+        title="Log Aktivitas"
+        subtitle="Jejak audit semua aktivitas admin"
         showSearch={false}
       />
 
@@ -89,7 +119,7 @@ export default function ActivityLogsPage() {
           <div className="relative flex-1 max-w-md">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
-              placeholder="Cari Entity ID, admin user, atau notes..."
+              placeholder="Cari ID, admin, atau catatan..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-9 bg-card"
@@ -97,33 +127,33 @@ export default function ActivityLogsPage() {
           </div>
           <Select value={entityFilter} onValueChange={setEntityFilter}>
             <SelectTrigger className="w-[150px] bg-card">
-              <SelectValue placeholder="Entity" />
+              <SelectValue placeholder="" />
             </SelectTrigger>
             <SelectContent className="bg-popover border-border">
-              <SelectItem value="all">All Entities</SelectItem>
-              <SelectItem value="Ticket">Ticket</SelectItem>
-              <SelectItem value="Payment">Payment</SelectItem>
-              <SelectItem value="Refund">Refund</SelectItem>
-              <SelectItem value="User">User</SelectItem>
-              <SelectItem value="Settings">Settings</SelectItem>
+              <SelectItem value="all">Semua</SelectItem>
+              <SelectItem value="Ticket">Tiket</SelectItem>
+              <SelectItem value="Payment">Pembayaran</SelectItem>
+              <SelectItem value="Refund">Pengembalian Dana</SelectItem>
+              <SelectItem value="User">Pengguna</SelectItem>
+              <SelectItem value="Settings">Pengaturan</SelectItem>
             </SelectContent>
           </Select>
           <Select value={actionFilter} onValueChange={setActionFilter}>
             <SelectTrigger className="w-[180px] bg-card">
-              <SelectValue placeholder="Action" />
+              <SelectValue placeholder="Aksi" />
             </SelectTrigger>
             <SelectContent className="bg-popover border-border">
-              <SelectItem value="all">All Actions</SelectItem>
+              <SelectItem value="all">Semua Aksi</SelectItem>
               {actionTypes.map((action) => (
                 <SelectItem key={action} value={action}>
-                  {action.replace(/_/g, ' ')}
+                  {actionLabels[action] ?? action.replace(/_/g, ' ')}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
           <Button variant="outline" size="sm" className="gap-2">
             <Download className="w-4 h-4" />
-            Export
+            Ekspor
           </Button>
         </div>
 
@@ -141,6 +171,7 @@ export default function ActivityLogsPage() {
               {sortedLogs.map((log) => {
                 const IconComponent = entityIcons[log.entityType] || History;
                 const actionColor = actionColors[log.actionType] || 'bg-muted text-muted-foreground';
+                const displayEntityId = formatShortId(log.entityId);
 
                 return (
                   <div key={log.id} className="flex gap-4 p-4 hover:bg-muted/30 transition-colors">
@@ -155,10 +186,10 @@ export default function ActivityLogsPage() {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
                         <Badge variant="outline" className="text-[10px] font-mono">
-                          {log.entityType}
+                          {entityLabels[log.entityType] ?? log.entityType}
                         </Badge>
                         <span className="text-sm font-medium text-foreground">
-                          {log.actionType.replace(/_/g, ' ')}
+                          {actionLabels[log.actionType] ?? log.actionType.replace(/_/g, ' ')}
                         </span>
                         {log.entityId && (
                           <>
@@ -168,10 +199,12 @@ export default function ActivityLogsPage() {
                                 to={`/tickets/${log.entityId}`}
                                 className="font-mono text-sm text-primary hover:underline"
                               >
-                                {log.entityId}
+                                {displayEntityId}
                               </Link>
                             ) : (
-                              <span className="font-mono text-sm text-muted-foreground">{log.entityId}</span>
+                              <span className="font-mono text-sm text-muted-foreground">
+                                {displayEntityId}
+                              </span>
                             )}
                           </>
                         )}
@@ -182,7 +215,7 @@ export default function ActivityLogsPage() {
                         <div className="flex items-center gap-2 text-sm mb-1">
                           {log.beforeValue && (
                             <span className="px-2 py-0.5 bg-status-rejected-bg text-status-rejected rounded text-xs">
-                              {log.beforeValue}
+                              {formatLogValue(log.beforeValue)}
                             </span>
                           )}
                           {log.beforeValue && log.afterValue && (
@@ -190,7 +223,7 @@ export default function ActivityLogsPage() {
                           )}
                           {log.afterValue && (
                             <span className="px-2 py-0.5 bg-status-approved-bg text-status-approved rounded text-xs">
-                              {log.afterValue}
+                              {formatLogValue(log.afterValue)}
                             </span>
                           )}
                         </div>

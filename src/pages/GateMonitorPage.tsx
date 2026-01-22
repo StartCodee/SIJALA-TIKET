@@ -6,6 +6,7 @@ import {
   dummyTickets,
   formatRupiah,
   formatDateTime,
+  formatShortId,
   FEE_PRICING,
 } from '@/data/dummyData';
 import {
@@ -13,7 +14,6 @@ import {
   DoorOpen,
   DoorClosed,
   Clock,
-  AlertTriangle,
   RefreshCw,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -22,7 +22,6 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { cn } from '@/lib/utils';
 
 export default function GateMonitorPage() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -33,16 +32,6 @@ export default function GateMonitorPage() {
   );
   const masuk = dummyTickets.filter((t) => t.gateStatus === 'masuk');
   const keluar = dummyTickets.filter((t) => t.gateStatus === 'keluar');
-
-  // Calculate duration for "masuk" tickets
-  const calculateDuration = (enteredAt: string) => {
-    const entered = new Date(enteredAt);
-    const now = new Date();
-    const diffMs = now.getTime() - entered.getTime();
-    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-    const diffMinutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
-    return `${diffHours}j ${diffMinutes}m`;
-  };
 
   const filterTickets = (tickets: typeof dummyTickets) => {
     return tickets.filter(
@@ -55,8 +44,8 @@ export default function GateMonitorPage() {
   return (
     <AdminLayout>
       <AdminHeader
-        title="Gate Monitor"
-        subtitle="Pantau status gate masuk/keluar pengunjung"
+        title="Monitor Gerbang"
+        subtitle="Pantau status gerbang masuk/keluar pengunjung"
         showDateFilter={false}
       />
 
@@ -68,7 +57,7 @@ export default function GateMonitorPage() {
               <div>
                 <p className="text-3xl font-bold">{belumMasuk.length}</p>
                 <p className="text-sm text-muted-foreground">Belum Masuk</p>
-                <p className="text-xs text-muted-foreground mt-1">Tiket paid, menunggu scan</p>
+                <p className="text-xs text-muted-foreground mt-1">Tiket sudah bayar, menunggu pemindaian</p>
               </div>
               <Clock className="w-10 h-10 text-status-pending/30" />
             </div>
@@ -100,7 +89,7 @@ export default function GateMonitorPage() {
           <div className="relative flex-1 max-w-md">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
-              placeholder="Cari Ticket ID atau nama..."
+              placeholder="Cari ID Tiket atau nama..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-9 bg-card"
@@ -108,7 +97,7 @@ export default function GateMonitorPage() {
           </div>
           <Button variant="outline" size="sm" className="gap-2">
             <RefreshCw className="w-4 h-4" />
-            Refresh
+            Muat Ulang
           </Button>
         </div>
 
@@ -136,12 +125,12 @@ export default function GateMonitorPage() {
                 <table className="data-table">
                   <thead>
                     <tr>
-                      <th>Ticket ID</th>
+                      <th>ID Tiket</th>
                       <th>Nama</th>
                       <th>Kategori</th>
-                      <th>Payment</th>
-                      <th>Paid At</th>
-                      <th>QR Status</th>
+                      <th>Pembayaran</th>
+                      <th>Dibayar Pada</th>
+                      <th>Status QR</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -152,7 +141,7 @@ export default function GateMonitorPage() {
                             to={`/tickets/${ticket.id}`}
                             className="font-mono text-sm font-medium text-primary hover:underline"
                           >
-                            {ticket.id}
+                            {formatShortId(ticket.id)}
                           </Link>
                         </td>
                         <td className="text-sm">{ticket.namaLengkap}</td>
@@ -165,7 +154,7 @@ export default function GateMonitorPage() {
                         </td>
                         <td>
                           <Badge variant={ticket.qrActive ? 'default' : 'secondary'}>
-                            {ticket.qrActive ? 'Active' : 'Inactive'}
+                            {ticket.qrActive ? 'Aktif' : 'Nonaktif'}
                           </Badge>
                         </td>
                       </tr>
@@ -183,11 +172,10 @@ export default function GateMonitorPage() {
                 <table className="data-table">
                   <thead>
                     <tr>
-                      <th>Ticket ID</th>
+                      <th>ID Tiket</th>
                       <th>Nama</th>
                       <th>Kategori</th>
-                      <th>Entered At</th>
-                      <th>Durasi di Area</th>
+                      <th>Masuk Pada</th>
                       <th>Status</th>
                     </tr>
                   </thead>
@@ -199,18 +187,13 @@ export default function GateMonitorPage() {
                             to={`/tickets/${ticket.id}`}
                             className="font-mono text-sm font-medium text-primary hover:underline"
                           >
-                            {ticket.id}
+                            {formatShortId(ticket.id)}
                           </Link>
                         </td>
                         <td className="text-sm">{ticket.namaLengkap}</td>
                         <td className="text-sm">{FEE_PRICING[ticket.feeCategory].label}</td>
                         <td className="text-sm text-muted-foreground">
                           {ticket.enteredAt && formatDateTime(ticket.enteredAt)}
-                        </td>
-                        <td>
-                          <Badge variant="outline" className="font-mono">
-                            {ticket.enteredAt && calculateDuration(ticket.enteredAt)}
-                          </Badge>
                         </td>
                         <td>
                           <GateStatusChip status={ticket.gateStatus} />
@@ -230,35 +213,25 @@ export default function GateMonitorPage() {
                 <table className="data-table">
                   <thead>
                     <tr>
-                      <th>Ticket ID</th>
+                      <th>ID Tiket</th>
                       <th>Nama</th>
                       <th>Kategori</th>
-                      <th>Entered At</th>
-                      <th>Exited At</th>
-                      <th>Total Durasi</th>
+                      <th>Masuk Pada</th>
+                      <th>Keluar Pada</th>
                     </tr>
                   </thead>
                   <tbody>
                     {filterTickets(keluar).map((ticket) => {
-                      let duration = '-';
-                      if (ticket.enteredAt && ticket.exitedAt) {
-                        const entered = new Date(ticket.enteredAt);
-                        const exited = new Date(ticket.exitedAt);
-                        const diffMs = exited.getTime() - entered.getTime();
-                        const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-                        const diffMinutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
-                        duration = `${diffHours}j ${diffMinutes}m`;
-                      }
                       return (
                         <tr key={ticket.id}>
                           <td>
-                            <Link
-                              to={`/tickets/${ticket.id}`}
-                              className="font-mono text-sm font-medium text-primary hover:underline"
-                            >
-                              {ticket.id}
-                            </Link>
-                          </td>
+                          <Link
+                            to={`/tickets/${ticket.id}`}
+                            className="font-mono text-sm font-medium text-primary hover:underline"
+                          >
+                            {formatShortId(ticket.id)}
+                          </Link>
+                        </td>
                           <td className="text-sm">{ticket.namaLengkap}</td>
                           <td className="text-sm">{FEE_PRICING[ticket.feeCategory].label}</td>
                           <td className="text-sm text-muted-foreground">
@@ -266,11 +239,6 @@ export default function GateMonitorPage() {
                           </td>
                           <td className="text-sm text-muted-foreground">
                             {ticket.exitedAt && formatDateTime(ticket.exitedAt)}
-                          </td>
-                          <td>
-                            <Badge variant="outline" className="font-mono">
-                              {duration}
-                            </Badge>
                           </td>
                         </tr>
                       );
