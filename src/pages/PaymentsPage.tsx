@@ -155,7 +155,7 @@ export default function PaymentsPage() {
                     <td>
                       {invoice.refundFlag ? (
                         <Badge variant="outline" className="text-status-revision border-status-revision">
-                          Ada Pengembalian
+                          Pengembalian
                         </Badge>
                       ) : (
                         <span className="text-muted-foreground text-sm">-</span>

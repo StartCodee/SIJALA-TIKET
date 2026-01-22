@@ -68,7 +68,18 @@ const categoryData = financeReportSummary.breakdown.byCategory.map(c => ({
   count: c.count,
 }));
 
-const COLORS = ['#0D9488', '#14B8A6', '#5EEAD4', '#2DD4BF', '#99F6E4'];
+const COLORS = [
+  'hsl(213 70% 35%)',
+  'hsl(213 65% 45%)',
+  'hsl(213 60% 55%)',
+  'hsl(213 60% 65%)',
+  'hsl(213 70% 75%)',
+];
+
+const CHART_COLORS = {
+  total: 'hsl(var(--primary))',
+  realized: 'hsl(213 70% 52%)',
+};
 
 export default function OverviewPage() {
   const recentTickets = [...dummyTickets]
@@ -171,12 +182,12 @@ export default function OverviewPage() {
                   <AreaChart data={trendData}>
                     <defs>
                       <linearGradient id="colorTotal" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#0D9488" stopOpacity={0.3} />
-                        <stop offset="95%" stopColor="#0D9488" stopOpacity={0} />
+                        <stop offset="5%" stopColor={CHART_COLORS.total} stopOpacity={0.35} />
+                        <stop offset="95%" stopColor={CHART_COLORS.total} stopOpacity={0} />
                       </linearGradient>
                       <linearGradient id="colorRealized" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#14B8A6" stopOpacity={0.3} />
-                        <stop offset="95%" stopColor="#14B8A6" stopOpacity={0} />
+                        <stop offset="5%" stopColor={CHART_COLORS.realized} stopOpacity={0.35} />
+                        <stop offset="95%" stopColor={CHART_COLORS.realized} stopOpacity={0} />
                       </linearGradient>
                     </defs>
                     <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
@@ -202,7 +213,7 @@ export default function OverviewPage() {
                     <Area
                       type="monotone"
                       dataKey="total"
-                      stroke="#0D9488"
+                      stroke={CHART_COLORS.total}
                       strokeWidth={2}
                       fill="url(#colorTotal)"
                       name="Total"
@@ -210,7 +221,7 @@ export default function OverviewPage() {
                     <Area
                       type="monotone"
                       dataKey="realized"
-                      stroke="#14B8A6"
+                      stroke={CHART_COLORS.realized}
                       strokeWidth={2}
                       fill="url(#colorRealized)"
                       name="Terealisasi"
@@ -348,9 +359,6 @@ export default function OverviewPage() {
                       </div>
                       <div className="text-right">
                         <p className="text-sm font-semibold text-foreground">{formatRupiah(ticket.totalBiaya)}</p>
-                        <p className="text-xs text-muted-foreground mt-0.5">
-                          OCR: {ticket.ocrConfidence}%
-                        </p>
                       </div>
                       <Link to={`/tickets/${ticket.id}`}>
                         <Button size="sm" className="btn-ocean text-xs">
