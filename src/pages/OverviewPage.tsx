@@ -97,7 +97,7 @@ export default function OverviewPage() {
       
       <div className="flex-1 overflow-auto p-6">
         {/* KPI Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4 mb-6">
+        <div className="grid grid-cols- md:grid-cols-4 lg:grid-cols-3 gap-4 mb-6">
           <KPICard
             title="Menunggu Persetujuan"
             value={kpis.pendingApproval}
@@ -119,7 +119,7 @@ export default function OverviewPage() {
             variant="success"
             trend={{ value: 12, label: 'vs minggu lalu' }}
           />
-          <KPICard
+          {/* <KPICard
             title="Gerbang Masuk"
             value={kpis.gateMasuk}
             icon={DoorOpen}
@@ -131,7 +131,7 @@ export default function OverviewPage() {
             value={kpis.gateKeluar}
             icon={DoorClosed}
             variant="default"
-          />
+          /> */}
         </div>
 
         {/* Revenue KPIs */}

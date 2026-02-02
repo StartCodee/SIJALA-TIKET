@@ -15,6 +15,9 @@ import RefundCenterPage from "./pages/RefundCenterPage";
 import UserManagementPage from "./pages/UserManagementPage";
 import ActivityLogsPage from "./pages/ActivityLogsPage";
 import NotFound from "./pages/NotFound";
+import InvoiceDetailPage from "./pages/InvoiceDetailPage";
+import InvoiceListPage from "./pages/InvoiceListPage";
+import TicketDesignerPage from "./pages/TicketDesigner";
 
 const queryClient = new QueryClient();
 
@@ -27,6 +30,7 @@ const App = () => (
         <Routes>
           <Route path="/" element={<OverviewPage />} />
           <Route path="/tickets" element={<TicketListPage />} />
+          <Route path="/ticket-designer" element={<TicketDesignerPage />} />
           <Route path="/tickets/:ticketId" element={<TicketDetailPage />} />
           <Route path="/approval" element={<ApprovalQueuePage />} />
           <Route path="/payments" element={<PaymentsPage />} />
@@ -37,6 +41,8 @@ const App = () => (
           <Route path="/users" element={<UserManagementPage />} />
           <Route path="/logs" element={<ActivityLogsPage />} />
           <Route path="*" element={<NotFound />} />
+          <Route path="/invoices" element={<InvoiceListPage />} />
+          <Route path="/invoices/:invoiceId" element={<InvoiceDetailPage />} />
         </Routes>
       </BrowserRouter>
     </TooltipProvider>

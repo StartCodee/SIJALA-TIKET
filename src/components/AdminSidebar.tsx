@@ -18,14 +18,18 @@ import {
   X,
 } from 'lucide-react';
 import logoRajaAmpat from '@/assets/KKP-RajaAmpat.png';
+import motifSidebar from '@/assets/motif-sidebar.svg';
 
 const navItems = [
   { to: '/', icon: LayoutDashboard, label: 'Ringkasan' },
   { to: '/tickets', icon: Ticket, label: 'Daftar Tiket' },
+  { to: '/invoices', icon: CreditCard, label: 'Invoice' },
+
   { to: '/approval', icon: ClipboardCheck, label: 'Antrian Persetujuan' },
   { to: '/payments', icon: CreditCard, label: 'Pembayaran' },
   { to: '/tarif', icon: Tag, label: 'Tarif Layanan' },
-  { to: '/gate', icon: DoorOpen, label: 'Monitor Gerbang' },
+  { to: '/ticket-designer', icon: Tag, label: 'Tampilan Tiket' },
+  // { to: '/gate', icon: DoorOpen, label: 'Monitor Gerbang' },
   { to: '/reports', icon: BarChart3, label: 'Laporan Keuangan' },
   { to: '/refunds', icon: RotateCcw, label: 'Pengembalian Dana' },
 ];
@@ -72,7 +76,7 @@ export function AdminSidebar({ className, mobileOpen = false, onMobileClose }: A
       />
       <aside
         className={cn(
-          'flex flex-col h-screen bg-sidebar border-r border-sidebar-border transition-[width,transform] duration-300',
+          'flex flex-col relative h-screen bg-sidebar border-r border-sidebar-border transition-[width,transform] duration-300',
           'fixed inset-y-0 left-0 z-50 shadow-2xl md:static md:z-auto md:shadow-none',
           'w-[82vw] max-w-[320px] md:w-[260px]',
           isCollapsed && 'md:w-[72px]',
@@ -81,6 +85,23 @@ export function AdminSidebar({ className, mobileOpen = false, onMobileClose }: A
         )}
         style={{ background: 'var(--gradient-sidebar)' }}
       >
+
+
+        {/* Tribal motif kanan bawah */}
+<img
+  src={motifSidebar}
+  alt=""
+  aria-hidden="true"
+  className={cn(
+    'pointer-events-none select-none absolute bottom-0 left-0',
+    'opacity-100 w-[10px] md:w-[140px]',
+    isCollapsed && 'md:w-[140px]'
+  )}
+/>
+
+
+
+
         {/* Logo Section */}
         <div className="flex items-center gap-3 p-4 border-b border-sidebar-border">
           <div className={cn('flex items-center gap-3 flex-1 min-w-0', isCollapsed && 'md:justify-center md:gap-0')}>

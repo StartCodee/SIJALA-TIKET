@@ -12,7 +12,6 @@ import {
   formatRupiah,
   formatShortId,
   FEE_PRICING,
-  BOOKING_TYPE_LABELS,
   DOMISILI_LABELS,
   type Ticket,
 } from '@/data/dummyData';
@@ -23,8 +22,8 @@ import {
   Eye,
   ChevronDown,
   ChevronUp,
-  Users,
   User,
+  FileText,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -47,6 +46,10 @@ export default function TicketListPage() {
   const [showFilters, setShowFilters] = useState(true);
   const [sortField, setSortField] = useState<keyof Ticket>('createdAt');
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
+
+  const isGroupInvoice = (ticket: Ticket) => ticket.bookingType === 'group';
+  const getDisplayTotalBiaya = (ticket: Ticket) =>
+    isGroupInvoice(ticket) ? ticket.hargaPerOrang : ticket.totalBiaya;
 
   // Filter tickets
   const filteredTickets = dummyTickets.filter((ticket) => {
@@ -88,10 +91,11 @@ export default function TicketListPage() {
       <ChevronDown className="w-3.5 h-3.5" />
     );
   };
+
   return (
     <AdminLayout>
-      <AdminHeader 
-        title="Daftar Tiket" 
+      <AdminHeader
+        title="Daftar Tiket"
         subtitle="Data master semua tiket biaya konservasi"
         showSearch={false}
       />
@@ -108,6 +112,7 @@ export default function TicketListPage() {
               className="pl-9 bg-card"
             />
           </div>
+
           <Button
             variant="outline"
             size="sm"
@@ -116,8 +121,13 @@ export default function TicketListPage() {
           >
             <Filter className="w-4 h-4" />
             Filter
-            {showFilters ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+            {showFilters ? (
+              <ChevronUp className="w-3.5 h-3.5" />
+            ) : (
+              <ChevronDown className="w-3.5 h-3.5" />
+            )}
           </Button>
+
           <Button variant="outline" size="sm" className="gap-2">
             <Download className="w-4 h-4" />
             Ekspor
@@ -145,6 +155,7 @@ export default function TicketListPage() {
                     </SelectContent>
                   </Select>
                 </div>
+
                 <div>
                   <label className="text-xs font-medium text-muted-foreground mb-1.5 block">
                     Status Pembayaran
@@ -162,6 +173,7 @@ export default function TicketListPage() {
                     </SelectContent>
                   </Select>
                 </div>
+
                 <div>
                   <label className="text-xs font-medium text-muted-foreground mb-1.5 block">
                     Status Gerbang
@@ -178,6 +190,7 @@ export default function TicketListPage() {
                     </SelectContent>
                   </Select>
                 </div>
+
                 <div>
                   <label className="text-xs font-medium text-muted-foreground mb-1.5 block">
                     Kategori Biaya
@@ -196,6 +209,7 @@ export default function TicketListPage() {
                     </SelectContent>
                   </Select>
                 </div>
+
                 <div className="flex items-end">
                   <Button
                     variant="ghost"
@@ -230,7 +244,7 @@ export default function TicketListPage() {
             <table className="data-table">
               <thead>
                 <tr>
-                  <th 
+                  <th
                     className="cursor-pointer hover:bg-muted/70 transition-colors"
                     onClick={() => handleSort('id')}
                   >
@@ -241,63 +255,84 @@ export default function TicketListPage() {
                   <th>Tipe</th>
                   <th>Domisili</th>
                   <th className="text-right">Total Biaya</th>
-                  <th>Persetujuan</th>
+                  {/* <th>Persetujuan</th> */}
                   <th>Pembayaran</th>
-                  <th>Gerbang</th>
+                  {/* <th>Gerbang</th> */}
                   <th>Realisasi</th>
                   <th className="text-center">Aksi</th>
                 </tr>
               </thead>
+
               <tbody>
-                {sortedTickets.map((ticket) => (
-                  <tr key={ticket.id} className="group">
-                    <td className="whitespace-nowrap">
-                      <Link 
-                        to={`/tickets/${ticket.id}`}
-                        className="font-mono text-sm font-medium text-primary hover:underline whitespace-nowrap"
-                      >
-                        {formatShortId(ticket.id)}
-                      </Link>
-                    </td>
-                    <td>
-                      <div className="flex items-center gap-1.5">
-                        {ticket.bookingType === 'group' ? (
-                          <Users className="w-3.5 h-3.5 text-muted-foreground" />
-                        ) : (
-                          <User className="w-3.5 h-3.5 text-muted-foreground" />
-                        )}
-                        <span className="text-sm">{BOOKING_TYPE_LABELS[ticket.bookingType]}</span>
-                      </div>
-                    </td>
-                    <td>
-                      <span className="text-sm">{DOMISILI_LABELS[ticket.domisiliOCR]}</span>
-                    </td>
-                    <td className="text-right">
-                      <span className="font-medium text-sm">{formatRupiah(ticket.totalBiaya)}</span>
-                    </td>
-                    <td>
-                      <ApprovalStatusChip status={ticket.approvalStatus} />
-                    </td>
-                    <td>
-                      <PaymentStatusChip status={ticket.paymentStatus} />
-                    </td>
-                    <td>
-                      <GateStatusChip status={ticket.gateStatus} />
-                    </td>
-                    <td>
-                      <RealisasiStatusChip status={ticket.realisasiStatus} />
-                    </td>
-                    <td>
-                      <div className="flex items-center justify-center gap-1">
-                        <Link to={`/tickets/${ticket.id}`}>
-                          <Button variant="ghost" size="icon" className="h-8 w-8">
-                            <Eye className="w-4 h-4" />
-                          </Button>
+                {sortedTickets.map((ticket) => {
+                  const groupInvoice = isGroupInvoice(ticket);
+                  const displayTotal = getDisplayTotalBiaya(ticket);
+
+                  return (
+                    <tr key={ticket.id} className="group">
+                      <td className="whitespace-nowrap">
+                        <Link
+                          to={`/tickets/${ticket.id}`}
+                          className="font-mono text-sm font-medium text-primary hover:underline whitespace-nowrap"
+                        >
+                          {formatShortId(ticket.id)}
                         </Link>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
+                      </td>
+
+                      <td>
+                        <div className="flex items-center gap-2">
+                          <User className="w-3.5 h-3.5 text-muted-foreground" />
+                          <span className="text-sm">Perorangan</span>
+                          {groupInvoice && (
+                            <span className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground">
+                              Invoice Grup
+                            </span>
+                          )}
+                        </div>
+                      </td>
+
+                      <td>
+                        <span className="text-sm">{DOMISILI_LABELS[ticket.domisiliOCR]}</span>
+                      </td>
+
+                      <td className="text-right">
+                        <span className="font-medium text-sm">{formatRupiah(displayTotal)}</span>
+                        {groupInvoice && (
+                          <span className="block text-[10px] text-muted-foreground">per orang</span>
+                        )}
+                      </td>
+
+                      {/* <td>
+                        <ApprovalStatusChip status={ticket.approvalStatus} />
+                      </td> */}
+                      <td>
+                        <PaymentStatusChip status={ticket.paymentStatus} />
+                      </td>
+                      {/* <td>
+                        <GateStatusChip status={ticket.gateStatus} />
+                      </td> */}
+                      <td>
+                        <RealisasiStatusChip status={ticket.realisasiStatus} />
+                      </td>
+
+                      <td>
+                        <div className="flex items-center justify-center gap-1">
+                          <Link to={`/tickets/${ticket.id}`}>
+                            <Button variant="ghost" size="icon" className="h-8 w-8">
+                              <Eye className="w-4 h-4" />
+                            </Button>
+                          </Link>
+
+                          <Link to={`/invoices/${ticket.id}`}>
+                            <Button variant="ghost" size="icon" className="h-8 w-8">
+                              <FileText className="w-4 h-4" />
+                            </Button>
+                          </Link>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>

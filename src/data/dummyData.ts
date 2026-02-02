@@ -708,39 +708,44 @@ export const dummyAuditLogs: AuditLog[] = [
 ];
 
 // Dummy Invoices
+// Dummy Invoices
 export const dummyInvoices: Invoice[] = [
+  // ✅ GROUP INVOICE: 1 invoice bayar banyak tiket perorangan
   {
     id: 'INV-2024-001',
     ticketId: 'RA-2024-002',
     amount: 500000,
-    method: 'bank_transfer',
+    method: 'qris',
     paidAt: '2024-01-16T14:00:00',
     paymentStatus: 'sudah_bayar',
     realisasiStatus: 'sudah_terealisasi',
     refundFlag: false,
   },
   {
-    id: 'INV-2024-002',
-    ticketId: 'RA-2024-003',
-    amount: 4500000,
-    method: 'credit_card',
-    paidAt: '2024-01-16T20:00:00',
-    paymentStatus: 'refund_diproses',
-    realisasiStatus: 'sudah_terealisasi',
-    refundFlag: true,
-  },
-  {
-    id: 'INV-2024-003',
+    id: 'INV-2024-001',
     ticketId: 'RA-2024-004',
     amount: 1000000,
     method: 'qris',
-    paidAt: '2024-01-15T11:00:00',
+    paidAt: '2024-01-16T14:00:00',
     paymentStatus: 'sudah_bayar',
     realisasiStatus: 'sudah_terealisasi',
     refundFlag: false,
   },
   {
-    id: 'INV-2024-004',
+    id: 'INV-2024-001',
+    ticketId: 'RA-2024-011',
+    amount: 150000,
+    method: 'qris',
+    paidAt: '2024-01-16T14:00:00',
+    paymentStatus: 'sudah_bayar',
+    realisasiStatus: 'sudah_terealisasi',
+    refundFlag: false,
+  },
+
+  
+  // ✅ PERORANGAN INVOICE: 1 invoice = 1 tiket (contoh peneliti)
+  {
+    id: 'INV-2024-003',
     ticketId: 'RA-2024-006',
     amount: 1000000,
     method: 'bank_transfer',
@@ -749,28 +754,10 @@ export const dummyInvoices: Invoice[] = [
     realisasiStatus: 'sudah_terealisasi',
     refundFlag: false,
   },
+
+  // ✅ PERORANGAN INVOICE: tiket bookingType group tapi invoicenya single (tetap perorangan invoice)
   {
-    id: 'INV-2024-005',
-    ticketId: 'RA-2024-009',
-    amount: 2000000,
-    method: 'e_wallet',
-    paidAt: '2024-01-18T12:00:00',
-    paymentStatus: 'refund_selesai',
-    realisasiStatus: 'sudah_terealisasi',
-    refundFlag: true,
-  },
-  {
-    id: 'INV-2024-006',
-    ticketId: 'RA-2024-011',
-    amount: 150000,
-    method: 'qris',
-    paidAt: '2024-01-12T10:00:00',
-    paymentStatus: 'sudah_bayar',
-    realisasiStatus: 'sudah_terealisasi',
-    refundFlag: false,
-  },
-  {
-    id: 'INV-2024-007',
+    id: 'INV-2024-004',
     ticketId: 'RA-2024-012',
     amount: 12000000,
     method: 'credit_card',
@@ -779,7 +766,71 @@ export const dummyInvoices: Invoice[] = [
     realisasiStatus: 'sudah_terealisasi',
     refundFlag: false,
   },
+
+  // ✅ GROUP INVOICE: dibuat tapi belum bayar (banyak tiket)
+  {
+    id: 'INV-2024-005',
+    ticketId: 'RA-2024-001',
+    amount: 150000,
+    method: 'bank_transfer',
+    paymentStatus: 'belum_bayar',
+    realisasiStatus: 'belum_terealisasi',
+    refundFlag: false,
+  },
+  {
+    id: 'INV-2024-005',
+    ticketId: 'RA-2024-005',
+    amount: 500000,
+    method: 'bank_transfer',
+    paymentStatus: 'belum_bayar',
+    realisasiStatus: 'belum_terealisasi',
+    refundFlag: false,
+  },
+
+  // ✅ PERORANGAN INVOICE: mooring (unpaid)
+  {
+    id: 'INV-2024-006',
+    ticketId: 'RA-2024-010',
+    amount: 75000000,
+    method: 'bank_transfer',
+    paymentStatus: 'belum_bayar',
+    realisasiStatus: 'belum_terealisasi',
+    refundFlag: false,
+  },
 ];
+
+// ===== Helpers untuk multi-ticket invoice (GROUPING by invoice.id) =====
+
+export const groupInvoiceLinesById = (lines: Invoice[]) =>
+  lines.reduce((acc, line) => {
+    (acc[line.id] ||= []).push(line);
+    return acc;
+  }, {} as Record<string, Invoice[]>);
+
+export const getInvoiceLinesById = (invoiceId: string): Invoice[] =>
+  dummyInvoices.filter((inv) => inv.id === invoiceId);
+
+export const getInvoiceIdByTicketId = (ticketId: string): string | undefined =>
+  dummyInvoices.find((inv) => inv.ticketId === ticketId)?.id;
+
+// Map cepat: ticketId -> invoiceId
+export const invoiceIdByTicketId: Record<string, string> = dummyInvoices.reduce((acc, inv) => {
+  acc[inv.ticketId] = inv.id;
+  return acc;
+}, {} as Record<string, string>);
+
+export const getInvoiceIdForTicket = (ticketId: string): string | undefined => {
+  return invoiceIdByTicketId[ticketId];
+};
+
+export const getInvoiceLinesByInvoiceId = (invoiceId: string): Invoice[] => {
+  return dummyInvoices.filter((inv) => inv.id === invoiceId);
+};
+
+export const getTicketIdsByInvoiceId = (invoiceId: string): string[] => {
+  return getInvoiceLinesByInvoiceId(invoiceId).map((inv) => inv.ticketId);
+};
+
 
 // Finance Report Summary
 export const financeReportSummary = {

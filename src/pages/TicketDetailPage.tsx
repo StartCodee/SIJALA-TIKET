@@ -15,7 +15,6 @@ import {
   formatDateTime,
   formatShortId,
   FEE_PRICING,
-  BOOKING_TYPE_LABELS,
   DOMISILI_LABELS,
   REFUND_TYPE_LABELS,
 } from '@/data/dummyData';
@@ -29,6 +28,7 @@ import {
   QrCode,
   CreditCard,
   AlertTriangle,
+  FileText,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -63,6 +63,13 @@ export default function TicketDetailPage() {
     );
   }
 
+  const isGroupInvoice = ticket.bookingType === 'group';
+  const pesertaTotal =
+    (ticket.jumlahDomestik || 0) + (ticket.jumlahMancanegara || 0);
+
+  // Revisi #1: tampilan tiket jadi perorangan
+  const displayTotalBiaya = isGroupInvoice ? ticket.hargaPerOrang : ticket.totalBiaya;
+
   return (
     <AdminLayout>
       <AdminHeader
@@ -76,12 +83,20 @@ export default function TicketDetailPage() {
         {/* Back Button & Actions */}
         <div className="flex items-center justify-between mb-6">
           <Link to="/tickets">
-              <Button variant="ghost" className="gap-2">
-                <ArrowLeft className="w-4 h-4" />
-                Kembali
-              </Button>
+            <Button variant="ghost" className="gap-2">
+              <ArrowLeft className="w-4 h-4" />
+              Kembali
+            </Button>
           </Link>
+
           <div className="flex items-center gap-2">
+            <Link to={`/invoices/${ticket.id}`}>
+              <Button variant="outline" className="gap-2">
+                <FileText className="w-4 h-4" />
+                Invoice
+              </Button>
+            </Link>
+
             {ticket.needsApproval && ticket.approvalStatus === 'menunggu' && (
               <>
                 <Button className="gap-2 bg-status-approved hover:bg-status-approved/90 text-white">
@@ -94,6 +109,7 @@ export default function TicketDetailPage() {
                 </Button>
               </>
             )}
+
             {ticket.paymentStatus === 'sudah_bayar' && ticket.gateStatus === 'belum_masuk' && (
               <Button variant="outline" className="gap-2">
                 <RotateCcw className="w-4 h-4" />
@@ -133,11 +149,19 @@ export default function TicketDetailPage() {
                     <p className="text-xs text-muted-foreground mb-1">No. HP</p>
                     <p className="text-sm font-medium">{ticket.noHP}</p>
                   </div>
+
+                  {/* Revisi #1: selalu Perorangan */}
                   <div>
                     <p className="text-xs text-muted-foreground mb-1">Tipe Pemesanan</p>
-                    <p className="text-sm font-medium">{BOOKING_TYPE_LABELS[ticket.bookingType]}</p>
+                    <p className="text-sm font-medium">Perorangan</p>
+                    {isGroupInvoice && (
+                      <Badge variant="secondary" className="mt-1">
+                        Invoice Grup
+                      </Badge>
+                    )}
                   </div>
                 </div>
+
                 {ticket.approvedBy && (
                   <div className="mt-4 pt-4 border-t border-border">
                     <p className="text-xs text-muted-foreground mb-1">Disetujui Oleh</p>
@@ -148,6 +172,7 @@ export default function TicketDetailPage() {
                 )}
               </CardContent>
             </Card>
+
             {/* Dokumen KTP */}
             <Card className="card-ocean">
               <CardHeader className="pb-3">
@@ -211,28 +236,31 @@ export default function TicketDetailPage() {
                     <span className="text-muted-foreground">Kategori</span>
                     <span className="font-medium">{FEE_PRICING[ticket.feeCategory].label}</span>
                   </div>
+
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">Harga/orang</span>
                     <span>{formatRupiah(ticket.hargaPerOrang)}</span>
                   </div>
-                  {ticket.bookingType === 'group' && (
-                    <>
-                      <Separator />
-                      <div className="flex justify-between text-sm">
-                        <span className="text-muted-foreground">Jumlah Domestik</span>
-                        <span>{ticket.jumlahDomestik || 0} orang</span>
-                      </div>
-                      <div className="flex justify-between text-sm">
-                        <span className="text-muted-foreground">Jumlah Mancanegara</span>
-                        <span>{ticket.jumlahMancanegara || 0} orang</span>
-                      </div>
-                    </>
-                  )}
+
                   <Separator />
+
                   <div className="flex justify-between">
-                    <span className="font-semibold">Total</span>
-                    <span className="text-xl font-bold text-primary">{formatRupiah(ticket.totalBiaya)}</span>
+                    <span className="font-semibold">
+                      {isGroupInvoice ? 'Total (per orang)' : 'Total'}
+                    </span>
+                    <span className="text-xl font-bold text-primary">
+                      {formatRupiah(displayTotalBiaya)}
+                    </span>
                   </div>
+
+                  {isGroupInvoice && (
+                    <p className="text-xs text-muted-foreground">
+                      Invoice grup: {pesertaTotal || 0} orang • Total invoice grup:{' '}
+                      <span className="font-medium text-foreground">
+                        {formatRupiah(ticket.totalBiaya)}
+                      </span>
+                    </p>
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -254,7 +282,10 @@ export default function TicketDetailPage() {
                     )}
                   >
                     <QrCode
-                      className={cn('w-20 h-20', ticket.qrActive ? 'text-foreground' : 'text-muted-foreground/30')}
+                      className={cn(
+                        'w-20 h-20',
+                        ticket.qrActive ? 'text-foreground' : 'text-muted-foreground/30'
+                      )}
                     />
                   </div>
                   <Badge variant={ticket.qrActive ? 'default' : 'secondary'} className="mb-2">
