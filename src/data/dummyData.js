@@ -1,124 +1,4 @@
 // Dummy data for Raja Ampat Conservation Fee Ticketing Admin Dashboard
-
- 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 // Fee pricing constants
 export const FEE_PRICING = {
   wisatawan_domestik_pbd: { label: 'Wisatawan Domestik (Papua Barat Daya)', price: 150000, needsApproval: false },
@@ -142,6 +22,19 @@ export const BOOKING_TYPE_LABELS = {
   group: 'Grup',
 };
 
+export const GENDER_LABELS = {
+  L: 'Laki-laki',
+  P: 'Perempuan',
+  U: 'Tidak diketahui',
+};
+
+export const OPERATOR_TYPE_LABELS = {
+  loket: 'Loket',
+  qris: 'QRIS',
+  transfer: 'Transfer',
+  doku: 'Doku',
+};
+
 export const REFUND_TYPE_LABELS = {
   full: 'Penuh',
   partial: 'Parsial',
@@ -160,6 +53,9 @@ export const dummyTickets = [
     bookingType: 'perorangan',
     feeCategory: 'wisatawan_domestik_pbd',
     domisiliOCR: 'pbd',
+    countryOCR: 'Indonesia',
+    genderOCR: 'L',
+    operatorType: 'loket',
     ocrConfidence: 95,
     namaLengkap: 'Budi Santoso',
     email: 'budi@gmail.com',
@@ -182,6 +78,9 @@ export const dummyTickets = [
     bookingType: 'perorangan',
     feeCategory: 'wisatawan_domestik_luar_papua',
     domisiliOCR: 'papua_luar_pbd',
+    countryOCR: 'Indonesia',
+    genderOCR: 'P',
+    operatorType: 'qris',
     ocrConfidence: 88,
     namaLengkap: 'Siti Rahayu',
     email: 'siti@gmail.com',
@@ -205,6 +104,9 @@ export const dummyTickets = [
     bookingType: 'group',
     feeCategory: 'wisatawan_domestik_luar_papua',
     domisiliOCR: 'papua_luar_pbd',
+    countryOCR: 'Indonesia',
+    genderOCR: 'L',
+    operatorType: 'transfer',
     ocrConfidence: 92,
     namaLengkap: 'Ahmad Wijaya',
     email: 'ahmad@gmail.com',
@@ -231,6 +133,9 @@ export const dummyTickets = [
     bookingType: 'perorangan',
     feeCategory: 'wisatawan_mancanegara',
     domisiliOCR: 'mancanegara',
+    countryOCR: 'Australia',
+    genderOCR: 'L',
+    operatorType: 'doku',
     ocrConfidence: 99,
     namaLengkap: 'John Smith',
     email: 'john@email.com',
@@ -256,6 +161,9 @@ export const dummyTickets = [
     bookingType: 'perorangan',
     feeCategory: 'peneliti_domestik',
     domisiliOCR: 'papua_luar_pbd',
+    countryOCR: 'Indonesia',
+    genderOCR: 'P',
+    operatorType: 'loket',
     ocrConfidence: 87,
     namaLengkap: 'Dr. Maria Putri',
     email: 'maria.putri@univ.ac.id',
@@ -278,6 +186,9 @@ export const dummyTickets = [
     bookingType: 'perorangan',
     feeCategory: 'peneliti_mancanegara',
     domisiliOCR: 'mancanegara',
+    countryOCR: 'United Kingdom',
+    genderOCR: 'L',
+    operatorType: 'doku',
     ocrConfidence: 96,
     namaLengkap: 'Dr. James Wilson',
     email: 'jwilson@oxford.edu',
@@ -304,6 +215,9 @@ export const dummyTickets = [
     bookingType: 'perorangan',
     feeCategory: 'mooring',
     domisiliOCR: 'papua_luar_pbd',
+    countryOCR: 'Indonesia',
+    genderOCR: 'U',
+    operatorType: 'transfer',
     ocrConfidence: 91,
     namaLengkap: 'PT. Phinisi Jaya',
     email: 'info@phinisijaya.com',
@@ -329,6 +243,9 @@ export const dummyTickets = [
     bookingType: 'perorangan',
     feeCategory: 'sport_fishing',
     domisiliOCR: 'papua_luar_pbd',
+    countryOCR: 'Indonesia',
+    genderOCR: 'U',
+    operatorType: 'transfer',
     ocrConfidence: 89,
     namaLengkap: 'Klub Memancing Indonesia',
     email: 'club@fishingindo.com',
@@ -352,6 +269,9 @@ export const dummyTickets = [
     bookingType: 'group',
     feeCategory: 'wisatawan_domestik_papua',
     domisiliOCR: 'papua_luar_pbd',
+    countryOCR: 'Indonesia',
+    genderOCR: 'L',
+    operatorType: 'qris',
     ocrConfidence: 94,
     namaLengkap: 'Kelompok Wisata Papua',
     email: 'kwp@gmail.com',
@@ -378,6 +298,9 @@ export const dummyTickets = [
     bookingType: 'perorangan',
     feeCategory: 'mooring',
     domisiliOCR: 'mancanegara',
+    countryOCR: 'Netherlands',
+    genderOCR: 'U',
+    operatorType: 'doku',
     ocrConfidence: 97,
     namaLengkap: 'Kapal Coral Explorer',
     email: 'charter@coralexplorer.com',
@@ -400,6 +323,9 @@ export const dummyTickets = [
     bookingType: 'perorangan',
     feeCategory: 'wisatawan_domestik_pbd',
     domisiliOCR: 'pbd',
+    countryOCR: 'Indonesia',
+    genderOCR: 'L',
+    operatorType: 'qris',
     ocrConfidence: 93,
     namaLengkap: 'Yohanes Wambrauw',
     email: 'yohanes@gmail.com',
@@ -425,6 +351,9 @@ export const dummyTickets = [
     bookingType: 'group',
     feeCategory: 'wisatawan_mancanegara',
     domisiliOCR: 'mancanegara',
+    countryOCR: 'Germany',
+    genderOCR: 'U',
+    operatorType: 'doku',
     ocrConfidence: 98,
     namaLengkap: 'Kelompok Penyelam Eropa',
     email: 'tour@eudivers.eu',
@@ -450,6 +379,9 @@ export const dummyTickets = [
     bookingType: 'perorangan',
     feeCategory: 'peneliti_mancanegara',
     domisiliOCR: 'mancanegara',
+    countryOCR: 'France',
+    genderOCR: 'P',
+    operatorType: 'doku',
     ocrConfidence: 90,
     namaLengkap: 'Dr. Lina Kartika',
     email: 'lina.kartika@univ.ac.id',

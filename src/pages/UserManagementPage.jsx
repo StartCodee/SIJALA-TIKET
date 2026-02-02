@@ -51,7 +51,7 @@ export default function UserManagementPage() {
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
   const [permissions, setPermissions] = useState([
-    { perm: 'Lihat Dasbor', admin: true, finance: true, approver: true },
+    { perm: 'Lihat Dashboard', admin: true, finance: true, approver: true },
     { perm: 'Lihat Tiket', admin: true, finance: true, approver: true },
     { perm: 'Setujui/Tolak Tiket', admin: true, finance: false, approver: true },
     { perm: 'Proses Pengembalian Dana', admin: true, finance: true, approver: false },

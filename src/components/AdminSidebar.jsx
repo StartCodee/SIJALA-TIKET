@@ -18,7 +18,8 @@ import {
   LogOut,
   X,
 } from 'lucide-react';
-import logoRajaAmpat from '@/assets/KKP-RajaAmpat.png';
+import logoRajaAmpat from '@/assets/image/KKP-RajaAmpat.png';
+import tribbleImage from '@/assets/image/tribble.png';
 
 const navItems = [
   { to: '/', icon: LayoutDashboard, label: 'Ringkasan' },
@@ -73,7 +74,7 @@ export function AdminSidebar({ className, mobileOpen = false, onMobileClose }) {
       )
       , React.createElement('aside', {
         className: cn(
-          'flex flex-col h-screen bg-sidebar border-r border-sidebar-border transition-[width,transform] duration-300',
+          'relative flex flex-col h-screen bg-sidebar border-r border-sidebar-border transition-[width,transform] duration-300',
           'fixed inset-y-0 left-0 z-50 shadow-2xl md:static md:z-auto md:shadow-none',
           'w-[82vw] max-w-[320px] md:w-[260px]',
           isCollapsed && 'md:w-[72px]',
@@ -89,7 +90,7 @@ export function AdminSidebar({ className, mobileOpen = false, onMobileClose }) {
               className: cn(
                 'rounded-xl bg-white/95 ring-1 ring-white/25 p-1 shadow-sm',
                 'h-12 w-12 md:h-12 md:w-12',
-                isCollapsed && 'md:h-10 md:w-10'
+                isCollapsed && 'md:h-10 md:w-10 md:p-1'
               ), __self: this, __source: {fileName: _jsxFileName, lineNumber: 87}}
 
               , React.createElement('img', {
@@ -115,8 +116,15 @@ export function AdminSidebar({ className, mobileOpen = false, onMobileClose }) {
           )
         )
 
+        , React.createElement('img', {
+          src: tribbleImage,
+          alt: "Tribble",
+          className: "pointer-events-none absolute bottom-[-5px] w-[150px]" ,
+          __self: this, __source: {fileName: _jsxFileName, lineNumber: 117}}
+        )
+
         /* Navigation */
-        , React.createElement('nav', { className: "flex-1 overflow-y-auto custom-scrollbar py-4 px-0"    , __self: this, __source: {fileName: _jsxFileName, lineNumber: 118}}
+        , React.createElement('nav', { className: "relative z-10 flex-1 overflow-y-auto custom-scrollbar py-4 px-0"    , __self: this, __source: {fileName: _jsxFileName, lineNumber: 118}}
           /* Main Nav */
           , React.createElement('div', { className: "space-y-1", __self: this, __source: {fileName: _jsxFileName, lineNumber: 120}}
             , !isCollapsed && (
@@ -182,53 +190,22 @@ export function AdminSidebar({ className, mobileOpen = false, onMobileClose }) {
           )
         )
 
-        /* User Section */
+        /* Logout Section */
         , React.createElement('div', { className: cn(
-          'p-4 border-t border-sidebar-border',
+          'relative p-4 border-t border-sidebar-border',
           isCollapsed && 'md:flex md:justify-center'
         ), __self: this, __source: {fileName: _jsxFileName, lineNumber: 185}}
-          , !isCollapsed ? (
-            React.createElement('div', { className: "flex items-center gap-2"  , __self: this, __source: {fileName: _jsxFileName, lineNumber: 190}}
-              , React.createElement(NavLink, {
-                to: "/profile",
-                className: ({ isActive }) => cn(
-                  'flex flex-1 items-center gap-3 rounded-lg p-2 transition-colors',
-                  isActive
-                    ? 'bg-sidebar-primary/15 text-sidebar-primary'
-                    : 'text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-foreground'
-                ),
-                'aria-label': "Buka profil" ,
-                onClick: handleMobileClose, __self: this, __source: {fileName: _jsxFileName, lineNumber: 191}}
+          , React.createElement('button', {
+            type: "button",
+            className: cn(
+              'relative z-10 flex w-full items-center gap-3 rounded-xl bg-white px-4 py-2.5 text-[#E53935] shadow-sm transition-colors hover:bg-white/90',
+              isCollapsed && 'justify-center px-2'
+            ),
+            onClick: handleMobileClose,
+            'aria-label': "Logout", __self: this, __source: {fileName: _jsxFileName, lineNumber: 198}}
 
-                , React.createElement('div', { className: "w-9 h-9 rounded-full bg-sidebar-primary/20 flex items-center justify-center"      , __self: this, __source: {fileName: _jsxFileName, lineNumber: 202}}
-                  , React.createElement('span', { className: "text-sm font-semibold text-sidebar-primary"  , __self: this, __source: {fileName: _jsxFileName, lineNumber: 203}}, "RH")
-                )
-                , React.createElement('div', { className: "flex-1 min-w-0" , __self: this, __source: {fileName: _jsxFileName, lineNumber: 205}}
-                  , React.createElement('p', { className: "text-sm font-medium truncate"  , __self: this, __source: {fileName: _jsxFileName, lineNumber: 206}}, "Rudi Hartono" )
-                  , React.createElement('p', { className: "text-[10px] text-sidebar-foreground/60" , __self: this, __source: {fileName: _jsxFileName, lineNumber: 207}}, "Admin")
-                )
-              )
-              , React.createElement('button', { className: "p-1.5 rounded-lg hover:bg-sidebar-accent transition-colors"   , __self: this, __source: {fileName: _jsxFileName, lineNumber: 210}}
-                , React.createElement(LogOut, { className: "w-4 h-4 text-sidebar-foreground/60"  , __self: this, __source: {fileName: _jsxFileName, lineNumber: 211}} )
-              )
-            )
-          ) : (
-              React.createElement(NavLink, {
-                to: "/profile",
-                className: ({ isActive }) => cn(
-                  'flex items-center justify-center rounded-lg p-2 transition-colors',
-                  isActive
-                    ? 'bg-sidebar-primary/15 text-sidebar-primary'
-                    : 'text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-foreground'
-                ),
-                'aria-label': "Buka profil" ,
-                title: "Profil Akun" ,
-                onClick: handleMobileClose, __self: this, __source: {fileName: _jsxFileName, lineNumber: 215}}
-
-              , React.createElement('div', { className: "w-9 h-9 rounded-full bg-sidebar-primary/20 flex items-center justify-center"      , __self: this, __source: {fileName: _jsxFileName, lineNumber: 227}}
-                , React.createElement('span', { className: "text-sm font-semibold text-sidebar-primary"  , __self: this, __source: {fileName: _jsxFileName, lineNumber: 228}}, "RH")
-              )
-            )
+            , React.createElement(LogOut, { className: "w-4 h-4"  , __self: this, __source: {fileName: _jsxFileName, lineNumber: 205}} )
+            , !isCollapsed && React.createElement('span', { className: "text-sm font-medium" , __self: this, __source: {fileName: _jsxFileName, lineNumber: 206}}, "Logout")
           )
         )
       )

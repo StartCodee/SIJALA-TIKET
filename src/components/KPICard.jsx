@@ -74,7 +74,7 @@ export function KPICard({
   return (
     React.createElement('div', { className: cn('kpi-card group', className), __self: this, __source: {fileName: _jsxFileName, lineNumber: 74}}
       , React.createElement('div', { className: "flex items-center justify-between gap-3"   , __self: this, __source: {fileName: _jsxFileName, lineNumber: 75}}
-        , React.createElement('p', { className: "text-sm font-medium text-muted-foreground truncate"   , __self: this, __source: {fileName: _jsxFileName, lineNumber: 76}}
+        , React.createElement('p', { className: "text-sm font-medium text-muted-foreground leading-snug break-words"   , __self: this, __source: {fileName: _jsxFileName, lineNumber: 76}}
           , title
         )
         , React.createElement('div', {
