@@ -20,7 +20,7 @@ import { Search, Filter, Download, ChevronDown, ChevronUp, Eye, Printer } from '
 
 import { dummyInvoices, formatDateTime, formatRupiah } from '@/data/dummyData';
 import { buildInvoicesFromLines } from '@/features/invoices/invoiceUtils';
-import { exportCSV } from '@/lib/exporters';
+import { exportExcel } from '@/lib/exporters';
 import { getUserRole, isAdministrator } from '@/lib/rbac';
 import { PaymentStatusChip } from '@/components/StatusChip';
 
@@ -69,7 +69,7 @@ export default function InvoiceListPage() {
   const handleExport = () => {
     if (!canExport) return;
 
-    exportCSV(
+    exportExcel(
       filtered.map((i) => ({
         invoice_id: i.invoiceId,
         invoice_no: i.invoiceNo,
@@ -83,7 +83,8 @@ export default function InvoiceListPage() {
         refund_flag: i.refundFlag ? 'yes' : 'no',
         total: i.grandTotal,
       })),
-      `invoice_export_${new Date().toISOString().slice(0, 10)}.csv`
+      `invoice_export_${new Date().toISOString().slice(0, 10)}.xlsx`,
+      { sheetName: 'Invoices' }
     );
   };
 
@@ -119,10 +120,10 @@ export default function InvoiceListPage() {
             className="gap-2"
             onClick={handleExport}
             disabled={!canExport}
-            title={!canExport ? 'Hanya super_admin yang bisa export' : 'Export CSV'}
+            title={!canExport ? 'Hanya super_admin yang bisa export' : 'Export Excel'}
           >
             <Download className="w-4 h-4" />
-            Export
+            Export Excel
           </Button>
         </div>
 

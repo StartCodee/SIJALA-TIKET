@@ -12,7 +12,7 @@ import { ArrowLeft, Download, Printer, AlertTriangle, Copy, FileText, Eye } from
 
 import { dummyInvoices, getInvoiceLinesById, formatDateTime, formatRupiah } from '@/data/dummyData';
 import { buildInvoiceFromLines } from '@/features/invoices/invoiceUtils';
-import { exportJSON, exportCSV } from '@/lib/exporters';
+import { exportJSON, exportExcel } from '@/lib/exporters';
 import { getUserRole, isAdministrator } from '@/lib/rbac';
 import { PaymentStatusChip, ApprovalStatusChip } from '@/components/StatusChip';
 
@@ -65,9 +65,9 @@ export default function InvoiceDetailPage() {
     exportJSON(invoice, `invoice_${invoice.invoiceNo}.json`);
   };
 
-  const handleExportTicketsCSV = () => {
+  const handleExportTicketsExcel = () => {
     if (!canExport) return;
-    exportCSV(
+    exportExcel(
       invoice.tickets.map((t) => ({
         invoice_id: invoice.invoiceId,
         invoice_no: invoice.invoiceNo,
@@ -86,7 +86,8 @@ export default function InvoiceDetailPage() {
         paid_at: t.paidAt || '',
         created_at: t.createdAt,
       })),
-      `invoice_${invoice.invoiceNo}_tickets.csv`
+      `invoice_${invoice.invoiceNo}_tickets.xlsx`,
+      { sheetName: 'Tickets' }
     );
   };
 
@@ -137,12 +138,12 @@ export default function InvoiceDetailPage() {
             <Button
               variant="outline"
               className="gap-2"
-              onClick={handleExportTicketsCSV}
+              onClick={handleExportTicketsExcel}
               disabled={!canExport}
-              title={!canExport ? 'Hanya super_admin yang bisa export' : 'Export tiket CSV'}
+              title={!canExport ? 'Hanya super_admin yang bisa export' : 'Export tiket Excel'}
             >
               <Download className="w-4 h-4" />
-              Export Tiket (CSV)
+              Export Tiket (Excel)
             </Button>
           </div>
         </div>
