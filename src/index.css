@@ -264,6 +264,16 @@
   .animate-slide-up {
     animation: slideUp 0.3s ease-out;
   }
+
+  .kpi-config-wiggle {
+    animation: wiggle 2.4s ease-in-out infinite;
+    transform-origin: center;
+    will-change: transform;
+  }
+  
+  .kpi-config-wiggle:hover {
+    animation-play-state: paused;
+  }
   
   @keyframes fadeIn {
     from { opacity: 0; }
@@ -273,6 +283,21 @@
   @keyframes slideUp {
     from { opacity: 0; transform: translateY(10px); }
     to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes wiggle {
+    0%, 100% { transform: rotate(0deg); }
+    15% { transform: rotate(-1deg); }
+    30% { transform: rotate(1deg); }
+    45% { transform: rotate(-0.6deg); }
+    60% { transform: rotate(0.6deg); }
+    75% { transform: rotate(-0.4deg); }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .kpi-config-wiggle {
+      animation: none;
+    }
   }
 }
 
