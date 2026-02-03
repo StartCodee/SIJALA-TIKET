@@ -40,16 +40,15 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import {
-  AreaChart,
+  ComposedChart,
+  Line,
   Area,
   XAxis,
   YAxis,
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-  BarChart,
   Bar,
-  Cell,
   Legend,
 } from 'recharts';
 
@@ -62,8 +61,9 @@ const COLORS = [
 ];
 
 const CHART_COLORS = {
-  total: 'hsl(var(--primary))',
-  realized: 'hsl(213 70% 52%)',
+  saldo: 'hsl(var(--primary))',
+  potensi: 'hsl(213 70% 52%)',
+  refund: 'hsl(6 80% 55%)',
 };
 
 export default function FinanceReportsPage() {
@@ -71,30 +71,23 @@ export default function FinanceReportsPage() {
   const [realisasiRule, setRealisasiRule] = useState('masuk');
   const [realisasiDays, setRealisasiDays] = useState(3);
 
-  const { 
-    period, 
-    totalPaid, 
-    totalRealized, 
-    totalUnrealized, 
-    totalRefunds, 
-    netRealized,
+  const {
+    period,
+    totalPaid,
+    totalRealized,
+    totalUnrealized,
+    totalRefunds,
     breakdown,
-    dailyTrend
+    dailyTrend,
   } = financeReportSummary;
+  const totalSaldoPemasukan = totalPaid;
 
   // Chart data
-  const trendData = dailyTrend.map(d => ({
+  const trendData = dailyTrend.map((d) => ({
     date: new Date(d.date).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' }),
-    total: d.total / 1000000,
-    realized: d.realized / 1000000,
-    unrealized: (d.total - d.realized) / 1000000,
-  }));
-
-  const categoryData = breakdown.byCategory.map((c, i) => ({
-    name: c.category.replace('Wisatawan ', '').replace('Domestik ', ''),
-    amount: c.amount / 1000000,
-    count: c.count,
-    fill: COLORS[i % COLORS.length],
+    saldo: d.total / 1000000,
+    potensi: d.realized / 1000000,
+    refund: (d.refunds || 0) / 1000000,
   }));
 
   return (
@@ -135,15 +128,15 @@ export default function FinanceReportsPage() {
         )
 
         /* Summary KPIs */
-        , React.createElement('div', { className: "grid grid-cols-2 md:grid-cols-5 gap-4 mb-6"    , __self: this, __source: {fileName: _jsxFileName, lineNumber: 137}}
+        , React.createElement('div', { className: "grid grid-cols-2 md:grid-cols-4 gap-4 mb-6"    , __self: this, __source: {fileName: _jsxFileName, lineNumber: 137}}
           , React.createElement(KPICard, {
-            title: "Total Terbayar" ,
+            title: "Total Saldo Pemasukan" ,
             value: formatRupiah(totalPaid),
             icon: Wallet,
             variant: "brand", __self: this, __source: {fileName: _jsxFileName, lineNumber: 138}}
           )
           , React.createElement(KPICard, {
-            title: "Total Terealisasi" ,
+            title: "Total Potensi Pemasukan" ,
             value: formatRupiah(totalRealized),
             icon: TrendingUp,
             variant: "brand", __self: this, __source: {fileName: _jsxFileName, lineNumber: 144}}
@@ -155,38 +148,32 @@ export default function FinanceReportsPage() {
             variant: "brand", __self: this, __source: {fileName: _jsxFileName, lineNumber: 150}}
           )
           , React.createElement(KPICard, {
-            title: "Total Pengembalian" ,
+            title: "Total Pengembalian Dana" ,
             value: formatRupiah(totalRefunds),
             icon: RotateCcw,
             variant: "brand", __self: this, __source: {fileName: _jsxFileName, lineNumber: 156}}
           )
-          , React.createElement(KPICard, {
-            title: "Bersih Terealisasi" ,
-            value: formatRupiah(netRealized),
-            icon: TrendingUp,
-            variant: "brand", __self: this, __source: {fileName: _jsxFileName, lineNumber: 162}}
-          )
         )
 
         /* Charts */
-        , React.createElement('div', { className: "grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6"    , __self: this, __source: {fileName: _jsxFileName, lineNumber: 171}}
+        , React.createElement('div', { className: "grid grid-cols-1 gap-6 mb-6"    , __self: this, __source: {fileName: _jsxFileName, lineNumber: 171}}
           /* Trend Chart */
           , React.createElement(Card, { className: "card-ocean", __self: this, __source: {fileName: _jsxFileName, lineNumber: 173}}
             , React.createElement(CardHeader, {__self: this, __source: {fileName: _jsxFileName, lineNumber: 174}}
-              , React.createElement(CardTitle, { className: "text-base font-semibold" , __self: this, __source: {fileName: _jsxFileName, lineNumber: 175}}, "Tren Harian: Terbayar vs Terealisasi"    )
+              , React.createElement(CardTitle, { className: "text-base font-semibold" , __self: this, __source: {fileName: _jsxFileName, lineNumber: 175}}, "Tren Harian: Total Saldo Pemasukan, Total Potensi Pemasukan, dan Total Pengembalian Dana"    )
             )
             , React.createElement(CardContent, {__self: this, __source: {fileName: _jsxFileName, lineNumber: 177}}
               , React.createElement('div', { className: "h-[300px]", __self: this, __source: {fileName: _jsxFileName, lineNumber: 178}}
                 , React.createElement(ResponsiveContainer, { width: "100%", height: "100%", __self: this, __source: {fileName: _jsxFileName, lineNumber: 179}}
-                  , React.createElement(AreaChart, { data: trendData, __self: this, __source: {fileName: _jsxFileName, lineNumber: 180}}
+                  , React.createElement(ComposedChart, { data: trendData, __self: this, __source: {fileName: _jsxFileName, lineNumber: 180}}
                     , React.createElement('defs', {__self: this, __source: {fileName: _jsxFileName, lineNumber: 181}}
-                      , React.createElement('linearGradient', { id: "colorTotal2", x1: "0", y1: "0", x2: "0", y2: "1", __self: this, __source: {fileName: _jsxFileName, lineNumber: 182}}
-                        , React.createElement('stop', { offset: "5%", stopColor: CHART_COLORS.total, stopOpacity: 0.35, __self: this, __source: {fileName: _jsxFileName, lineNumber: 183}} )
-                        , React.createElement('stop', { offset: "95%", stopColor: CHART_COLORS.total, stopOpacity: 0, __self: this, __source: {fileName: _jsxFileName, lineNumber: 184}} )
+                      , React.createElement('linearGradient', { id: "colorSaldo", x1: "0", y1: "0", x2: "0", y2: "1", __self: this, __source: {fileName: _jsxFileName, lineNumber: 182}}
+                        , React.createElement('stop', { offset: "5%", stopColor: CHART_COLORS.saldo, stopOpacity: 0.35, __self: this, __source: {fileName: _jsxFileName, lineNumber: 183}} )
+                        , React.createElement('stop', { offset: "95%", stopColor: CHART_COLORS.saldo, stopOpacity: 0, __self: this, __source: {fileName: _jsxFileName, lineNumber: 184}} )
                       )
-                      , React.createElement('linearGradient', { id: "colorRealized2", x1: "0", y1: "0", x2: "0", y2: "1", __self: this, __source: {fileName: _jsxFileName, lineNumber: 186}}
-                        , React.createElement('stop', { offset: "5%", stopColor: CHART_COLORS.realized, stopOpacity: 0.35, __self: this, __source: {fileName: _jsxFileName, lineNumber: 187}} )
-                        , React.createElement('stop', { offset: "95%", stopColor: CHART_COLORS.realized, stopOpacity: 0, __self: this, __source: {fileName: _jsxFileName, lineNumber: 188}} )
+                      , React.createElement('linearGradient', { id: "colorPotensi", x1: "0", y1: "0", x2: "0", y2: "1", __self: this, __source: {fileName: _jsxFileName, lineNumber: 186}}
+                        , React.createElement('stop', { offset: "5%", stopColor: CHART_COLORS.potensi, stopOpacity: 0.35, __self: this, __source: {fileName: _jsxFileName, lineNumber: 187}} )
+                        , React.createElement('stop', { offset: "95%", stopColor: CHART_COLORS.potensi, stopOpacity: 0, __self: this, __source: {fileName: _jsxFileName, lineNumber: 188}} )
                       )
                     )
                     , React.createElement(CartesianGrid, { strokeDasharray: "3 3" , stroke: "hsl(var(--border))", __self: this, __source: {fileName: _jsxFileName, lineNumber: 191}} )
@@ -196,10 +183,18 @@ export default function FinanceReportsPage() {
                       axisLine: { stroke: 'hsl(var(--border))' }, __self: this, __source: {fileName: _jsxFileName, lineNumber: 192}}
                     )
                     , React.createElement(YAxis, {
+                      yAxisId: "left",
                       tick: { fontSize: 11, fill: 'hsl(var(--muted-foreground))' },
                       axisLine: { stroke: 'hsl(var(--border))' },
                       tickFormatter: (v) => `${v}jt`, __self: this, __source: {fileName: _jsxFileName, lineNumber: 197}}
                     )
+                    , React.createElement(YAxis, {
+                      yAxisId: "right",
+                      orientation: "right",
+                      tick: { fontSize: 11, fill: 'hsl(var(--muted-foreground))' },
+                      axisLine: { stroke: 'hsl(var(--border))' },
+                      tickFormatter: (v) => `${v}jt`, __self: this, __source: {fileName: _jsxFileName, lineNumber: 201}}
+                    )
                     , React.createElement(Tooltip, {
                       contentStyle: {
                         backgroundColor: 'hsl(var(--card))',
@@ -207,68 +202,35 @@ export default function FinanceReportsPage() {
                         borderRadius: '8px',
                         fontSize: '12px',
                       },
-                      formatter: (value) => [`Rp ${value}jt`, ''], __self: this, __source: {fileName: _jsxFileName, lineNumber: 202}}
+                      formatter: (value, name) => [formatRupiah(value * 1000000), name], __self: this, __source: {fileName: _jsxFileName, lineNumber: 202}}
                     )
                     , React.createElement(Legend, {__self: this, __source: {fileName: _jsxFileName, lineNumber: 211}} )
                     , React.createElement(Area, {
+                      yAxisId: "left",
                       type: "monotone",
-                      dataKey: "total",
-                      stroke: CHART_COLORS.total,
+                      dataKey: "saldo",
+                      stroke: CHART_COLORS.saldo,
                       strokeWidth: 2,
-                      fill: "url(#colorTotal2)",
-                      name: "Total Terbayar" , __self: this, __source: {fileName: _jsxFileName, lineNumber: 212}}
+                      fill: "url(#colorSaldo)",
+                      name: "Total Saldo Pemasukan" , __self: this, __source: {fileName: _jsxFileName, lineNumber: 212}}
                     )
                     , React.createElement(Area, {
+                      yAxisId: "left",
                       type: "monotone",
-                      dataKey: "realized",
-                      stroke: CHART_COLORS.realized,
+                      dataKey: "potensi",
+                      stroke: CHART_COLORS.potensi,
                       strokeWidth: 2,
-                      fill: "url(#colorRealized2)",
-                      name: "Terealisasi", __self: this, __source: {fileName: _jsxFileName, lineNumber: 220}}
+                      fill: "url(#colorPotensi)",
+                      name: "Total Potensi Pemasukan", __self: this, __source: {fileName: _jsxFileName, lineNumber: 220}}
                     )
-                  )
-                )
-              )
-            )
-          )
-
-          /* Category Breakdown */
-          , React.createElement(Card, { className: "card-ocean", __self: this, __source: {fileName: _jsxFileName, lineNumber: 235}}
-            , React.createElement(CardHeader, {__self: this, __source: {fileName: _jsxFileName, lineNumber: 236}}
-              , React.createElement(CardTitle, { className: "text-base font-semibold" , __self: this, __source: {fileName: _jsxFileName, lineNumber: 237}}, "Rincian per Kategori"  )
-            )
-            , React.createElement(CardContent, {__self: this, __source: {fileName: _jsxFileName, lineNumber: 239}}
-              , React.createElement('div', { className: "h-[300px]", __self: this, __source: {fileName: _jsxFileName, lineNumber: 240}}
-                , React.createElement(ResponsiveContainer, { width: "100%", height: "100%", __self: this, __source: {fileName: _jsxFileName, lineNumber: 241}}
-                  , React.createElement(BarChart, { data: categoryData, layout: "vertical", __self: this, __source: {fileName: _jsxFileName, lineNumber: 242}}
-                    , React.createElement(CartesianGrid, { strokeDasharray: "3 3" , stroke: "hsl(var(--border))", __self: this, __source: {fileName: _jsxFileName, lineNumber: 243}} )
-                    , React.createElement(XAxis, {
-                      type: "number",
-                      tick: { fontSize: 11, fill: 'hsl(var(--muted-foreground))' },
-                      tickFormatter: (v) => `${v}jt`, __self: this, __source: {fileName: _jsxFileName, lineNumber: 244}}
-                    )
-                    , React.createElement(YAxis, {
-                      type: "category",
-                      dataKey: "name",
-                      tick: { fontSize: 10, fill: 'hsl(var(--muted-foreground))' },
-                      width: 100, __self: this, __source: {fileName: _jsxFileName, lineNumber: 249}}
-                    )
-                    , React.createElement(Tooltip, {
-                      contentStyle: {
-                        backgroundColor: 'hsl(var(--card))',
-                        border: '1px solid hsl(var(--border))',
-                        borderRadius: '8px',
-                        fontSize: '12px',
-                      },
-                      formatter: (value, name, props) => [
-                        `${formatRupiah(value * 1000000)} (${props.payload.count} tiket)`,
-                        '',
-                      ], __self: this, __source: {fileName: _jsxFileName, lineNumber: 255}}
-                    )
-                    , React.createElement(Bar, { dataKey: "amount", radius: [0, 4, 4, 0], __self: this, __source: {fileName: _jsxFileName, lineNumber: 267}}
-                      , categoryData.map((entry, index) => (
-                        React.createElement(Cell, { key: `cell-${index}`, fill: entry.fill, __self: this, __source: {fileName: _jsxFileName, lineNumber: 269}} )
-                      ))
+                    , React.createElement(Line, {
+                      yAxisId: "right",
+                      type: "monotone",
+                      dataKey: "refund",
+                      stroke: CHART_COLORS.refund,
+                      strokeWidth: 2,
+                      dot: { r: 3 },
+                      name: "Total Pengembalian Dana", __self: this, __source: {fileName: _jsxFileName, lineNumber: 228}}
                     )
                   )
                 )
@@ -282,7 +244,7 @@ export default function FinanceReportsPage() {
           /* By Category */
           , React.createElement(Card, { className: "card-ocean", __self: this, __source: {fileName: _jsxFileName, lineNumber: 282}}
             , React.createElement(CardHeader, {__self: this, __source: {fileName: _jsxFileName, lineNumber: 283}}
-            , React.createElement(CardTitle, { className: "text-base font-semibold" , __self: this, __source: {fileName: _jsxFileName, lineNumber: 284}}, "Detail per Kategori Biaya"   )
+            , React.createElement(CardTitle, { className: "text-base font-semibold" , __self: this, __source: {fileName: _jsxFileName, lineNumber: 284}}, "Detail per Kategori Layanan"   )
             )
             , React.createElement(CardContent, {__self: this, __source: {fileName: _jsxFileName, lineNumber: 286}}
               , React.createElement('div', { className: "space-y-3", __self: this, __source: {fileName: _jsxFileName, lineNumber: 287}}
@@ -298,32 +260,47 @@ export default function FinanceReportsPage() {
                         , React.createElement('p', { className: "text-xs text-muted-foreground" , __self: this, __source: {fileName: _jsxFileName, lineNumber: 297}}, item.count, " tiket" )
                       )
                     )
-                    , React.createElement('span', { className: "text-sm font-semibold" , __self: this, __source: {fileName: _jsxFileName, lineNumber: 300}}, formatRupiah(item.amount))
+                    , React.createElement('div', { className: "text-right", __self: this, __source: {fileName: _jsxFileName, lineNumber: 300}}
+                      , React.createElement('p', { className: "text-sm font-semibold" , __self: this, __source: {fileName: _jsxFileName, lineNumber: 301}}, formatRupiah(item.amount))
+                      , React.createElement('p', { className: "text-xs text-muted-foreground" , __self: this, __source: {fileName: _jsxFileName, lineNumber: 302}}
+                        , totalSaldoPemasukan
+                          ? `${((item.amount / totalSaldoPemasukan) * 100).toFixed(1)}%`
+                          : '0%'
+                      )
+                    )
                   )
                 ))
+                , React.createElement('div', { className: "flex items-center justify-between pt-3 border-t border-border" , __self: this, __source: {fileName: _jsxFileName, lineNumber: 306}}
+                  , React.createElement('p', { className: "text-sm font-semibold" , __self: this, __source: {fileName: _jsxFileName, lineNumber: 307}}, "Total Saldo Pemasukan")
+                  , React.createElement('p', { className: "text-sm font-semibold text-primary" , __self: this, __source: {fileName: _jsxFileName, lineNumber: 308}}, formatRupiah(totalSaldoPemasukan))
+                )
               )
             )
           )
 
-          /* By Domisili */
+          /* By Country */
           , React.createElement(Card, { className: "card-ocean", __self: this, __source: {fileName: _jsxFileName, lineNumber: 308}}
             , React.createElement(CardHeader, {__self: this, __source: {fileName: _jsxFileName, lineNumber: 309}}
-              , React.createElement(CardTitle, { className: "text-base font-semibold" , __self: this, __source: {fileName: _jsxFileName, lineNumber: 310}}, "Detail per Domisili"  )
+              , React.createElement(CardTitle, { className: "text-base font-semibold" , __self: this, __source: {fileName: _jsxFileName, lineNumber: 310}}, "Detail per Negara"  )
             )
             , React.createElement(CardContent, {__self: this, __source: {fileName: _jsxFileName, lineNumber: 312}}
               , React.createElement('div', { className: "space-y-3", __self: this, __source: {fileName: _jsxFileName, lineNumber: 313}}
-                , breakdown.byDomisili.map((item, i) => (
-                  React.createElement('div', { key: item.domisili, className: "flex items-center justify-between py-2 border-b border-border last:border-0"      , __self: this, __source: {fileName: _jsxFileName, lineNumber: 315}}
+                , breakdown.byCountry.map((item, i) => (
+                  React.createElement('div', { key: item.country, className: "flex items-center justify-between py-2 border-b border-border last:border-0"      , __self: this, __source: {fileName: _jsxFileName, lineNumber: 315}}
                     , React.createElement('div', { className: "flex items-center gap-3"  , __self: this, __source: {fileName: _jsxFileName, lineNumber: 316}}
                       , React.createElement('div', { 
                         className: "w-3 h-3 rounded-full"  , 
                         style: { backgroundColor: COLORS[i % COLORS.length] }, __self: this, __source: {fileName: _jsxFileName, lineNumber: 317}} 
                       )
-                      , React.createElement('p', { className: "text-sm font-medium" , __self: this, __source: {fileName: _jsxFileName, lineNumber: 321}}, item.domisili)
+                      , React.createElement('p', { className: "text-sm font-medium" , __self: this, __source: {fileName: _jsxFileName, lineNumber: 321}}, item.country)
                     )
                     , React.createElement('span', { className: "text-sm font-semibold" , __self: this, __source: {fileName: _jsxFileName, lineNumber: 323}}, formatRupiah(item.amount))
                   )
                 ))
+                , React.createElement('div', { className: "flex items-center justify-between pt-3 border-t border-border" , __self: this, __source: {fileName: _jsxFileName, lineNumber: 325}}
+                  , React.createElement('p', { className: "text-sm font-semibold" , __self: this, __source: {fileName: _jsxFileName, lineNumber: 326}}, "Total Saldo Pemasukan")
+                  , React.createElement('p', { className: "text-sm font-semibold text-primary" , __self: this, __source: {fileName: _jsxFileName, lineNumber: 327}}, formatRupiah(totalSaldoPemasukan))
+                )
               )
             )
           )

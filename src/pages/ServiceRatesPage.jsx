@@ -6,6 +6,13 @@ import { Button } from '@/components/ui/button';
 import { Card, } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -24,13 +31,12 @@ import {
   AlertDialogCancel,
 } from '@/components/ui/alert-dialog';
 import { Pencil, Trash2, Search, Plus } from 'lucide-react';
-import { FEE_PRICING, formatRupiah } from '@/data/dummyData';
-
-
-
-
-
-
+import {
+  DEFAULT_SERVICE_RATE_VALIDITY,
+  FEE_PRICING,
+  SERVICE_RATE_VALIDITY_OPTIONS,
+  formatRupiah,
+} from '@/data/dummyData';
 
 export default function ServiceRatesPage() {
   const initialItems = useMemo(
@@ -39,9 +45,12 @@ export default function ServiceRatesPage() {
         id: key,
         label: value.label,
         price: value.price,
+        validity: value.validity || DEFAULT_SERVICE_RATE_VALIDITY,
       })),
     []
   );
+
+  const validityOptions = SERVICE_RATE_VALIDITY_OPTIONS;
 
   const [items, setItems] = useState(initialItems);
   const [searchQuery, setSearchQuery] = useState('');
@@ -49,9 +58,11 @@ export default function ServiceRatesPage() {
   const [deleteItem, setDeleteItem] = useState(null);
   const [editLabel, setEditLabel] = useState('');
   const [editPrice, setEditPrice] = useState('');
+  const [editValidity, setEditValidity] = useState(DEFAULT_SERVICE_RATE_VALIDITY);
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [newLabel, setNewLabel] = useState('');
   const [newPrice, setNewPrice] = useState('');
+  const [newValidity, setNewValidity] = useState(DEFAULT_SERVICE_RATE_VALIDITY);
 
   const filteredItems = items.filter((item) => {
     if (!searchQuery.trim()) return true;
@@ -63,6 +74,7 @@ export default function ServiceRatesPage() {
     setEditItem(item);
     setEditLabel(item.label);
     setEditPrice(item.price.toString());
+    setEditValidity(item.validity || DEFAULT_SERVICE_RATE_VALIDITY);
   };
 
   const saveEdit = () => {
@@ -75,6 +87,9 @@ export default function ServiceRatesPage() {
               ...item,
               label: editLabel.trim() || item.label,
               price: Number.isFinite(nextPrice) && nextPrice > 0 ? nextPrice : item.price,
+              validity: validityOptions.includes(editValidity)
+                ? editValidity
+                : item.validity || DEFAULT_SERVICE_RATE_VALIDITY,
             }
           : item
       )
@@ -105,11 +120,15 @@ export default function ServiceRatesPage() {
       id: generateId(trimmedLabel),
       label: trimmedLabel,
       price: nextPrice,
+      validity: validityOptions.includes(newValidity)
+        ? newValidity
+        : DEFAULT_SERVICE_RATE_VALIDITY,
     };
     setItems((prev) => [...prev, nextItem]);
     setShowAddDialog(false);
     setNewLabel('');
     setNewPrice('');
+    setNewValidity(DEFAULT_SERVICE_RATE_VALIDITY);
   };
   const confirmDelete = () => {
     if (!deleteItem) return;
@@ -150,7 +169,8 @@ export default function ServiceRatesPage() {
                 , React.createElement('tr', {__self: this, __source: {fileName: _jsxFileName, lineNumber: 149}}
                   , React.createElement('th', {__self: this, __source: {fileName: _jsxFileName, lineNumber: 150}}, "Kategori Layanan" )
                   , React.createElement('th', { className: "text-right", __self: this, __source: {fileName: _jsxFileName, lineNumber: 151}}, "Harga")
-                  , React.createElement('th', { className: "text-center", __self: this, __source: {fileName: _jsxFileName, lineNumber: 152}}, "Aksi")
+                  , React.createElement('th', { className: "text-center", __self: this, __source: {fileName: _jsxFileName, lineNumber: 152}}, "Masa Berlaku")
+                  , React.createElement('th', { className: "text-center", __self: this, __source: {fileName: _jsxFileName, lineNumber: 153}}, "Aksi")
                 )
               )
               , React.createElement('tbody', {__self: this, __source: {fileName: _jsxFileName, lineNumber: 155}}
@@ -163,21 +183,24 @@ export default function ServiceRatesPage() {
                       , React.createElement('span', { className: "text-sm font-semibold" , __self: this, __source: {fileName: _jsxFileName, lineNumber: 162}}, formatRupiah(item.price))
                     )
                     , React.createElement('td', { className: "text-center", __self: this, __source: {fileName: _jsxFileName, lineNumber: 164}}
-                      , React.createElement('div', { className: "flex items-center justify-center gap-2"   , __self: this, __source: {fileName: _jsxFileName, lineNumber: 165}}
+                      , React.createElement('span', { className: "text-sm text-muted-foreground" , __self: this, __source: {fileName: _jsxFileName, lineNumber: 165}}, item.validity)
+                    )
+                    , React.createElement('td', { className: "text-center", __self: this, __source: {fileName: _jsxFileName, lineNumber: 167}}
+                      , React.createElement('div', { className: "flex items-center justify-center gap-2"   , __self: this, __source: {fileName: _jsxFileName, lineNumber: 168}}
                         , React.createElement(Button, {
                           size: "sm",
                           className: "gap-2 bg-status-pending hover:bg-status-pending/90 text-white"   ,
-                          onClick: () => openEdit(item), __self: this, __source: {fileName: _jsxFileName, lineNumber: 166}}
+                          onClick: () => openEdit(item), __self: this, __source: {fileName: _jsxFileName, lineNumber: 169}}
 
-                          , React.createElement(Pencil, { className: "w-4 h-4" , __self: this, __source: {fileName: _jsxFileName, lineNumber: 171}} ), "Edit"
+                          , React.createElement(Pencil, { className: "w-4 h-4" , __self: this, __source: {fileName: _jsxFileName, lineNumber: 174}} ), "Edit"
 
                         )
                         , React.createElement(Button, {
                           size: "sm",
                           className: "gap-2 bg-status-rejected hover:bg-status-rejected/90 text-white"   ,
-                          onClick: () => setDeleteItem(item), __self: this, __source: {fileName: _jsxFileName, lineNumber: 174}}
+                          onClick: () => setDeleteItem(item), __self: this, __source: {fileName: _jsxFileName, lineNumber: 177}}
 
-                          , React.createElement(Trash2, { className: "w-4 h-4" , __self: this, __source: {fileName: _jsxFileName, lineNumber: 179}} ), "Hapus"
+                          , React.createElement(Trash2, { className: "w-4 h-4" , __self: this, __source: {fileName: _jsxFileName, lineNumber: 182}} ), "Hapus"
 
                         )
                       )
@@ -186,7 +209,7 @@ export default function ServiceRatesPage() {
                 ))
                 , filteredItems.length === 0 && (
                   React.createElement('tr', {__self: this, __source: {fileName: _jsxFileName, lineNumber: 187}}
-                    , React.createElement('td', { colSpan: 3, className: "text-center text-sm text-muted-foreground py-8"   , __self: this, __source: {fileName: _jsxFileName, lineNumber: 188}}, "Belum ada tarif yang tersedia."
+                    , React.createElement('td', { colSpan: 4, className: "text-center text-sm text-muted-foreground py-8"   , __self: this, __source: {fileName: _jsxFileName, lineNumber: 188}}, "Belum ada tarif yang tersedia."
 
                     )
                   )
@@ -219,6 +242,19 @@ export default function ServiceRatesPage() {
               )
               , React.createElement('p', { className: "text-xs text-muted-foreground" , __self: this, __source: {fileName: _jsxFileName, lineNumber: 219}}, "Format tampilan: "
                   , editPrice ? formatRupiah(Number(editPrice.replace(/[^\d]/g, ''))) : '-'
+              )
+            )
+            , React.createElement('div', { className: "space-y-2"}
+              , React.createElement('label', { className: "text-sm font-medium" }, "Masa Berlaku")
+              , React.createElement(Select, { value: editValidity, onValueChange: setEditValidity }
+                , React.createElement(SelectTrigger, null
+                  , React.createElement(SelectValue, { placeholder: "Pilih masa berlaku" })
+                )
+                , React.createElement(SelectContent, null
+                  , validityOptions.map((option) => (
+                    React.createElement(SelectItem, { key: option, value: option }, option)
+                  ))
+                )
               )
             )
           )
@@ -255,6 +291,19 @@ export default function ServiceRatesPage() {
               )
               , React.createElement('p', { className: "text-xs text-muted-foreground" , __self: this, __source: {fileName: _jsxFileName, lineNumber: 255}}, "Format tampilan: "
                   , newPrice ? formatRupiah(Number(newPrice.replace(/[^\d]/g, ''))) : '-'
+              )
+            )
+            , React.createElement('div', { className: "space-y-2"}
+              , React.createElement('label', { className: "text-sm font-medium" }, "Masa Berlaku")
+              , React.createElement(Select, { value: newValidity, onValueChange: setNewValidity }
+                , React.createElement(SelectTrigger, null
+                  , React.createElement(SelectValue, { placeholder: "Pilih masa berlaku" })
+                )
+                , React.createElement(SelectContent, null
+                  , validityOptions.map((option) => (
+                    React.createElement(SelectItem, { key: option, value: option }, option)
+                  ))
+                )
               )
             )
           )

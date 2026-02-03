@@ -1,31 +1,26 @@
-import React from "react";
-const _jsxFileName = "src\\pages\\TicketListPage.tsx";import { useState } from 'react';
+import { useState } from 'react';
 import { AdminLayout } from '@/components/AdminLayout';
 import { AdminHeader } from '@/components/AdminHeader';
 import {
-  ApprovalStatusChip,
-  PaymentStatusChip,
-  GateStatusChip,
-  RealisasiStatusChip,
-} from '@/components/StatusChip';
-import {
   dummyTickets,
-  formatRupiah,
   formatShortId,
   FEE_PRICING,
-  BOOKING_TYPE_LABELS,
   DOMISILI_LABELS,
-
+  BOOKING_TYPE_LABELS,
+  formatDate,
 } from '@/data/dummyData';
 import {
   Search,
   Filter,
   Download,
-  Eye,
   ChevronDown,
   ChevronUp,
-  Users,
   User,
+  FileText,
+  Users,
+  FileCheck,
+  Landmark,
+  IdCard,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -43,11 +38,38 @@ export default function TicketListPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [approvalFilter, setApprovalFilter] = useState('all');
   const [paymentFilter, setPaymentFilter] = useState('all');
-  const [gateFilter, setGateFilter] = useState('all');
+  const [paymentTypeFilter, setPaymentTypeFilter] = useState('all');
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [showFilters, setShowFilters] = useState(true);
   const [sortField, setSortField] = useState('createdAt');
   const [sortDir, setSortDir] = useState('desc');
+
+  const getPaymentType = (ticket) => {
+    if (ticket.operatorType === 'doku') return 'online';
+    return 'on_the_spot';
+  };
+  const isInternationalTicket = (ticket) =>
+    ticket.domisiliOCR === 'mancanegara' || ticket.feeCategory?.includes('mancanegara');
+  const getPaymentStatusLabel = (ticket) => {
+    switch (ticket.paymentStatus) {
+      case 'sudah_bayar':
+        return { label: 'Success', className: 'bg-status-approved-bg text-status-approved' };
+      case 'belum_bayar':
+        return { label: 'Pending', className: 'bg-status-pending-bg text-status-pending' };
+      case 'gagal':
+      case 'unsuccessful':
+        return { label: 'Unsuccessful', className: 'bg-status-rejected-bg text-status-rejected' };
+      case 'no_activity':
+        return { label: 'No Activity', className: 'bg-muted text-muted-foreground' };
+      default:
+        return { label: 'No Activity', className: 'bg-muted text-muted-foreground' };
+    }
+  };
+  const getTicketTime = (ticket) =>
+    new Date(ticket.createdAt).toLocaleTimeString('id-ID', {
+      hour: '2-digit',
+      minute: '2-digit',
+    });
 
   // Filter tickets
   const filteredTickets = dummyTickets.filter((ticket) => {
@@ -57,9 +79,10 @@ export default function TicketListPage() {
       ticket.email.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesApproval = approvalFilter === 'all' || ticket.approvalStatus === approvalFilter;
     const matchesPayment = paymentFilter === 'all' || ticket.paymentStatus === paymentFilter;
-    const matchesGate = gateFilter === 'all' || ticket.gateStatus === gateFilter;
+    const matchesPaymentType =
+      paymentTypeFilter === 'all' || getPaymentType(ticket) === paymentTypeFilter;
     const matchesCategory = categoryFilter === 'all' || ticket.feeCategory === categoryFilter;
-    return matchesSearch && matchesApproval && matchesPayment && matchesGate && matchesCategory;
+    return matchesSearch && matchesApproval && matchesPayment && matchesPaymentType && matchesCategory;
   });
 
   // Sort tickets
@@ -84,226 +107,285 @@ export default function TicketListPage() {
   const SortIcon = ({ field }) => {
     if (sortField !== field) return null;
     return sortDir === 'asc' ? (
-      React.createElement(ChevronUp, { className: "w-3.5 h-3.5" , __self: this, __source: {fileName: _jsxFileName, lineNumber: 86}} )
+      <ChevronUp className="w-3.5 h-3.5" />
     ) : (
-      React.createElement(ChevronDown, { className: "w-3.5 h-3.5" , __self: this, __source: {fileName: _jsxFileName, lineNumber: 88}} )
+      <ChevronDown className="w-3.5 h-3.5" />
     );
   };
+
   return (
-    React.createElement(AdminLayout, {__self: this, __source: {fileName: _jsxFileName, lineNumber: 92}}
-      , React.createElement(AdminHeader, { 
-        title: "Daftar Tiket" , 
-        subtitle: "Data master semua tiket biaya konservasi"     ,
-        showSearch: false, __self: this, __source: {fileName: _jsxFileName, lineNumber: 93}}
-      )
+    <AdminLayout>
+      <AdminHeader
+        title="Daftar Tiket"
+        subtitle="Data master semua tiket biaya konservasi"
+        showSearch={false}
+      />
 
-      , React.createElement('div', { className: "flex-1 overflow-auto p-6"  , __self: this, __source: {fileName: _jsxFileName, lineNumber: 99}}
-        /* Search & Actions Bar */
-        , React.createElement('div', { className: "flex items-center gap-4 mb-4"   , __self: this, __source: {fileName: _jsxFileName, lineNumber: 101}}
-          , React.createElement('div', { className: "relative flex-1 max-w-md"  , __self: this, __source: {fileName: _jsxFileName, lineNumber: 102}}
-            , React.createElement(Search, { className: "absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground"      , __self: this, __source: {fileName: _jsxFileName, lineNumber: 103}} )
-            , React.createElement(Input, {
-              placeholder: "Cari ID Tiket, nama, atau email..."     ,
-              value: searchQuery,
-              onChange: (e) => setSearchQuery(e.target.value),
-              className: "pl-9 bg-card" , __self: this, __source: {fileName: _jsxFileName, lineNumber: 104}}
-            )
-          )
-          , React.createElement(Button, {
-            variant: "outline",
-            size: "sm",
-            onClick: () => setShowFilters(!showFilters),
-            className: "gap-2", __self: this, __source: {fileName: _jsxFileName, lineNumber: 111}}
+      <div className="flex-1 overflow-auto p-6">
+        {/* Search & Actions Bar */}
+        <div className="flex items-center gap-4 mb-4">
+          <div className="relative flex-1 max-w-md">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input
+              placeholder="Cari ID Tiket, nama, atau email..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-9 bg-card"
+            />
+          </div>
 
-            , React.createElement(Filter, { className: "w-4 h-4" , __self: this, __source: {fileName: _jsxFileName, lineNumber: 117}} ), "Filter"
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setShowFilters(!showFilters)}
+            className="gap-2"
+          >
+            <Filter className="w-4 h-4" />
+            Filter
+            {showFilters ? (
+              <ChevronUp className="w-3.5 h-3.5" />
+            ) : (
+              <ChevronDown className="w-3.5 h-3.5" />
+            )}
+          </Button>
 
-            , showFilters ? React.createElement(ChevronUp, { className: "w-3.5 h-3.5" , __self: this, __source: {fileName: _jsxFileName, lineNumber: 119}} ) : React.createElement(ChevronDown, { className: "w-3.5 h-3.5" , __self: this, __source: {fileName: _jsxFileName, lineNumber: 119}} )
-          )
-          , React.createElement(Button, { variant: "outline", size: "sm", className: "gap-2", __self: this, __source: {fileName: _jsxFileName, lineNumber: 121}}
-            , React.createElement(Download, { className: "w-4 h-4" , __self: this, __source: {fileName: _jsxFileName, lineNumber: 122}} ), "Ekspor"
+          <Button variant="outline" size="sm" className="gap-2">
+            <Download className="w-4 h-4" />
+            Ekspor
+          </Button>
+        </div>
 
-          )
-        )
+        {/* Filters */}
+        {showFilters && (
+          <Card className="mb-4 card-ocean animate-fade-in">
+            <CardContent className="p-4">
+              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground mb-1.5 block">
+                    Status Persetujuan
+                  </label>
+                  <Select value={approvalFilter} onValueChange={setApprovalFilter}>
+                    <SelectTrigger className="bg-background">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="bg-popover border-border">
+                      <SelectItem value="all">Semua</SelectItem>
+                      <SelectItem value="menunggu">Menunggu</SelectItem>
+                      <SelectItem value="disetujui">Disetujui</SelectItem>
+                      <SelectItem value="ditolak">Ditolak</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
 
-        /* Filters */
-        , showFilters && (
-          React.createElement(Card, { className: "mb-4 card-ocean animate-fade-in"  , __self: this, __source: {fileName: _jsxFileName, lineNumber: 129}}
-            , React.createElement(CardContent, { className: "p-4", __self: this, __source: {fileName: _jsxFileName, lineNumber: 130}}
-              , React.createElement('div', { className: "grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4"    , __self: this, __source: {fileName: _jsxFileName, lineNumber: 131}}
-                , React.createElement('div', {__self: this, __source: {fileName: _jsxFileName, lineNumber: 132}}
-                  , React.createElement('label', { className: "text-xs font-medium text-muted-foreground mb-1.5 block"    , __self: this, __source: {fileName: _jsxFileName, lineNumber: 133}}, "Status Persetujuan"
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground mb-1.5 block">
+                    Status Pembayaran
+                  </label>
+                  <Select value={paymentFilter} onValueChange={setPaymentFilter}>
+                    <SelectTrigger className="bg-background">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="bg-popover border-border">
+                      <SelectItem value="all">Semua</SelectItem>
+                      <SelectItem value="belum_bayar">Belum Bayar</SelectItem>
+                      <SelectItem value="sudah_bayar">Sudah Bayar</SelectItem>
+                      <SelectItem value="refund_diproses">Pengembalian Diproses</SelectItem>
+                      <SelectItem value="refund_selesai">Pengembalian Selesai</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
 
-                  )
-                  , React.createElement(Select, { value: approvalFilter, onValueChange: setApprovalFilter, __self: this, __source: {fileName: _jsxFileName, lineNumber: 136}}
-                    , React.createElement(SelectTrigger, { className: "bg-background", __self: this, __source: {fileName: _jsxFileName, lineNumber: 137}}
-                      , React.createElement(SelectValue, {__self: this, __source: {fileName: _jsxFileName, lineNumber: 138}} )
-                    )
-                    , React.createElement(SelectContent, { className: "bg-popover border-border" , __self: this, __source: {fileName: _jsxFileName, lineNumber: 140}}
-                      , React.createElement(SelectItem, { value: "all", __self: this, __source: {fileName: _jsxFileName, lineNumber: 141}}, "Semua")
-                      , React.createElement(SelectItem, { value: "menunggu", __self: this, __source: {fileName: _jsxFileName, lineNumber: 142}}, "Menunggu")
-                      , React.createElement(SelectItem, { value: "disetujui", __self: this, __source: {fileName: _jsxFileName, lineNumber: 143}}, "Disetujui")
-                      , React.createElement(SelectItem, { value: "ditolak", __self: this, __source: {fileName: _jsxFileName, lineNumber: 144}}, "Ditolak")
-                    )
-                  )
-                )
-                , React.createElement('div', {__self: this, __source: {fileName: _jsxFileName, lineNumber: 148}}
-                  , React.createElement('label', { className: "text-xs font-medium text-muted-foreground mb-1.5 block"    , __self: this, __source: {fileName: _jsxFileName, lineNumber: 149}}, "Status Pembayaran"
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground mb-1.5 block">
+                    Tipe Pembayaran
+                  </label>
+                  <Select value={paymentTypeFilter} onValueChange={setPaymentTypeFilter}>
+                    <SelectTrigger className="bg-background">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="bg-popover border-border">
+                      <SelectItem value="all">Semua</SelectItem>
+                      <SelectItem value="online">Online</SelectItem>
+                      <SelectItem value="on_the_spot">On the spot</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
 
-                  )
-                  , React.createElement(Select, { value: paymentFilter, onValueChange: setPaymentFilter, __self: this, __source: {fileName: _jsxFileName, lineNumber: 152}}
-                    , React.createElement(SelectTrigger, { className: "bg-background", __self: this, __source: {fileName: _jsxFileName, lineNumber: 153}}
-                      , React.createElement(SelectValue, {__self: this, __source: {fileName: _jsxFileName, lineNumber: 154}} )
-                    )
-                    , React.createElement(SelectContent, { className: "bg-popover border-border" , __self: this, __source: {fileName: _jsxFileName, lineNumber: 156}}
-                      , React.createElement(SelectItem, { value: "all", __self: this, __source: {fileName: _jsxFileName, lineNumber: 157}}, "Semua")
-                      , React.createElement(SelectItem, { value: "belum_bayar", __self: this, __source: {fileName: _jsxFileName, lineNumber: 158}}, "Belum Bayar" )
-                      , React.createElement(SelectItem, { value: "sudah_bayar", __self: this, __source: {fileName: _jsxFileName, lineNumber: 159}}, "Sudah Bayar" )
-                      , React.createElement(SelectItem, { value: "refund_diproses", __self: this, __source: {fileName: _jsxFileName, lineNumber: 160}}, "Pengembalian Diproses" )
-                      , React.createElement(SelectItem, { value: "refund_selesai", __self: this, __source: {fileName: _jsxFileName, lineNumber: 161}}, "Pengembalian Selesai" )
-                    )
-                  )
-                )
-                , React.createElement('div', {__self: this, __source: {fileName: _jsxFileName, lineNumber: 165}}
-                  , React.createElement('label', { className: "text-xs font-medium text-muted-foreground mb-1.5 block"    , __self: this, __source: {fileName: _jsxFileName, lineNumber: 166}}, "Status Gerbang"
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground mb-1.5 block">
+                    Kategori Biaya
+                  </label>
+                  <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+                    <SelectTrigger className="bg-background">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="bg-popover border-border">
+                      <SelectItem value="all">Semua</SelectItem>
+                      {Object.entries(FEE_PRICING).map(([key, value]) => (
+                        <SelectItem key={key} value={key}>
+                          {value.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
 
-                  )
-                  , React.createElement(Select, { value: gateFilter, onValueChange: setGateFilter, __self: this, __source: {fileName: _jsxFileName, lineNumber: 169}}
-                    , React.createElement(SelectTrigger, { className: "bg-background", __self: this, __source: {fileName: _jsxFileName, lineNumber: 170}}
-                      , React.createElement(SelectValue, {__self: this, __source: {fileName: _jsxFileName, lineNumber: 171}} )
-                    )
-                    , React.createElement(SelectContent, { className: "bg-popover border-border" , __self: this, __source: {fileName: _jsxFileName, lineNumber: 173}}
-                      , React.createElement(SelectItem, { value: "all", __self: this, __source: {fileName: _jsxFileName, lineNumber: 174}}, "Semua")
-                      , React.createElement(SelectItem, { value: "belum_masuk", __self: this, __source: {fileName: _jsxFileName, lineNumber: 175}}, "Belum Masuk" )
-                      , React.createElement(SelectItem, { value: "masuk", __self: this, __source: {fileName: _jsxFileName, lineNumber: 176}}, "Masuk")
-                      , React.createElement(SelectItem, { value: "keluar", __self: this, __source: {fileName: _jsxFileName, lineNumber: 177}}, "Keluar")
-                    )
-                  )
-                )
-                , React.createElement('div', {__self: this, __source: {fileName: _jsxFileName, lineNumber: 181}}
-                  , React.createElement('label', { className: "text-xs font-medium text-muted-foreground mb-1.5 block"    , __self: this, __source: {fileName: _jsxFileName, lineNumber: 182}}, "Kategori Biaya"
-
-                  )
-                  , React.createElement(Select, { value: categoryFilter, onValueChange: setCategoryFilter, __self: this, __source: {fileName: _jsxFileName, lineNumber: 185}}
-                    , React.createElement(SelectTrigger, { className: "bg-background", __self: this, __source: {fileName: _jsxFileName, lineNumber: 186}}
-                      , React.createElement(SelectValue, {__self: this, __source: {fileName: _jsxFileName, lineNumber: 187}} )
-                    )
-                    , React.createElement(SelectContent, { className: "bg-popover border-border" , __self: this, __source: {fileName: _jsxFileName, lineNumber: 189}}
-                      , React.createElement(SelectItem, { value: "all", __self: this, __source: {fileName: _jsxFileName, lineNumber: 190}}, "Semua")
-                      , Object.entries(FEE_PRICING).map(([key, value]) => (
-                        React.createElement(SelectItem, { key: key, value: key, __self: this, __source: {fileName: _jsxFileName, lineNumber: 192}}
-                          , value.label
-                        )
-                      ))
-                    )
-                  )
-                )
-                , React.createElement('div', { className: "flex items-end" , __self: this, __source: {fileName: _jsxFileName, lineNumber: 199}}
-                  , React.createElement(Button, {
-                    variant: "ghost",
-                    size: "sm",
-                    onClick: () => {
+                <div className="flex items-end">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
                       setApprovalFilter('all');
                       setPaymentFilter('all');
-                      setGateFilter('all');
+                      setPaymentTypeFilter('all');
                       setCategoryFilter('all');
-                    },
-                    className: "text-xs", __self: this, __source: {fileName: _jsxFileName, lineNumber: 200}}
-, "Atur Ulang Filter"
+                    }}
+                    className="text-xs"
+                  >
+                    Atur Ulang Filter
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
-                  )
-                )
-              )
-            )
-          )
-        )
+        {/* Results Info */}
+        <div className="flex items-center justify-between mb-3">
+          <p className="text-sm text-muted-foreground">
+            Menampilkan <span className="font-medium text-foreground">{sortedTickets.length}</span> dari{' '}
+            <span className="font-medium text-foreground">{dummyTickets.length}</span> tiket
+          </p>
+        </div>
 
-        /* Results Info */
-        , React.createElement('div', { className: "flex items-center justify-between mb-3"   , __self: this, __source: {fileName: _jsxFileName, lineNumber: 220}}
-          , React.createElement('p', { className: "text-sm text-muted-foreground" , __self: this, __source: {fileName: _jsxFileName, lineNumber: 221}}, "Menampilkan "
-             , React.createElement('span', { className: "font-medium text-foreground" , __self: this, __source: {fileName: _jsxFileName, lineNumber: 222}}, sortedTickets.length), " dari" , ' '
-            , React.createElement('span', { className: "font-medium text-foreground" , __self: this, __source: {fileName: _jsxFileName, lineNumber: 223}}, dummyTickets.length), " tiket"
-          )
-        )
+        {/* Table */}
+        <Card className="card-ocean overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="data-table">
+              <thead>
+                <tr>
+                  <th
+                    className="cursor-pointer hover:bg-muted/70 transition-colors"
+                    onClick={() => handleSort('createdAt')}
+                  >
+                    <div className="flex items-center gap-1">
+                      Tanggal <SortIcon field="createdAt" />
+                    </div>
+                  </th>
+                  <th>Waktu</th>
+                  <th
+                    className="cursor-pointer hover:bg-muted/70 transition-colors"
+                    onClick={() => handleSort('id')}
+                  >
+                    <div className="flex items-center gap-1">
+                      ID Tiket <SortIcon field="id" />
+                    </div>
+                  </th>
+                  <th>Tipe</th>
+                  <th>Tipe Pembayaran</th>
+                  <th>Domisili</th>
+                  <th>Status Pembayaran</th>
+                  <th className="text-center">Aksi</th>
+                </tr>
+              </thead>
 
-        /* Table */
-        , React.createElement(Card, { className: "card-ocean overflow-hidden" , __self: this, __source: {fileName: _jsxFileName, lineNumber: 228}}
-          , React.createElement('div', { className: "overflow-x-auto", __self: this, __source: {fileName: _jsxFileName, lineNumber: 229}}
-            , React.createElement('table', { className: "data-table", __self: this, __source: {fileName: _jsxFileName, lineNumber: 230}}
-              , React.createElement('thead', {__self: this, __source: {fileName: _jsxFileName, lineNumber: 231}}
-                , React.createElement('tr', {__self: this, __source: {fileName: _jsxFileName, lineNumber: 232}}
-                  , React.createElement('th', { 
-                    className: "cursor-pointer hover:bg-muted/70 transition-colors"  ,
-                    onClick: () => handleSort('id'), __self: this, __source: {fileName: _jsxFileName, lineNumber: 233}}
+              <tbody>
+                {sortedTickets.map((ticket) => {
+                  const paymentStatus = getPaymentStatusLabel(ticket);
 
-                    , React.createElement('div', { className: "flex items-center gap-1"  , __self: this, __source: {fileName: _jsxFileName, lineNumber: 237}}, "ID Tiket "
-                        , React.createElement(SortIcon, { field: "id", __self: this, __source: {fileName: _jsxFileName, lineNumber: 238}} )
-                    )
-                  )
-                  , React.createElement('th', {__self: this, __source: {fileName: _jsxFileName, lineNumber: 241}}, "Tipe")
-                  , React.createElement('th', {__self: this, __source: {fileName: _jsxFileName, lineNumber: 242}}, "Domisili")
-                  , React.createElement('th', { className: "text-right", __self: this, __source: {fileName: _jsxFileName, lineNumber: 243}}, "Total Biaya" )
-                  , React.createElement('th', {__self: this, __source: {fileName: _jsxFileName, lineNumber: 244}}, "Persetujuan")
-                  , React.createElement('th', {__self: this, __source: {fileName: _jsxFileName, lineNumber: 245}}, "Pembayaran")
-                  , React.createElement('th', {__self: this, __source: {fileName: _jsxFileName, lineNumber: 246}}, "Gerbang")
-                  , React.createElement('th', {__self: this, __source: {fileName: _jsxFileName, lineNumber: 247}}, "Realisasi")
-                  , React.createElement('th', { className: "text-center", __self: this, __source: {fileName: _jsxFileName, lineNumber: 248}}, "Aksi")
-                )
-              )
-              , React.createElement('tbody', {__self: this, __source: {fileName: _jsxFileName, lineNumber: 251}}
-                , sortedTickets.map((ticket) => (
-                  React.createElement('tr', { key: ticket.id, className: "group", __self: this, __source: {fileName: _jsxFileName, lineNumber: 253}}
-                    , React.createElement('td', { className: "whitespace-nowrap", __self: this, __source: {fileName: _jsxFileName, lineNumber: 254}}
-                      , React.createElement(Link, { 
-                        to: `/tickets/${ticket.id}`,
-                        className: "font-mono text-sm font-medium text-primary hover:underline whitespace-nowrap"     , __self: this, __source: {fileName: _jsxFileName, lineNumber: 255}}
+                  return (
+                    <tr key={ticket.id} className="group">
+                      <td className="whitespace-nowrap text-sm">
+                        {formatDate(ticket.createdAt)}
+                      </td>
+                      <td className="whitespace-nowrap text-sm text-muted-foreground">
+                        {getTicketTime(ticket)}
+                      </td>
+                      <td className="whitespace-nowrap">
+                        <Link
+                          to={`/tickets/${ticket.id}`}
+                          className="font-mono text-sm font-medium text-primary hover:underline whitespace-nowrap"
+                        >
+                          {formatShortId(ticket.id)}
+                        </Link>
+                      </td>
 
-                        , formatShortId(ticket.id)
-                      )
-                    )
-                    , React.createElement('td', {__self: this, __source: {fileName: _jsxFileName, lineNumber: 262}}
-                      , React.createElement('div', { className: "flex items-center gap-1.5"  , __self: this, __source: {fileName: _jsxFileName, lineNumber: 263}}
-                        , ticket.bookingType === 'group' ? (
-                          React.createElement(Users, { className: "w-3.5 h-3.5 text-muted-foreground"  , __self: this, __source: {fileName: _jsxFileName, lineNumber: 265}} )
-                        ) : (
-                          React.createElement(User, { className: "w-3.5 h-3.5 text-muted-foreground"  , __self: this, __source: {fileName: _jsxFileName, lineNumber: 267}} )
-                        )
-                        , React.createElement('span', { className: "text-sm", __self: this, __source: {fileName: _jsxFileName, lineNumber: 269}}, BOOKING_TYPE_LABELS[ticket.bookingType])
-                      )
-                    )
-                    , React.createElement('td', {__self: this, __source: {fileName: _jsxFileName, lineNumber: 272}}
-                      , React.createElement('span', { className: "text-sm", __self: this, __source: {fileName: _jsxFileName, lineNumber: 273}}, DOMISILI_LABELS[ticket.domisiliOCR])
-                    )
-                    , React.createElement('td', { className: "text-right", __self: this, __source: {fileName: _jsxFileName, lineNumber: 275}}
-                      , React.createElement('span', { className: "font-medium text-sm" , __self: this, __source: {fileName: _jsxFileName, lineNumber: 276}}, formatRupiah(ticket.totalBiaya))
-                    )
-                    , React.createElement('td', {__self: this, __source: {fileName: _jsxFileName, lineNumber: 278}}
-                      , React.createElement(ApprovalStatusChip, { status: ticket.approvalStatus, __self: this, __source: {fileName: _jsxFileName, lineNumber: 279}} )
-                    )
-                    , React.createElement('td', {__self: this, __source: {fileName: _jsxFileName, lineNumber: 281}}
-                      , React.createElement(PaymentStatusChip, { status: ticket.paymentStatus, __self: this, __source: {fileName: _jsxFileName, lineNumber: 282}} )
-                    )
-                    , React.createElement('td', {__self: this, __source: {fileName: _jsxFileName, lineNumber: 284}}
-                      , React.createElement(GateStatusChip, { status: ticket.gateStatus, __self: this, __source: {fileName: _jsxFileName, lineNumber: 285}} )
-                    )
-                    , React.createElement('td', {__self: this, __source: {fileName: _jsxFileName, lineNumber: 287}}
-                      , React.createElement(RealisasiStatusChip, { status: ticket.realisasiStatus, __self: this, __source: {fileName: _jsxFileName, lineNumber: 288}} )
-                    )
-                    , React.createElement('td', {__self: this, __source: {fileName: _jsxFileName, lineNumber: 290}}
-                      , React.createElement('div', { className: "flex items-center justify-center gap-1"   , __self: this, __source: {fileName: _jsxFileName, lineNumber: 291}}
-                        , React.createElement(Link, { to: `/tickets/${ticket.id}`, __self: this, __source: {fileName: _jsxFileName, lineNumber: 292}}
-                          , React.createElement(Button, { variant: "ghost", size: "icon", className: "h-8 w-8" , __self: this, __source: {fileName: _jsxFileName, lineNumber: 293}}
-                            , React.createElement(Eye, { className: "w-4 h-4" , __self: this, __source: {fileName: _jsxFileName, lineNumber: 294}} )
-                          )
-                        )
-                      )
-                    )
-                  )
-                ))
-              )
-            )
-          )
-        )
-      )
-    )
+                      <td>
+                        <div className="flex items-center gap-2">
+                          <User className="w-3.5 h-3.5 text-muted-foreground" />
+                          <span className="text-sm">{BOOKING_TYPE_LABELS[ticket.bookingType]}</span>
+                        </div>
+                      </td>
+
+                      <td>
+                        <span
+                          className={
+                            getPaymentType(ticket) === 'online'
+                              ? 'inline-flex items-center rounded-full bg-status-approved-bg px-2.5 py-0.5 text-xs font-medium text-status-approved'
+                              : 'inline-flex items-center rounded-full bg-status-pending-bg px-2.5 py-0.5 text-xs font-medium text-status-pending'
+                          }
+                        >
+                          {getPaymentType(ticket) === 'online' ? 'Online' : 'On the spot'}
+                        </span>
+                      </td>
+
+                      <td>
+                        <span className="text-sm">{DOMISILI_LABELS[ticket.domisiliOCR]}</span>
+                      </td>
+
+                      <td>
+                        <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${paymentStatus.className}`}>
+                          {paymentStatus.label}
+                        </span>
+                      </td>
+
+                      <td>
+                        <div className="flex items-center justify-center gap-1">
+                          <Link to={`/tickets/${ticket.id}`}>
+                            <Button variant="ghost" size="icon" className="h-8 w-8" title="Detail tiket">
+                              <Users className="w-4 h-4" />
+                            </Button>
+                          </Link>
+
+                          {isInternationalTicket(ticket) ? (
+                            <Link to={`/payments/${ticket.id}?type=turis`}>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8"
+                                title="Bukti Pembayaran Turis"
+                              >
+                                <FileCheck className="w-4 h-4" />
+                              </Button>
+                            </Link>
+                          ) : (
+                            <Link to={`/payments/${ticket.id}?type=blud`}>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8"
+                                title="Bukti Pembayaran BLUD UPTD KKP"
+                              >
+                                <Landmark className="w-4 h-4" />
+                              </Button>
+                            </Link>
+                          )}
+
+                          <Link to={`/cards/${ticket.id}`}>
+                            <Button variant="ghost" size="icon" className="h-8 w-8" title="Cetak Kartu TJL">
+                              <IdCard className="w-4 h-4" />
+                            </Button>
+                          </Link>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </Card>
+      </div>
+    </AdminLayout>
   );
 }

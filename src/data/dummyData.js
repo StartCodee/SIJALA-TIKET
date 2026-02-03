@@ -1,14 +1,71 @@
 // Dummy data for Raja Ampat Conservation Fee Ticketing Admin Dashboard
+export const SERVICE_RATE_VALIDITY_OPTIONS = [
+  '1 bulan',
+  '2 bulan',
+  '3 bulan',
+  '4 bulan',
+  '5 bulan',
+  '6 bulan',
+  '7 bulan',
+  '8 bulan',
+  '9 bulan',
+  '10 bulan',
+  '11 bulan',
+  '12 bulan',
+];
+
+export const DEFAULT_SERVICE_RATE_VALIDITY = SERVICE_RATE_VALIDITY_OPTIONS[11];
+
 // Fee pricing constants
 export const FEE_PRICING = {
-  wisatawan_domestik_pbd: { label: 'Wisatawan Domestik (Papua Barat Daya)', price: 150000, needsApproval: false },
-  wisatawan_domestik_papua: { label: 'Wisatawan Domestik (Papua luar PBD)', price: 250000, needsApproval: false },
-  wisatawan_domestik_luar_papua: { label: 'Wisatawan Domestik', price: 500000, needsApproval: false },
-  wisatawan_mancanegara: { label: 'Wisatawan Mancanegara', price: 1000000, needsApproval: false },
-  peneliti_domestik: { label: 'Peneliti Domestik', price: 500000, needsApproval: true },
-  peneliti_mancanegara: { label: 'Peneliti Mancanegara', price: 1000000, needsApproval: true },
-  mooring: { label: 'Mooring', price: 75000000, needsApproval: true },
-  sport_fishing: { label: 'Sport Fishing', price: 2500000, needsApproval: true },
+  wisatawan_domestik_pbd: {
+    label: 'Wisatawan Domestik (Papua Barat Daya)',
+    price: 150000,
+    needsApproval: false,
+    validity: DEFAULT_SERVICE_RATE_VALIDITY,
+  },
+  wisatawan_domestik_papua: {
+    label: 'Wisatawan Domestik (Papua luar PBD)',
+    price: 250000,
+    needsApproval: false,
+    validity: DEFAULT_SERVICE_RATE_VALIDITY,
+  },
+  wisatawan_domestik_luar_papua: {
+    label: 'Wisatawan Domestik',
+    price: 500000,
+    needsApproval: false,
+    validity: DEFAULT_SERVICE_RATE_VALIDITY,
+  },
+  wisatawan_mancanegara: {
+    label: 'Wisatawan Mancanegara',
+    price: 1000000,
+    needsApproval: false,
+    validity: DEFAULT_SERVICE_RATE_VALIDITY,
+  },
+  peneliti_domestik: {
+    label: 'Peneliti Domestik',
+    price: 500000,
+    needsApproval: true,
+    validity: DEFAULT_SERVICE_RATE_VALIDITY,
+  },
+  peneliti_mancanegara: {
+    label: 'Peneliti Mancanegara',
+    price: 1000000,
+    needsApproval: true,
+    validity: DEFAULT_SERVICE_RATE_VALIDITY,
+  },
+  mooring: {
+    label: 'Mooring',
+    price: 75000000,
+    needsApproval: true,
+    validity: DEFAULT_SERVICE_RATE_VALIDITY,
+  },
+  sport_fishing: {
+    label: 'Sport Fishing',
+    price: 2500000,
+    needsApproval: true,
+    validity: DEFAULT_SERVICE_RATE_VALIDITY,
+  },
 };
 
 export const DOMISILI_LABELS = {
@@ -46,6 +103,19 @@ export const ROLE_LABELS = {
   operator_persetujuan: 'Operator Persetujuan',
 };
 
+export const dummyPermissionMatrix = [
+  { perm: 'Lihat Dashboard', admin: true, finance: true, approver: true },
+  { perm: 'Lihat Tiket', admin: true, finance: true, approver: true },
+  { perm: 'Setujui/Tolak Tiket', admin: true, finance: false, approver: true },
+  { perm: 'Proses Pengembalian Dana', admin: true, finance: true, approver: false },
+  { perm: 'Lihat Laporan Keuangan', admin: true, finance: true, approver: false },
+  { perm: 'Ekspor Data', admin: true, finance: true, approver: true },
+  { perm: 'Kelola Pengguna', admin: true, finance: false, approver: false },
+  { perm: 'Lihat Log Aktivitas', admin: true, finance: true, approver: true },
+  { perm: 'Ubah Hasil OCR', admin: true, finance: false, approver: true },
+  { perm: 'Ubah Pengaturan', admin: true, finance: false, approver: false },
+];
+
 // Dummy Tickets
 export const dummyTickets = [
   {
@@ -64,7 +134,7 @@ export const dummyTickets = [
     hargaPerOrang: 150000,
     totalBiaya: 150000,
     approvalStatus: 'disetujui',
-    paymentStatus: 'belum_bayar',
+    paymentStatus: 'no_activity',
     gateStatus: 'belum_masuk',
     realisasiStatus: 'belum_terealisasi',
     needsApproval: false,
@@ -227,7 +297,7 @@ export const dummyTickets = [
     totalBiaya: 75000000,
     approvalStatus: 'ditolak',
     rejectionReason: 'Dokumen tidak valid, kapal tidak terdaftar',
-    paymentStatus: 'belum_bayar',
+    paymentStatus: 'unsuccessful',
     gateStatus: 'belum_masuk',
     realisasiStatus: 'belum_terealisasi',
     needsApproval: true,
@@ -255,7 +325,7 @@ export const dummyTickets = [
     totalBiaya: 2500000,
     approvalStatus: 'ditolak',
     rejectionReason: 'Dokumen izin memancing tidak lengkap',
-    paymentStatus: 'belum_bayar',
+    paymentStatus: 'unsuccessful',
     gateStatus: 'belum_masuk',
     realisasiStatus: 'belum_terealisasi',
     needsApproval: true,
@@ -622,38 +692,42 @@ export const dummyAuditLogs = [
 
 // Dummy Invoices
 export const dummyInvoices = [
+  // ✅ GROUP INVOICE: 1 invoice bayar banyak tiket perorangan
   {
     id: 'INV-2024-001',
     ticketId: 'RA-2024-002',
     amount: 500000,
-    method: 'bank_transfer',
+    method: 'qris',
     paidAt: '2024-01-16T14:00:00',
     paymentStatus: 'sudah_bayar',
     realisasiStatus: 'sudah_terealisasi',
     refundFlag: false,
   },
   {
-    id: 'INV-2024-002',
-    ticketId: 'RA-2024-003',
-    amount: 4500000,
-    method: 'credit_card',
-    paidAt: '2024-01-16T20:00:00',
-    paymentStatus: 'refund_diproses',
-    realisasiStatus: 'sudah_terealisasi',
-    refundFlag: true,
-  },
-  {
-    id: 'INV-2024-003',
+    id: 'INV-2024-001',
     ticketId: 'RA-2024-004',
     amount: 1000000,
     method: 'qris',
-    paidAt: '2024-01-15T11:00:00',
+    paidAt: '2024-01-16T14:00:00',
     paymentStatus: 'sudah_bayar',
     realisasiStatus: 'sudah_terealisasi',
     refundFlag: false,
   },
   {
-    id: 'INV-2024-004',
+    id: 'INV-2024-001',
+    ticketId: 'RA-2024-011',
+    amount: 150000,
+    method: 'qris',
+    paidAt: '2024-01-16T14:00:00',
+    paymentStatus: 'sudah_bayar',
+    realisasiStatus: 'sudah_terealisasi',
+    refundFlag: false,
+  },
+
+  
+  // ✅ PERORANGAN INVOICE: 1 invoice = 1 tiket (contoh peneliti)
+  {
+    id: 'INV-2024-003',
     ticketId: 'RA-2024-006',
     amount: 1000000,
     method: 'bank_transfer',
@@ -662,28 +736,10 @@ export const dummyInvoices = [
     realisasiStatus: 'sudah_terealisasi',
     refundFlag: false,
   },
+
+  // ✅ PERORANGAN INVOICE: tiket bookingType group tapi invoicenya single (tetap perorangan invoice)
   {
-    id: 'INV-2024-005',
-    ticketId: 'RA-2024-009',
-    amount: 2000000,
-    method: 'e_wallet',
-    paidAt: '2024-01-18T12:00:00',
-    paymentStatus: 'refund_selesai',
-    realisasiStatus: 'sudah_terealisasi',
-    refundFlag: true,
-  },
-  {
-    id: 'INV-2024-006',
-    ticketId: 'RA-2024-011',
-    amount: 150000,
-    method: 'qris',
-    paidAt: '2024-01-12T10:00:00',
-    paymentStatus: 'sudah_bayar',
-    realisasiStatus: 'sudah_terealisasi',
-    refundFlag: false,
-  },
-  {
-    id: 'INV-2024-007',
+    id: 'INV-2024-004',
     ticketId: 'RA-2024-012',
     amount: 12000000,
     method: 'credit_card',
@@ -692,7 +748,71 @@ export const dummyInvoices = [
     realisasiStatus: 'sudah_terealisasi',
     refundFlag: false,
   },
+
+  // ✅ GROUP INVOICE: dibuat tapi belum bayar (banyak tiket)
+  {
+    id: 'INV-2024-005',
+    ticketId: 'RA-2024-001',
+    amount: 150000,
+    method: 'bank_transfer',
+    paymentStatus: 'belum_bayar',
+    realisasiStatus: 'belum_terealisasi',
+    refundFlag: false,
+  },
+  {
+    id: 'INV-2024-005',
+    ticketId: 'RA-2024-005',
+    amount: 500000,
+    method: 'bank_transfer',
+    paymentStatus: 'belum_bayar',
+    realisasiStatus: 'belum_terealisasi',
+    refundFlag: false,
+  },
+
+  // ✅ PERORANGAN INVOICE: mooring (unpaid)
+  {
+    id: 'INV-2024-006',
+    ticketId: 'RA-2024-010',
+    amount: 75000000,
+    method: 'bank_transfer',
+    paymentStatus: 'belum_bayar',
+    realisasiStatus: 'belum_terealisasi',
+    refundFlag: false,
+  },
 ];
+
+// ===== Helpers untuk multi-ticket invoice (GROUPING by invoice.id) =====
+
+export const groupInvoiceLinesById = (lines) =>
+  lines.reduce((acc, line) => {
+    (acc[line.id] ||= []).push(line);
+    return acc;
+  }, {});
+
+export const getInvoiceLinesById = (invoiceId) =>
+  dummyInvoices.filter((inv) => inv.id === invoiceId);
+
+export const getInvoiceIdByTicketId = (ticketId) =>
+  dummyInvoices.find((inv) => inv.ticketId === ticketId)?.id;
+
+// Map cepat: ticketId -> invoiceId
+export const invoiceIdByTicketId = dummyInvoices.reduce((acc, inv) => {
+  acc[inv.ticketId] = inv.id;
+  return acc;
+}, {});
+
+export const getInvoiceIdForTicket = (ticketId) => {
+  return invoiceIdByTicketId[ticketId];
+};
+
+export const getInvoiceLinesByInvoiceId = (invoiceId) => {
+  return dummyInvoices.filter((inv) => inv.id === invoiceId);
+};
+
+export const getTicketIdsByInvoiceId = (invoiceId) => {
+  return getInvoiceLinesByInvoiceId(invoiceId).map((inv) => inv.ticketId);
+};
+
 
 // Finance Report Summary
 export const financeReportSummary = {
@@ -713,6 +833,12 @@ export const financeReportSummary = {
       { category: 'Mooring', amount: 0, count: 0 },
       { category: 'Sport Fishing', amount: 0, count: 0 },
     ],
+    byCountry: [
+      { country: 'Indonesia', amount: 7150000 },
+      { country: 'Australia', amount: 1000000 },
+      { country: 'Germany', amount: 12000000 },
+      { country: 'United Kingdom', amount: 1000000 },
+    ],
     byDomisili: [
       { domisili: 'Papua Barat Daya', amount: 150000 },
       { domisili: 'Papua luar PBD', amount: 7000000 },
@@ -720,11 +846,11 @@ export const financeReportSummary = {
     ],
   },
   dailyTrend: [
-    { date: '2024-01-12', total: 150000, realized: 150000 },
-    { date: '2024-01-15', total: 1000000, realized: 1000000 },
-    { date: '2024-01-16', total: 5000000, realized: 4500000 },
-    { date: '2024-01-18', total: 2000000, realized: 2000000 },
-    { date: '2024-01-19', total: 12000000, realized: 0 },
+    { date: '2024-01-12', total: 150000, realized: 150000, refunds: 0 },
+    { date: '2024-01-15', total: 1000000, realized: 1000000, refunds: 0 },
+    { date: '2024-01-16', total: 5000000, realized: 4500000, refunds: 250000 },
+    { date: '2024-01-18', total: 2000000, realized: 2000000, refunds: 0 },
+    { date: '2024-01-19', total: 13000000, realized: 1000000, refunds: 500000 },
   ],
 };
 

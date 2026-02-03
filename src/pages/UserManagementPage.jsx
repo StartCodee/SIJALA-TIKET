@@ -3,7 +3,12 @@ const _jsxFileName = "src\\pages\\UserManagementPage.tsx";import { useState } fr
 import { AdminLayout } from '@/components/AdminLayout';
 import { AdminHeader } from '@/components/AdminHeader';
 import { UserStatusChip, RoleBadge } from '@/components/StatusChip';
-import { dummyAdminUsers, formatDateTime, formatShortId, } from '@/data/dummyData';
+import {
+  dummyAdminUsers,
+  dummyPermissionMatrix,
+  formatDateTime,
+  formatShortId,
+} from '@/data/dummyData';
 import {
   Search,
   Plus,
@@ -50,18 +55,9 @@ export default function UserManagementPage() {
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
-  const [permissions, setPermissions] = useState([
-    { perm: 'Lihat Dashboard', admin: true, finance: true, approver: true },
-    { perm: 'Lihat Tiket', admin: true, finance: true, approver: true },
-    { perm: 'Setujui/Tolak Tiket', admin: true, finance: false, approver: true },
-    { perm: 'Proses Pengembalian Dana', admin: true, finance: true, approver: false },
-    { perm: 'Lihat Laporan Keuangan', admin: true, finance: true, approver: false },
-    { perm: 'Ekspor Data', admin: true, finance: true, approver: true },
-    { perm: 'Kelola Pengguna', admin: true, finance: false, approver: false },
-    { perm: 'Lihat Log Aktivitas', admin: true, finance: true, approver: true },
-    { perm: 'Ubah Hasil OCR', admin: true, finance: false, approver: true },
-    { perm: 'Ubah Pengaturan', admin: true, finance: false, approver: false },
-  ]);
+  const [permissions, setPermissions] = useState(
+    () => dummyPermissionMatrix.map((row) => ({ ...row }))
+  );
 
   // Filter users
   const filteredUsers = dummyAdminUsers.filter((user) => {

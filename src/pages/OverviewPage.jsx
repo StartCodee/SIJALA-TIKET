@@ -28,18 +28,13 @@ import {
   RotateCcw,
   ArrowRight,
   Users,
+  GripVertical,
+  Check,
+  X,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import {
-  DropdownMenu,
-  DropdownMenuCheckboxItem,
-  DropdownMenuContent,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 import {
   AreaChart,
   Area,
@@ -52,7 +47,6 @@ import {
   Tooltip,
   ResponsiveContainer,
   Legend,
-  LineChart,
   Line,
   Cell,
   PieChart,
@@ -102,24 +96,44 @@ const trendFilterOptions = [
   { label: 'Kustom', value: 'custom', days: 30 },
 ];
 
+const defaultSummarySelection = [
+  'payment_success',
+  'payment_pending',
+  'payment_failed',
+  'visitor_active',
+  'visitor_due',
+  'failed_payment_amount',
+  'refund_requested',
+  'refund_success',
+  'approval_wait',
+  'visitor_registered',
+  'revenue_in',
+  'revenue_pending',
+  'revenue_total',
+  'approval_approved',
+];
+
+const defaultSummaryOrder = [
+  'payment_success',
+  'payment_pending',
+  'payment_failed',
+  'visitor_active',
+  'visitor_due',
+  'failed_payment_amount',
+  'refund_requested',
+  'refund_success',
+  'approval_wait',
+  'visitor_registered',
+  'revenue_in',
+  'revenue_pending',
+  'revenue_total',
+  'approval_approved',
+];
+
 export default function OverviewPage() {
   const isAdmin = true;
-  const [summarySelection, setSummarySelection] = useState([
-    'payment_success',
-    'payment_pending',
-    'payment_failed',
-    'visitor_active',
-    'visitor_due',
-    'failed_payment_amount',
-    'refund_requested',
-    'refund_success',
-    'approval_wait',
-    'visitor_registered',
-    'revenue_in',
-    'revenue_pending',
-    'revenue_total',
-    'approval_approved',
-  ]);
+  const [summarySelection, setSummarySelection] = useState(defaultSummarySelection);
+  const [showSummaryConfig, setShowSummaryConfig] = useState(false);
   const [trendFilter, setTrendFilter] = useState('today');
   const recentTickets = [...dummyTickets]
     .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
@@ -186,6 +200,12 @@ export default function OverviewPage() {
     current: bookingCounts[key] || 0,
     lastYear: Math.max(0, Math.round((bookingCounts[key] || 0) * 0.85)),
   }));
+  const categoryData = financeReportSummary.breakdown.byCategory
+    .map((item) => ({
+      name: item.category.replace('Wisatawan ', '').replace('Domestik ', ''),
+      value: item.amount,
+    }))
+    .filter((item) => item.value > 0);
   const summaryOptions = [
     { id: 'payment_success', label: 'Pembayaran Sukses' },
     { id: 'payment_pending', label: 'Pembayaran Pending' },
@@ -202,13 +222,39 @@ export default function OverviewPage() {
     { id: 'approval_wait', label: 'Menunggu persetujuan' },
     { id: 'approval_approved', label: 'Persetujuan Disetujui' },
   ];
+  const [summaryOrder, setSummaryOrder] = useState(defaultSummaryOrder);
   const isSelected = (id) => summarySelection.includes(id);
-  const toggleSummary = (id) => {
-    setSummarySelection((prev) => (
-      prev.includes(id)
-        ? prev.filter((item) => item !== id)
-        : [...prev, id]
-    ));
+  const showSummary = (id) => {
+    setSummarySelection((prev) => (prev.includes(id) ? prev : [...prev, id]));
+  };
+  const hideSummary = (id) => {
+    setSummarySelection((prev) => prev.filter((item) => item !== id));
+  };
+  const handleDragStart = (event, id) => {
+    event.dataTransfer.setData('text/plain', id);
+    event.dataTransfer.effectAllowed = 'move';
+  };
+  const handleDragOver = (event) => {
+    event.preventDefault();
+    event.dataTransfer.dropEffect = 'move';
+  };
+  const handleDrop = (event, targetId) => {
+    event.preventDefault();
+    const draggedId = event.dataTransfer.getData('text/plain');
+    if (!draggedId || draggedId === targetId) return;
+    setSummaryOrder((prev) => {
+      const next = [...prev];
+      const from = next.indexOf(draggedId);
+      const to = next.indexOf(targetId);
+      if (from === -1 || to === -1) return prev;
+      next.splice(from, 1);
+      next.splice(to, 0, draggedId);
+      return next;
+    });
+  };
+  const resetSummaryDefaults = () => {
+    setSummarySelection([...defaultSummarySelection]);
+    setSummaryOrder([...defaultSummaryOrder]);
   };
   const summaryKpis = [
     // Row 1
@@ -330,9 +376,13 @@ export default function OverviewPage() {
     },
   ];
 
-  const visibleKpis = summaryKpis
-    .filter((kpi) => (kpi.adminOnly ? isAdmin : true))
-    .filter((kpi) => isSelected(kpi.id));
+  const summaryKpiMap = summaryKpis.reduce((acc, kpi) => {
+    acc[kpi.id] = kpi;
+    return acc;
+  }, {});
+  const orderedKpis = summaryOrder.map((id) => summaryKpiMap[id]).filter(Boolean);
+  const editableKpis = orderedKpis.filter((kpi) => (kpi.adminOnly ? isAdmin : true));
+  const visibleKpis = editableKpis.filter((kpi) => isSelected(kpi.id));
   const kpiRows = [];
   for (let i = 0; i < visibleKpis.length; i += 5) {
     kpiRows.push(visibleKpis.slice(i, i + 5));
@@ -350,25 +400,21 @@ export default function OverviewPage() {
           , React.createElement(CardHeader, { className: "pb-2", __self: this, __source: {fileName: _jsxFileName, lineNumber: 100}}
             , React.createElement('div', { className: "flex flex-wrap items-center justify-between gap-3"  , __self: this, __source: {fileName: _jsxFileName, lineNumber: 101}}
               , React.createElement(CardTitle, { className: "text-base font-semibold" , __self: this, __source: {fileName: _jsxFileName, lineNumber: 102}}, "Pengaturan Ringkasan" )
-              , React.createElement('div', { className: "flex items-center gap-2"  , __self: this, __source: {fileName: _jsxFileName, lineNumber: 103}}
-                , React.createElement(DropdownMenu, {__self: this, __source: {fileName: _jsxFileName, lineNumber: 104}}
-                  , React.createElement(DropdownMenuTrigger, { asChild: true, __self: this, __source: {fileName: _jsxFileName, lineNumber: 105}}
-                    , React.createElement(Button, { variant: "outline", size: "sm", className: "h-8 text-xs" , __self: this, __source: {fileName: _jsxFileName, lineNumber: 106}}, "Atur Ringkasan" )
-                  )
-                  , React.createElement(DropdownMenuContent, { align: "end", className: "bg-popover border-border w-64" , __self: this, __source: {fileName: _jsxFileName, lineNumber: 108}}
-                    , React.createElement(DropdownMenuLabel, {__self: this, __source: {fileName: _jsxFileName, lineNumber: 109}}, "Tampilkan KPI")
-                    , React.createElement(DropdownMenuSeparator, {__self: this, __source: {fileName: _jsxFileName, lineNumber: 110}} )
-                    , summaryOptions
-                        .filter((option) => (option.adminOnly ? isAdmin : true))
-                        .map((option) => (
-                          React.createElement(DropdownMenuCheckboxItem, {
-                            key: option.id,
-                            checked: isSelected(option.id),
-                            onCheckedChange: () => toggleSummary(option.id), __self: this, __source: {fileName: _jsxFileName, lineNumber: 112}}
-
-                            , option.label
-                          )
-                        ))
+              , React.createElement('div', { className: "flex flex-wrap items-center gap-2"  , __self: this, __source: {fileName: _jsxFileName, lineNumber: 103}}
+                , React.createElement(Button, {
+                  size: "sm",
+                  className: showSummaryConfig
+                    ? "h-8 text-xs bg-status-revision-bg text-status-revision hover:bg-status-revision-bg/80 border border-status-revision/30"
+                    : "h-8 text-xs bg-primary text-primary-foreground hover:bg-primary/90",
+                  onClick: () => setShowSummaryConfig((prev) => !prev), __self: this, __source: {fileName: _jsxFileName, lineNumber: 106}}
+                  , showSummaryConfig ? "Tutup Ringkasan" : "Edit Ringkasan"
+                )
+                , showSummaryConfig && (
+                  React.createElement(Button, {
+                    size: "sm",
+                    className: "h-8 text-xs bg-status-pending-bg text-status-pending hover:bg-status-pending-bg/80 border border-status-pending/30",
+                    onClick: resetSummaryDefaults, __self: this, __source: {fileName: _jsxFileName, lineNumber: 114}}
+                    , "Edit Default"
                   )
                 )
                 , React.createElement(Button, { variant: "outline", size: "sm", className: "h-8 text-xs" , __self: this, __source: {fileName: _jsxFileName, lineNumber: 120}}, "Export PDF" )
@@ -376,7 +422,61 @@ export default function OverviewPage() {
               )
             )
           )
-          , React.createElement(CardContent, { className: "hidden", __self: this, __source: {fileName: _jsxFileName, lineNumber: 125}}
+          , showSummaryConfig && (
+            React.createElement(CardContent, { className: "pt-0", __self: this, __source: {fileName: _jsxFileName, lineNumber: 125}}
+              , React.createElement('p', { className: "mb-3 text-xs text-muted-foreground" , __self: this, __source: {fileName: _jsxFileName, lineNumber: 126}}, "Geser kartu untuk ubah urutan.")
+              , React.createElement('div', { className: "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"   , __self: this, __source: {fileName: _jsxFileName, lineNumber: 131}}
+                , editableKpis.map((kpi, index) => {
+                  const active = isSelected(kpi.id);
+                  return (
+                    React.createElement('div', {
+                      key: kpi.id,
+                      draggable: true,
+                      onDragStart: (event) => handleDragStart(event, kpi.id),
+                      onDragOver: handleDragOver,
+                      onDrop: (event) => handleDrop(event, kpi.id),
+                      className: `relative rounded-2xl border border-border bg-card p-4 transition cursor-grab active:cursor-grabbing kpi-config-wiggle ${active ? 'shadow-sm' : 'opacity-60 grayscale'}`,
+                      style: { animationDelay: `${index * 0.08}s` },
+                      __self: this, __source: {fileName: _jsxFileName, lineNumber: 127}}
+
+                      , React.createElement('div', { className: "absolute left-3 top-3 flex items-center gap-2 text-muted-foreground"    , __self: this, __source: {fileName: _jsxFileName, lineNumber: 128}}
+                        , React.createElement(GripVertical, { className: "w-4 h-4" , __self: this, __source: {fileName: _jsxFileName, lineNumber: 129}} )
+                      )
+                      , React.createElement('div', { className: "absolute right-2 top-2 flex items-center gap-1"  , __self: this, __source: {fileName: _jsxFileName, lineNumber: 132}}
+                        , React.createElement(Button, {
+                          variant: "ghost",
+                          size: "icon",
+                          className: `h-7 w-7 ${active ? 'text-status-approved' : 'text-muted-foreground'}`,
+                          title: "Tampilkan",
+                          onClick: () => showSummary(kpi.id), __self: this, __source: {fileName: _jsxFileName, lineNumber: 133}}
+                          , React.createElement(Check, { className: "w-4 h-4" , __self: this, __source: {fileName: _jsxFileName, lineNumber: 134}} )
+                        )
+                        , React.createElement(Button, {
+                          variant: "ghost",
+                          size: "icon",
+                          className: `h-7 w-7 ${!active ? 'text-status-rejected' : 'text-muted-foreground'}`,
+                          title: "Sembunyikan",
+                          onClick: () => hideSummary(kpi.id), __self: this, __source: {fileName: _jsxFileName, lineNumber: 137}}
+                          , React.createElement(X, { className: "w-4 h-4" , __self: this, __source: {fileName: _jsxFileName, lineNumber: 138}} )
+                        )
+                      )
+                      , React.createElement(KPICard, {
+                        title: kpi.title,
+                        value: kpi.value,
+                        icon: kpi.icon,
+                        variant: kpi.variant,
+                        subtitle: kpi.subtitle,
+                        trend: kpi.trend,
+                        className: "pointer-events-none", __self: this, __source: {fileName: _jsxFileName, lineNumber: 141}}
+                      )
+                    )
+                  );
+                })
+              )
+              , React.createElement('p', { className: "mt-3 text-xs text-muted-foreground" , __self: this, __source: {fileName: _jsxFileName, lineNumber: 148}}
+                , "Drag & drop kartu untuk mengatur urutan. Centang untuk tampil, silang untuk sembunyikan."
+              )
+            )
           )
         )
 
@@ -422,7 +522,7 @@ export default function OverviewPage() {
                       React.createElement('option', { key: option.value, value: option.value, __self: this, __source: {fileName: _jsxFileName, lineNumber: 182}}, option.label)
                     ))
                   )
-                  , React.createElement('span', { className: "text-xs text-muted-foreground" , __self: this, __source: {fileName: _jsxFileName, lineNumber: 186}}, "vs tahun lalu" )
+                  , React.createElement('span', { className: "text-xs text-muted-foreground" , __self: this, __source: {fileName: _jsxFileName, lineNumber: 186}}, "dengan tahun lalu" )
                 )
               )
             )
@@ -492,23 +592,45 @@ export default function OverviewPage() {
             , React.createElement(CardContent, {__self: this, __source: {fileName: _jsxFileName, lineNumber: 240}}
               , React.createElement('div', { className: "h-[180px]", __self: this, __source: {fileName: _jsxFileName, lineNumber: 241}}
                 , React.createElement(ResponsiveContainer, { width: "100%", height: "100%", __self: this, __source: {fileName: _jsxFileName, lineNumber: 242}}
-                  , React.createElement(LineChart, { data: trendData, __self: this, __source: {fileName: _jsxFileName, lineNumber: 243}}
-                    , React.createElement(CartesianGrid, { strokeDasharray: "3 3" , stroke: "hsl(var(--border))", __self: this, __source: {fileName: _jsxFileName, lineNumber: 244}} )
-                    , React.createElement(XAxis, { dataKey: "date", tick: { fontSize: 10, fill: 'hsl(var(--muted-foreground))' }, axisLine: { stroke: 'hsl(var(--border))' }, __self: this, __source: {fileName: _jsxFileName, lineNumber: 245}} )
-                    , React.createElement(YAxis, { tick: { fontSize: 10, fill: 'hsl(var(--muted-foreground))' }, axisLine: { stroke: 'hsl(var(--border))' }, tickFormatter: (v) => `${v}jt`, __self: this, __source: {fileName: _jsxFileName, lineNumber: 246}} )
-                    , React.createElement(Tooltip, { 
-                      contentStyle: { 
+                  , React.createElement(PieChart, {__self: this, __source: {fileName: _jsxFileName, lineNumber: 243}}
+                    , React.createElement(Pie, {
+                      data: categoryData,
+                      cx: "50%",
+                      cy: "50%",
+                      innerRadius: 50,
+                      outerRadius: 75,
+                      paddingAngle: 2,
+                      dataKey: "value", __self: this, __source: {fileName: _jsxFileName, lineNumber: 244}}
+
+                      , categoryData.map((entry, index) => (
+                        React.createElement(Cell, { key: `cell-${index}`, fill: PIE_COLORS[index % PIE_COLORS.length], __self: this, __source: {fileName: _jsxFileName, lineNumber: 254}} )
+                      ))
+                    )
+                    , React.createElement(Tooltip, {
+                      contentStyle: {
                         backgroundColor: 'hsl(var(--card))',
                         border: '1px solid hsl(var(--border))',
                         borderRadius: '8px',
                         fontSize: '12px',
                       },
-                      formatter: (value) => [`Rp ${value}jt`, ''], __self: this, __source: {fileName: _jsxFileName, lineNumber: 247}}
+                      formatter: (value) => [formatRupiah(value), ''], __self: this, __source: {fileName: _jsxFileName, lineNumber: 257}}
                     )
-                    , React.createElement(Line, { type: "monotone", dataKey: "total", stroke: CHART_COLORS.total, strokeWidth: 2, dot: false, name: "Total", __self: this, __source: {fileName: _jsxFileName, lineNumber: 251}} )
-                    , React.createElement(Line, { type: "monotone", dataKey: "lastYearTotal", stroke: CHART_COLORS.previous, strokeWidth: 2, dot: false, strokeDasharray: "4 4", name: "Total tahun lalu", __self: this, __source: {fileName: _jsxFileName, lineNumber: 252}} )
                   )
                 )
+              )
+              , React.createElement('div', { className: "space-y-2 mt-2" , __self: this, __source: {fileName: _jsxFileName, lineNumber: 269}}
+                , categoryData.slice(0, 5).map((item, index) => (
+                  React.createElement('div', { key: item.name, className: "flex items-center justify-between text-xs"   , __self: this, __source: {fileName: _jsxFileName, lineNumber: 271}}
+                    , React.createElement('div', { className: "flex items-center gap-2"  , __self: this, __source: {fileName: _jsxFileName, lineNumber: 272}}
+                      , React.createElement('div', { 
+                        className: "w-2.5 h-2.5 rounded-full"  , 
+                        style: { backgroundColor: PIE_COLORS[index] }, __self: this, __source: {fileName: _jsxFileName, lineNumber: 273}} 
+                      )
+                      , React.createElement('span', { className: "text-muted-foreground truncate max-w-[160px]"  , __self: this, __source: {fileName: _jsxFileName, lineNumber: 277}}, item.name)
+                    )
+                    , React.createElement('span', { className: "font-medium", __self: this, __source: {fileName: _jsxFileName, lineNumber: 279}}, formatRupiah(item.value))
+                  )
+                ))
               )
             )
           )
