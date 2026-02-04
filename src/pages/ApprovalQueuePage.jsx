@@ -178,7 +178,7 @@ export default function ApprovalQueuePage() {
     React.createElement(AdminLayout, {__self: this, __source: {fileName: _jsxFileName, lineNumber: 177}}
       , React.createElement(AdminHeader, {
         title: "Antrian Persetujuan" ,
-        subtitle: "Tiket yang membutuhkan persetujuan admin"    ,
+        subtitle: "Tiket yang membutuhkan persetujuan Admin Tiket"    ,
         showSearch: false,
         showDateFilter: false, __self: this, __source: {fileName: _jsxFileName, lineNumber: 178}}
       )

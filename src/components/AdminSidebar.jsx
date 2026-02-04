@@ -192,28 +192,38 @@ export function AdminSidebar({ className, mobileOpen = false, onMobileClose }) {
         </button>
 
         {/* User Section */}
-        <div className={cn(
-          'p-4 border-t border-sidebar-border',
-          isCollapsed && 'md:flex md:justify-center'
-        )}>
-          {!isCollapsed ? (
-            <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-full bg-sidebar-primary/20 flex items-center justify-center">
+        <div
+          className={cn(
+            'p-4 border-t border-sidebar-border',
+            isCollapsed && 'md:flex md:justify-center'
+          )}
+        >
+          <div className={cn('flex items-center gap-3', isCollapsed && 'md:justify-center')}>
+            <NavLink
+              to="/profile"
+              className="flex items-center gap-3 flex-1 min-w-0 rounded-lg p-1.5 hover:bg-sidebar-accent transition-colors"
+              onClick={handleMobileClose}
+              title="Profil"
+            >
+              <div className="w-9 h-9 rounded-full bg-sidebar-primary/20 flex items-center justify-center flex-shrink-0">
                 <span className="text-sm font-semibold text-sidebar-primary">RH</span>
               </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-sidebar-foreground truncate">Rudi Hartono</p>
-                <p className="text-[10px] text-sidebar-foreground/60">Admin Utama</p>
-              </div>
-              <button className="p-1.5 rounded-lg hover:bg-sidebar-accent transition-colors">
+              {!isCollapsed && (
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-sidebar-foreground truncate">Rudi Hartono</p>
+                  <p className="text-[10px] text-sidebar-foreground/60">Admin Utama</p>
+                </div>
+              )}
+            </NavLink>
+            {!isCollapsed && (
+              <button
+                className="p-1.5 rounded-lg hover:bg-sidebar-accent transition-colors"
+                onClick={(event) => event.stopPropagation()}
+              >
                 <LogOut className="w-4 h-4 text-sidebar-foreground/60" />
               </button>
-            </div>
-          ) : (
-            <div className="w-9 h-9 rounded-full bg-sidebar-primary/20 flex items-center justify-center">
-              <span className="text-sm font-semibold text-sidebar-primary">RH</span>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       </aside>
     </>

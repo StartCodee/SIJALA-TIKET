@@ -18,6 +18,7 @@ import NotFound from "./pages/NotFound";
 import InvoiceDetailPage from "./pages/InvoiceDetailPage";
 import InvoiceListPage from "./pages/InvoiceListPage";
 import TicketDesignerPage from "./pages/TicketDesigner";
+import ProfilePage from "./pages/ProfilePage";
 
 const queryClient = new QueryClient();
 
@@ -56,6 +57,7 @@ const App = () => (
           <Route path="*" element={<NotFound />} />
           <Route path="/invoices" element={<InvoiceListPage />} />
           <Route path="/invoices/:invoiceId" element={<InvoiceDetailPage />} />
+          <Route path="/profile" element={<ProfilePage />} />
         </Routes>
       </BrowserRouter>
     </TooltipProvider>

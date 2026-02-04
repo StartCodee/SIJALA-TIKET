@@ -4,6 +4,8 @@ import {
   DOMISILI_LABELS,
   FEE_PRICING,
   groupInvoiceLinesById,
+  getTicketById,
+  getTicketOverride,
 } from '@/data/dummyData';
 
 export type InvoiceType = 'perorangan' | 'group';
@@ -90,33 +92,45 @@ export function buildInvoicesFromLines(allLines: Invoice[]): InvoiceViewModel[] 
 export function buildInvoiceFromLines(invoiceId: string, lines: Invoice[]): InvoiceViewModel {
   const lineTicketIds = lines.map((l) => l.ticketId);
   const tickets = lineTicketIds
-    .map((id) => dummyTickets.find((t) => t.id === id))
+    .map((id) => getTicketById(id) || dummyTickets.find((t) => t.id === id))
     .filter(Boolean) as Ticket[];
 
   // fallback kalau ticket tidak ketemu
   const firstTicket = tickets[0];
 
   const ticketRows: InvoiceTicketRow[] = lines.map((l) => {
-    const t = dummyTickets.find((x) => x.id === l.ticketId);
+    const override = getTicketOverride(l.ticketId);
+    const t = getTicketById(l.ticketId) || dummyTickets.find((x) => x.id === l.ticketId);
 
-    const feeLabel = t ? (FEE_PRICING[t.feeCategory]?.label || t.feeCategory) : 'Unknown';
-    const dom = t ? DOMISILI_LABELS[t.domisiliOCR] : '-';
+    const feeCategory = override?.feeCategory || t?.feeCategory || 'wisatawan_domestik_pbd';
+    const feeLabel =
+      FEE_PRICING[feeCategory]?.label ||
+      override?.feeLabel ||
+      (t ? FEE_PRICING[t.feeCategory]?.label || t.feeCategory : 'Unknown');
+    const domKey = override?.domisiliOCR || t?.domisiliOCR;
+    const dom = domKey ? DOMISILI_LABELS[domKey] : '-';
+    const amount =
+      override?.totalBiaya ??
+      override?.amount ??
+      l.amount ??
+      (t?.totalBiaya || 0);
+    const unitPrice = override?.hargaPerOrang ?? (t?.hargaPerOrang || 0);
 
     return {
       invoiceId,
       ticketId: l.ticketId,
-      namaLengkap: t?.namaLengkap || '-',
-      email: t?.email || '-',
-      noHP: t?.noHP || '-',
+      namaLengkap: override?.namaLengkap || t?.namaLengkap || '-',
+      email: override?.email || t?.email || '-',
+      noHP: override?.noHP || t?.noHP || '-',
       domisiliLabel: dom,
-      bookingType: t?.bookingType || 'perorangan',
-      feeCategory: t?.feeCategory || 'wisatawan_domestik_pbd',
+      bookingType: override?.bookingType || t?.bookingType || 'perorangan',
+      feeCategory,
       feeLabel,
-      unitPrice: t?.hargaPerOrang || 0,
-      amount: l.amount ?? (t?.totalBiaya || 0),
-      approvalStatus: t?.approvalStatus || 'menunggu',
-      paymentStatus: l.paymentStatus,
-      realisasiStatus: l.realisasiStatus,
+      unitPrice,
+      amount,
+      approvalStatus: override?.approvalStatus || t?.approvalStatus || 'menunggu',
+      paymentStatus: override?.paymentStatus || l.paymentStatus,
+      realisasiStatus: override?.realisasiStatus || l.realisasiStatus,
       method: l.method,
       paidAt: l.paidAt,
       createdAt: t?.createdAt || new Date().toISOString(),

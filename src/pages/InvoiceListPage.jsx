@@ -16,7 +16,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 
-import { Search, Filter, Download, ChevronDown, ChevronUp, Eye, Printer } from 'lucide-react';
+import { Search, Filter, Download, ChevronDown, ChevronUp, Eye, Printer, FileText } from 'lucide-react';
 
 import { dummyInvoices, formatDateTime, formatRupiah } from '@/data/dummyData';
 import { buildInvoicesFromLines } from '@/features/invoices/invoiceUtils';
@@ -88,6 +88,14 @@ export default function InvoiceListPage() {
     );
   };
 
+  const handleExportPdf = () => {
+    window.print();
+  };
+
+  const handlePrint = () => {
+    window.print();
+  };
+
   return (
     <AdminLayout>
       <AdminHeader
@@ -97,8 +105,8 @@ export default function InvoiceListPage() {
       />
 
       <div className="flex-1 overflow-auto p-6 space-y-4">
-        <div className="flex items-center gap-3">
-          <div className="relative flex-1 max-w-md">
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="relative flex-1 min-w-[220px] max-w-md">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
               value={searchQuery}
@@ -120,10 +128,20 @@ export default function InvoiceListPage() {
             className="gap-2"
             onClick={handleExport}
             disabled={!canExport}
-            title={!canExport ? 'Hanya super_admin yang bisa export' : 'Export Excel'}
+            title={!canExport ? 'Hanya Admin Utama yang bisa export' : 'Export XLS'}
           >
             <Download className="w-4 h-4" />
-            Export Excel
+            Export XLS
+          </Button>
+
+          <Button variant="outline" size="sm" className="gap-2" onClick={handleExportPdf}>
+            <FileText className="w-4 h-4" />
+            Export PDF
+          </Button>
+
+          <Button variant="outline" size="sm" className="gap-2" onClick={handlePrint}>
+            <Printer className="w-4 h-4" />
+            Print
           </Button>
         </div>
 
@@ -204,7 +222,7 @@ export default function InvoiceListPage() {
 
               {/* {!canExport && (
                 <p className="text-xs text-muted-foreground mt-3">
-                  Role kamu: <span className="font-medium text-foreground">{role}</span>. Export hanya untuk <span className="font-medium text-foreground">super_admin</span>.
+                  Role kamu: <span className="font-medium text-foreground">{role}</span>. Export hanya untuk <span className="font-medium text-foreground">Admin Utama</span>.
                 </p>
               )} */}
             </CardContent>

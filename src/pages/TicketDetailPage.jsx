@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { AdminLayout } from '@/components/AdminLayout';
 import { AdminHeader } from '@/components/AdminHeader';
@@ -9,7 +10,8 @@ import {
   RefundStatusChip,
 } from '@/components/StatusChip';
 import {
-  dummyTickets,
+  getTicketById,
+  saveTicketOverride,
   dummyRefunds,
   formatRupiah,
   formatDateTime,
@@ -17,6 +19,7 @@ import {
   FEE_PRICING,
   DOMISILI_LABELS,
   REFUND_TYPE_LABELS,
+  BOOKING_TYPE_LABELS,
 } from '@/data/dummyData';
 import {
   ArrowLeft,
@@ -29,17 +32,94 @@ import {
   CreditCard,
   AlertTriangle,
   FileText,
+  Edit,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 export default function TicketDetailPage() {
   const { ticketId } = useParams();
-  const ticket = dummyTickets.find((t) => t.id === ticketId);
+  const [ticket, setTicket] = useState(() => (ticketId ? getTicketById(ticketId) : null));
   const ticketRefunds = dummyRefunds.filter((r) => r.ticketId === ticketId);
+  const [showEditDialog, setShowEditDialog] = useState(false);
+  const [editForm, setEditForm] = useState({
+    namaLengkap: '',
+    email: '',
+    noHP: '',
+    domisiliOCR: 'pbd',
+    bookingType: 'perorangan',
+    feeCategory: 'wisatawan_domestik_pbd',
+    hargaPerOrang: 0,
+    totalBiaya: 0,
+    approvalStatus: 'menunggu',
+    paymentStatus: 'belum_bayar',
+    gateStatus: 'belum_masuk',
+    realisasiStatus: 'belum_terealisasi',
+  });
+
+  useEffect(() => {
+    if (!ticketId) return;
+    setTicket(getTicketById(ticketId));
+  }, [ticketId]);
+
+  const openEditDialog = () => {
+    if (!ticket) return;
+    setEditForm({
+      namaLengkap: ticket.namaLengkap || '',
+      email: ticket.email || '',
+      noHP: ticket.noHP || '',
+      domisiliOCR: ticket.domisiliOCR || 'pbd',
+      bookingType: ticket.bookingType || 'perorangan',
+      feeCategory: ticket.feeCategory || 'wisatawan_domestik_pbd',
+      hargaPerOrang: ticket.hargaPerOrang || 0,
+      totalBiaya: ticket.totalBiaya || 0,
+      approvalStatus: ticket.approvalStatus || 'menunggu',
+      paymentStatus: ticket.paymentStatus || 'belum_bayar',
+      gateStatus: ticket.gateStatus || 'belum_masuk',
+      realisasiStatus: ticket.realisasiStatus || 'belum_terealisasi',
+    });
+    setShowEditDialog(true);
+  };
+
+  const handleSaveEdit = () => {
+    if (!ticket) return;
+    saveTicketOverride(ticket.id, {
+      namaLengkap: editForm.namaLengkap,
+      email: editForm.email,
+      noHP: editForm.noHP,
+      domisiliOCR: editForm.domisiliOCR,
+      bookingType: editForm.bookingType,
+      feeCategory: editForm.feeCategory,
+      hargaPerOrang: Number(editForm.hargaPerOrang || 0),
+      totalBiaya: Number(editForm.totalBiaya || 0),
+      approvalStatus: editForm.approvalStatus,
+      paymentStatus: editForm.paymentStatus,
+      gateStatus: editForm.gateStatus,
+      realisasiStatus: editForm.realisasiStatus,
+    });
+    setTicket(getTicketById(ticket.id));
+    setShowEditDialog(false);
+  };
 
   if (!ticket) {
     return (
@@ -96,6 +176,10 @@ export default function TicketDetailPage() {
                 Invoice
               </Button>
             </Link>
+            <Button variant="outline" className="gap-2" onClick={openEditDialog}>
+              <Edit className="w-4 h-4" />
+              Edit Tiket
+            </Button>
 
             {ticket.needsApproval && ticket.approvalStatus === 'menunggu' && (
               <>
@@ -362,6 +446,176 @@ export default function TicketDetailPage() {
           </div>
         </div>
       </div>
+
+      <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
+        <DialogContent className="bg-card border-border max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Edit Tiket</DialogTitle>
+            <DialogDescription>
+              Perubahan tiket akan berdampak pada invoice terkait (jumlah tagihan).
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 py-2">
+            <div className="space-y-2">
+              <Label>Nama</Label>
+              <Input
+                value={editForm.namaLengkap}
+                onChange={(e) => setEditForm((prev) => ({ ...prev, namaLengkap: e.target.value }))}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Email</Label>
+              <Input
+                type="email"
+                value={editForm.email}
+                onChange={(e) => setEditForm((prev) => ({ ...prev, email: e.target.value }))}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>No. HP</Label>
+              <Input
+                value={editForm.noHP}
+                onChange={(e) => setEditForm((prev) => ({ ...prev, noHP: e.target.value }))}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Domisili</Label>
+              <Select
+                value={editForm.domisiliOCR}
+                onValueChange={(value) => setEditForm((prev) => ({ ...prev, domisiliOCR: value }))}
+              >
+                <SelectTrigger className="bg-background">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="bg-popover border-border">
+                  {Object.entries(DOMISILI_LABELS).map(([key, label]) => (
+                    <SelectItem key={key} value={key}>{label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>Tipe Pemesanan</Label>
+              <Select
+                value={editForm.bookingType}
+                onValueChange={(value) => setEditForm((prev) => ({ ...prev, bookingType: value }))}
+              >
+                <SelectTrigger className="bg-background">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="bg-popover border-border">
+                  {Object.entries(BOOKING_TYPE_LABELS).map(([key, label]) => (
+                    <SelectItem key={key} value={key}>{label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>Kategori</Label>
+              <Select
+                value={editForm.feeCategory}
+                onValueChange={(value) => setEditForm((prev) => ({ ...prev, feeCategory: value }))}
+              >
+                <SelectTrigger className="bg-background">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="bg-popover border-border">
+                  {Object.entries(FEE_PRICING).map(([key, value]) => (
+                    <SelectItem key={key} value={key}>{value.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>Harga per Orang</Label>
+              <Input
+                type="number"
+                value={editForm.hargaPerOrang}
+                onChange={(e) => setEditForm((prev) => ({ ...prev, hargaPerOrang: e.target.value }))}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Total Biaya</Label>
+              <Input
+                type="number"
+                value={editForm.totalBiaya}
+                onChange={(e) => setEditForm((prev) => ({ ...prev, totalBiaya: e.target.value }))}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Status Persetujuan</Label>
+              <Select
+                value={editForm.approvalStatus}
+                onValueChange={(value) => setEditForm((prev) => ({ ...prev, approvalStatus: value }))}
+              >
+                <SelectTrigger className="bg-background">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="bg-popover border-border">
+                  <SelectItem value="menunggu">Menunggu</SelectItem>
+                  <SelectItem value="disetujui">Disetujui</SelectItem>
+                  <SelectItem value="ditolak">Ditolak</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>Status Pembayaran</Label>
+              <Select
+                value={editForm.paymentStatus}
+                onValueChange={(value) => setEditForm((prev) => ({ ...prev, paymentStatus: value }))}
+              >
+                <SelectTrigger className="bg-background">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="bg-popover border-border">
+                  <SelectItem value="belum_bayar">Belum Bayar</SelectItem>
+                  <SelectItem value="sudah_bayar">Sudah Bayar</SelectItem>
+                  <SelectItem value="refund_diproses">Refund Diproses</SelectItem>
+                  <SelectItem value="refund_selesai">Refund Selesai</SelectItem>
+                  <SelectItem value="unsuccessful">Unsuccessful</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>Status Gerbang</Label>
+              <Select
+                value={editForm.gateStatus}
+                onValueChange={(value) => setEditForm((prev) => ({ ...prev, gateStatus: value }))}
+              >
+                <SelectTrigger className="bg-background">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="bg-popover border-border">
+                  <SelectItem value="belum_masuk">Belum Masuk</SelectItem>
+                  <SelectItem value="masuk">Masuk</SelectItem>
+                  <SelectItem value="keluar">Keluar</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>Status Realisasi</Label>
+              <Select
+                value={editForm.realisasiStatus}
+                onValueChange={(value) => setEditForm((prev) => ({ ...prev, realisasiStatus: value }))}
+              >
+                <SelectTrigger className="bg-background">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="bg-popover border-border">
+                  <SelectItem value="belum_terealisasi">Belum Terealisasi</SelectItem>
+                  <SelectItem value="sudah_terealisasi">Sudah Terealisasi</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowEditDialog(false)}>Batal</Button>
+            <Button className="btn-ocean" onClick={handleSaveEdit}>Simpan Perubahan</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </AdminLayout>
   );
 }

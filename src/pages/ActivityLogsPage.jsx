@@ -110,7 +110,7 @@ export default function ActivityLogsPage() {
     React.createElement(AdminLayout, {__self: this, __source: {fileName: _jsxFileName, lineNumber: 109}}
       , React.createElement(AdminHeader, {
         title: "Log Aktivitas" ,
-        subtitle: "Jejak audit semua aktivitas admin"    ,
+        subtitle: "Jejak audit semua aktivitas pengguna"    ,
         showSearch: false, __self: this, __source: {fileName: _jsxFileName, lineNumber: 110}}
       )
 
@@ -120,7 +120,7 @@ export default function ActivityLogsPage() {
           , React.createElement('div', { className: "relative flex-1 max-w-md"  , __self: this, __source: {fileName: _jsxFileName, lineNumber: 119}}
             , React.createElement(Search, { className: "absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground"      , __self: this, __source: {fileName: _jsxFileName, lineNumber: 120}} )
             , React.createElement(Input, {
-              placeholder: "Cari ID, admin, atau catatan..."    ,
+              placeholder: "Cari ID, pengguna, atau catatan..."    ,
               value: searchQuery,
               onChange: (e) => setSearchQuery(e.target.value),
               className: "pl-9 bg-card" , __self: this, __source: {fileName: _jsxFileName, lineNumber: 121}}

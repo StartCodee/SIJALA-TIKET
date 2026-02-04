@@ -31,9 +31,9 @@ export function AdminHeader({
 
   return (
     <header className={cn('bg-card border-b border-border px-6 py-4', className)}>
-      <div className="flex items-center justify-between gap-4">
+      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
         {/* Title */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 min-w-0">
           <Button
             variant="ghost"
             size="icon"
@@ -43,7 +43,7 @@ export function AdminHeader({
           >
             <Menu className="w-5 h-5" />
           </Button>
-          <div>
+          <div className="min-w-0">
             <h1 className="text-xl font-bold text-foreground">{title}</h1>
             {subtitle && (
               <p className="text-sm text-muted-foreground mt-0.5">{subtitle}</p>
@@ -52,16 +52,16 @@ export function AdminHeader({
         </div>
 
         {/* Actions */}
-        <div className="flex items-center gap-3">
+        <div className="flex w-full flex-wrap items-center gap-2 md:w-auto md:justify-end">
           {/* Global Search */}
           {showSearch && (
-            <div className="relative">
+            <div className="relative w-full md:w-[280px]">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
                 placeholder="Cari ID Tiket, nama, email..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-[280px] pl-9 h-9 bg-background border-border"
+                className="w-full pl-9 h-9 bg-background border-border"
               />
             </div>
           )}
