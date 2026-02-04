@@ -2,19 +2,6 @@ import React from "react";
 const _jsxFileName = "src\\components\\KPICard.tsx";import { cn } from '@/lib/utils';
 import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
 
-
-
-
-
-
-
-
-
-
-
-
-
-
 const variantStyles = {
   default: {
     iconBg: 'bg-muted',
@@ -72,7 +59,7 @@ export function KPICard({
     : '';
 
   return (
-    React.createElement('div', { className: cn('kpi-card group', className), __self: this, __source: {fileName: _jsxFileName, lineNumber: 74}}
+    React.createElement('div', { className: cn('kpi-card group min-w-0', className), __self: this, __source: {fileName: _jsxFileName, lineNumber: 74}}
       , React.createElement('div', { className: "flex items-center justify-between gap-3"   , __self: this, __source: {fileName: _jsxFileName, lineNumber: 75}}
         , React.createElement('p', { className: "text-sm font-medium text-muted-foreground leading-snug break-words"   , __self: this, __source: {fileName: _jsxFileName, lineNumber: 76}}
           , title
@@ -86,11 +73,11 @@ export function KPICard({
           , React.createElement(Icon, { className: cn('w-5 h-5', styles.iconColor), strokeWidth: 1.75, __self: this, __source: {fileName: _jsxFileName, lineNumber: 85}} )
         )
       )
-      , React.createElement('p', { className: "mt-2 text-2xl font-bold text-foreground tracking-tight"    , __self: this, __source: {fileName: _jsxFileName, lineNumber: 88}}
+      , React.createElement('p', { className: "mt-2 text-xl sm:text-2xl font-bold text-foreground tracking-tight leading-tight break-words"    , __self: this, __source: {fileName: _jsxFileName, lineNumber: 88}}
         , value
       )
       , subtitle && (
-        React.createElement('p', { className: "mt-1 text-xs text-muted-foreground"  , __self: this, __source: {fileName: _jsxFileName, lineNumber: 92}}
+        React.createElement('p', { className: "mt-1 text-xs text-muted-foreground break-words"  , __self: this, __source: {fileName: _jsxFileName, lineNumber: 92}}
           , subtitle
         )
       )
@@ -108,13 +95,6 @@ export function KPICard({
     )
   );
 }
-
-// Mini KPI for inline stats
-
-
-
-
-
 
 export function MiniKPI({ label, value, className }) {
   return (

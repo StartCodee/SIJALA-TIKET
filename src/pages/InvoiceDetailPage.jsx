@@ -259,27 +259,27 @@ export default function InvoiceDetailPage() {
           }
         `}</style>
 
-        <div className="flex items-center justify-between no-print">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between no-print">
           <Link to="/invoices">
-            <Button variant="ghost" className="gap-2">
+            <Button variant="ghost" className="gap-2 w-full sm:w-auto justify-start">
               <ArrowLeft className="w-4 h-4" />
               Kembali
             </Button>
           </Link>
 
-          <div className="flex items-center gap-2">
-            <Button variant="outline" className="gap-2" onClick={openEditDialog}>
+          <div className="flex flex-wrap gap-2 sm:justify-end">
+            <Button variant="outline" className="gap-2 w-full sm:w-auto" onClick={openEditDialog}>
               <Edit className="w-4 h-4" />
               Edit Invoice
             </Button>
-            <Button variant="outline" className="gap-2" onClick={() => window.print()}>
+            <Button variant="outline" className="gap-2 w-full sm:w-auto" onClick={() => window.print()}>
               <Printer className="w-4 h-4" />
               Print / Save PDF
             </Button>
 
             <Button
               variant="outline"
-              className="gap-2"
+              className="gap-2 w-full sm:w-auto"
               onClick={handleExportJSON}
               disabled={!canExport}
               title={!canExport ? 'Hanya Admin Utama yang bisa export' : 'Export JSON'}
@@ -290,7 +290,7 @@ export default function InvoiceDetailPage() {
 
             <Button
               variant="outline"
-              className="gap-2"
+              className="gap-2 w-full sm:w-auto"
               onClick={handleExportTicketsExcel}
               disabled={!canExport}
                 title={!canExport ? 'Hanya Admin Utama yang bisa export' : 'Export tiket XLS'}
