@@ -153,7 +153,7 @@ export default function ActivityLogsPage() {
             )
           )
           , React.createElement(Button, { variant: "outline", size: "sm", className: "gap-2", __self: this, __source: {fileName: _jsxFileName, lineNumber: 154}}
-            , React.createElement(Download, { className: "w-4 h-4" , __self: this, __source: {fileName: _jsxFileName, lineNumber: 155}} ), "Ekspor"
+            , React.createElement(Download, { className: "w-4 h-4" , __self: this, __source: {fileName: _jsxFileName, lineNumber: 155}} ), "Export"
 
           )
         )
