@@ -106,7 +106,7 @@ export default function UserManagementPage() {
     React.createElement(AdminLayout, {__self: this, __source: {fileName: _jsxFileName, lineNumber: 84}}
       , React.createElement(AdminHeader, {
         title: "Manajemen Pengguna" ,
-        subtitle: "Kelola akun admin dan izin peran"     ,
+        subtitle: "Kelola akun pengguna dan izin peran"     ,
         showSearch: false,
         showDateFilter: false, __self: this, __source: {fileName: _jsxFileName, lineNumber: 85}}
       )
@@ -160,9 +160,9 @@ export default function UserManagementPage() {
             )
             , React.createElement(SelectContent, { className: "bg-popover border-border" , __self: this, __source: {fileName: _jsxFileName, lineNumber: 139}}
               , React.createElement(SelectItem, { value: "all", __self: this, __source: {fileName: _jsxFileName, lineNumber: 140}}, "Semua Peran" )
-              , React.createElement(SelectItem, { value: "admin", __self: this, __source: {fileName: _jsxFileName, lineNumber: 141}}, "Admin")
-              , React.createElement(SelectItem, { value: "operator_keuangan", __self: this, __source: {fileName: _jsxFileName, lineNumber: 142}}, "Operator Keuangan" )
-              , React.createElement(SelectItem, { value: "operator_persetujuan", __self: this, __source: {fileName: _jsxFileName, lineNumber: 143}}, "Operator Persetujuan" )
+              , React.createElement(SelectItem, { value: "admin_utama", __self: this, __source: {fileName: _jsxFileName, lineNumber: 141}}, "Admin Utama")
+              , React.createElement(SelectItem, { value: "admin_tiket", __self: this, __source: {fileName: _jsxFileName, lineNumber: 142}}, "Admin Tiket" )
+              , React.createElement(SelectItem, { value: "petugas_tiket", __self: this, __source: {fileName: _jsxFileName, lineNumber: 143}}, "Petugas Tiket" )
             )
           )
           , React.createElement(Button, { className: "btn-ocean gap-2" , onClick: () => setShowAddDialog(true), __self: this, __source: {fileName: _jsxFileName, lineNumber: 146}}
@@ -275,9 +275,9 @@ export default function UserManagementPage() {
                 , React.createElement('thead', {__self: this, __source: {fileName: _jsxFileName, lineNumber: 253}}
                   , React.createElement('tr', { className: "border-b border-border" , __self: this, __source: {fileName: _jsxFileName, lineNumber: 248}}
                     , React.createElement('th', { className: "text-left py-2 font-medium"  , __self: this, __source: {fileName: _jsxFileName, lineNumber: 249}}, "Izin")
-                    , React.createElement('th', { className: "text-center py-2 font-medium"  , __self: this, __source: {fileName: _jsxFileName, lineNumber: 250}}, "Admin")
-                    , React.createElement('th', { className: "text-center py-2 font-medium"  , __self: this, __source: {fileName: _jsxFileName, lineNumber: 251}}, "Operator Keuangan" )
-                    , React.createElement('th', { className: "text-center py-2 font-medium"  , __self: this, __source: {fileName: _jsxFileName, lineNumber: 252}}, "Operator Persetujuan" )
+                    , React.createElement('th', { className: "text-center py-2 font-medium"  , __self: this, __source: {fileName: _jsxFileName, lineNumber: 250}}, "Admin Utama")
+                    , React.createElement('th', { className: "text-center py-2 font-medium"  , __self: this, __source: {fileName: _jsxFileName, lineNumber: 251}}, "Admin Tiket" )
+                    , React.createElement('th', { className: "text-center py-2 font-medium"  , __self: this, __source: {fileName: _jsxFileName, lineNumber: 252}}, "Petugas Tiket" )
                   )
                 )
                 , React.createElement('tbody', { className: "divide-y divide-border" , __self: this, __source: {fileName: _jsxFileName, lineNumber: 255}}
@@ -287,27 +287,27 @@ export default function UserManagementPage() {
                       , React.createElement('td', { className: "text-center py-2" , __self: this, __source: {fileName: _jsxFileName, lineNumber: 270}}
                         , React.createElement('div', { className: "flex justify-center" , __self: this, __source: {fileName: _jsxFileName, lineNumber: 271}}
                           , React.createElement(Checkbox, {
-                            checked: row.admin,
-                            onCheckedChange: (checked) => handlePermissionToggle(i, 'admin', checked),
-                            'aria-label': `Izin ${row.perm} untuk Admin`, __self: this, __source: {fileName: _jsxFileName, lineNumber: 272}}
+                            checked: row.admin_utama,
+                            onCheckedChange: (checked) => handlePermissionToggle(i, 'admin_utama', checked),
+                            'aria-label': `Izin ${row.perm} untuk Admin Utama`, __self: this, __source: {fileName: _jsxFileName, lineNumber: 272}}
                           )
                         )
                       )
                       , React.createElement('td', { className: "text-center py-2" , __self: this, __source: {fileName: _jsxFileName, lineNumber: 275}}
                         , React.createElement('div', { className: "flex justify-center" , __self: this, __source: {fileName: _jsxFileName, lineNumber: 276}}
                           , React.createElement(Checkbox, {
-                            checked: row.finance,
-                            onCheckedChange: (checked) => handlePermissionToggle(i, 'finance', checked),
-                            'aria-label': `Izin ${row.perm} untuk Operator Keuangan`, __self: this, __source: {fileName: _jsxFileName, lineNumber: 277}}
+                            checked: row.admin_tiket,
+                            onCheckedChange: (checked) => handlePermissionToggle(i, 'admin_tiket', checked),
+                            'aria-label': `Izin ${row.perm} untuk Admin Tiket`, __self: this, __source: {fileName: _jsxFileName, lineNumber: 277}}
                           )
                         )
                       )
                       , React.createElement('td', { className: "text-center py-2" , __self: this, __source: {fileName: _jsxFileName, lineNumber: 284}}
                         , React.createElement('div', { className: "flex justify-center" , __self: this, __source: {fileName: _jsxFileName, lineNumber: 285}}
                           , React.createElement(Checkbox, {
-                            checked: row.approver,
-                            onCheckedChange: (checked) => handlePermissionToggle(i, 'approver', checked),
-                            'aria-label': `Izin ${row.perm} untuk Operator Persetujuan`, __self: this, __source: {fileName: _jsxFileName, lineNumber: 286}}
+                            checked: row.petugas_tiket,
+                            onCheckedChange: (checked) => handlePermissionToggle(i, 'petugas_tiket', checked),
+                            'aria-label': `Izin ${row.perm} untuk Petugas Tiket`, __self: this, __source: {fileName: _jsxFileName, lineNumber: 286}}
                           )
                         )
                       )
@@ -325,7 +325,7 @@ export default function UserManagementPage() {
         , React.createElement(DialogContent, { className: "bg-card border-border" , __self: this, __source: {fileName: _jsxFileName, lineNumber: 304}}
           , React.createElement(DialogHeader, {__self: this, __source: {fileName: _jsxFileName, lineNumber: 305}}
             , React.createElement(DialogTitle, {__self: this, __source: {fileName: _jsxFileName, lineNumber: 306}}, "Tambah Pengguna Baru"  )
-            , React.createElement(DialogDescription, {__self: this, __source: {fileName: _jsxFileName, lineNumber: 307}}, "Tambahkan admin baru ke sistem"    )
+            , React.createElement(DialogDescription, {__self: this, __source: {fileName: _jsxFileName, lineNumber: 307}}, "Tambahkan pengguna baru ke sistem"    )
           )
           , React.createElement('div', { className: "space-y-4 py-4" , __self: this, __source: {fileName: _jsxFileName, lineNumber: 309}}
             , React.createElement('div', { className: "space-y-2", __self: this, __source: {fileName: _jsxFileName, lineNumber: 310}}
@@ -343,9 +343,9 @@ export default function UserManagementPage() {
                   , React.createElement(SelectValue, { placeholder: "Pilih peran" , __self: this, __source: {fileName: _jsxFileName, lineNumber: 322}} )
                 )
                 , React.createElement(SelectContent, { className: "bg-popover border-border" , __self: this, __source: {fileName: _jsxFileName, lineNumber: 324}}
-                  , React.createElement(SelectItem, { value: "admin", __self: this, __source: {fileName: _jsxFileName, lineNumber: 325}}, "Admin")
-                  , React.createElement(SelectItem, { value: "operator_keuangan", __self: this, __source: {fileName: _jsxFileName, lineNumber: 326}}, "Operator Keuangan" )
-                  , React.createElement(SelectItem, { value: "operator_persetujuan", __self: this, __source: {fileName: _jsxFileName, lineNumber: 327}}, "Operator Persetujuan" )
+                  , React.createElement(SelectItem, { value: "admin_utama", __self: this, __source: {fileName: _jsxFileName, lineNumber: 325}}, "Admin Utama")
+                  , React.createElement(SelectItem, { value: "admin_tiket", __self: this, __source: {fileName: _jsxFileName, lineNumber: 326}}, "Admin Tiket" )
+                  , React.createElement(SelectItem, { value: "petugas_tiket", __self: this, __source: {fileName: _jsxFileName, lineNumber: 327}}, "Petugas Tiket" )
                 )
               )
             )
@@ -386,9 +386,9 @@ export default function UserManagementPage() {
                     , React.createElement(SelectValue, {__self: this, __source: {fileName: _jsxFileName, lineNumber: 365}} )
                   )
                 , React.createElement(SelectContent, { className: "bg-popover border-border" , __self: this, __source: {fileName: _jsxFileName, lineNumber: 367}}
-                  , React.createElement(SelectItem, { value: "admin", __self: this, __source: {fileName: _jsxFileName, lineNumber: 368}}, "Admin")
-                  , React.createElement(SelectItem, { value: "operator_keuangan", __self: this, __source: {fileName: _jsxFileName, lineNumber: 369}}, "Operator Keuangan" )
-                  , React.createElement(SelectItem, { value: "operator_persetujuan", __self: this, __source: {fileName: _jsxFileName, lineNumber: 370}}, "Operator Persetujuan" )
+                  , React.createElement(SelectItem, { value: "admin_utama", __self: this, __source: {fileName: _jsxFileName, lineNumber: 368}}, "Admin Utama")
+                  , React.createElement(SelectItem, { value: "admin_tiket", __self: this, __source: {fileName: _jsxFileName, lineNumber: 369}}, "Admin Tiket" )
+                  , React.createElement(SelectItem, { value: "petugas_tiket", __self: this, __source: {fileName: _jsxFileName, lineNumber: 370}}, "Petugas Tiket" )
                 )
               )
             )

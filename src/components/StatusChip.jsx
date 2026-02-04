@@ -151,9 +151,9 @@ export function UserStatusChip({ status }) {
 // Role Badge
 export function RoleBadge({ role }) {
   const config = {
-    admin: { variant: 'rejected', label: 'Admin' },
-    operator_keuangan: { variant: 'approved', label: 'Operator Keuangan' },
-    operator_persetujuan: { variant: 'revision', label: 'Operator Persetujuan' },
+    admin_utama: { variant: 'rejected', label: 'Admin Utama' },
+    admin_tiket: { variant: 'revision', label: 'Admin Tiket' },
+    petugas_tiket: { variant: 'approved', label: 'Petugas Tiket' },
   };
   
   const { variant, label } = config[role] || { variant: 'info', label: role };

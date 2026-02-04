@@ -100,26 +100,26 @@ export default function FinanceReportsPage() {
 
       , React.createElement('div', { className: "flex-1 overflow-auto p-6"  , __self: this, __source: {fileName: _jsxFileName, lineNumber: 107}}
         /* Actions */
-        , React.createElement('div', { className: "flex items-center justify-between mb-6"   , __self: this, __source: {fileName: _jsxFileName, lineNumber: 109}}
+        , React.createElement('div', { className: "flex flex-wrap items-center gap-3 mb-6"   , __self: this, __source: {fileName: _jsxFileName, lineNumber: 109}}
           , React.createElement('div', { className: "flex items-center gap-2"  , __self: this, __source: {fileName: _jsxFileName, lineNumber: 110}}
             , React.createElement(Button, { variant: "outline", size: "sm", className: "gap-2", __self: this, __source: {fileName: _jsxFileName, lineNumber: 111}}
               , React.createElement(Calendar, { className: "w-4 h-4" , __self: this, __source: {fileName: _jsxFileName, lineNumber: 112}} )
               , period
             )
           )
-          , React.createElement('div', { className: "flex items-center gap-2"  , __self: this, __source: {fileName: _jsxFileName, lineNumber: 116}}
+          , React.createElement('div', { className: "flex flex-wrap items-center gap-2 md:ml-auto"  , __self: this, __source: {fileName: _jsxFileName, lineNumber: 116}}
             , React.createElement(Button, { variant: "outline", size: "sm", className: "gap-2", onClick: () => setShowSettings(true), __self: this, __source: {fileName: _jsxFileName, lineNumber: 117}}
               , React.createElement(Settings, { className: "w-4 h-4" , __self: this, __source: {fileName: _jsxFileName, lineNumber: 118}} ), "Pengaturan Laporan"
 
             )
             , React.createElement(Button, { variant: "outline", size: "sm", className: "gap-2", __self: this, __source: {fileName: _jsxFileName, lineNumber: 121}}
-              , React.createElement(Download, { className: "w-4 h-4" , __self: this, __source: {fileName: _jsxFileName, lineNumber: 122}} ), "Ekspor Excel"
+              , React.createElement(Download, { className: "w-4 h-4" , __self: this, __source: {fileName: _jsxFileName, lineNumber: 122}} ), "Ekspor XLS"
 
             )
             , React.createElement(Button, { variant: "outline", size: "sm", className: "gap-2", __self: this, __source: {fileName: _jsxFileName, lineNumber: 125}}
               , React.createElement(FileText, { className: "w-4 h-4" , __self: this, __source: {fileName: _jsxFileName, lineNumber: 126}} ), "Ekspor PDF"
 
-            )
+            )/*  */
             , React.createElement(Button, { variant: "outline", size: "sm", className: "gap-2", __self: this, __source: {fileName: _jsxFileName, lineNumber: 129}}
               , React.createElement(Printer, { className: "w-4 h-4" , __self: this, __source: {fileName: _jsxFileName, lineNumber: 130}} ), "Cetak"
 

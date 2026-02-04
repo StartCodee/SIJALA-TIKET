@@ -19,6 +19,7 @@ import {
   Clock,
   FileText,
   Upload,
+  Printer,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -35,6 +36,7 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { exportExcel } from '@/lib/exporters';
 
 export default function RefundCenterPage() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -42,6 +44,7 @@ export default function RefundCenterPage() {
   const [showDetailDialog, setShowDetailDialog] = useState(false);
   const [actionNotes, setActionNotes] = useState('');
   const [referenceNumber, setReferenceNumber] = useState('');
+  const [activeTab, setActiveTab] = useState('menunggu');
 
   // Filter refunds
   const filteredRefunds = dummyRefunds.filter((refund) => {
@@ -66,6 +69,58 @@ export default function RefundCenterPage() {
     menunggu: filteredRefunds.filter((refund) => refund.status === 'requested'),
     diterima: filteredRefunds.filter((refund) => refund.status === 'completed'),
     ditolak: filteredRefunds.filter((refund) => refund.status === 'rejected'),
+  };
+  const activeRefunds = refundsByStatus[activeTab] || filteredRefunds;
+
+  const handleExportExcel = () => {
+    exportExcel(
+      activeRefunds.map((r) => ({
+        refund_id: r.id,
+        ticket_id: r.ticketId,
+        ticket_name: r.ticketName,
+        status: r.status,
+        requested_at: r.requestedAt,
+        type: r.type,
+        original_amount: r.originalAmount,
+        refund_amount: r.refundAmount,
+        reason: r.reason,
+        requested_by: r.requestedBy || '',
+        processed_by: r.processedBy || '',
+        processed_at: r.processedAt || '',
+        completed_at: r.completedAt || '',
+        reference_number: r.referenceNumber || '',
+        notes: r.notes || '',
+      })),
+      `refund_export_${new Date().toISOString().slice(0, 10)}.xlsx`,
+      {
+        sheetName: 'Refunds',
+        columns: [
+          { key: 'refund_id', label: 'ID Pengembalian' },
+          { key: 'ticket_id', label: 'ID Tiket' },
+          { key: 'ticket_name', label: 'Nama' },
+          { key: 'status', label: 'Status' },
+          { key: 'requested_at', label: 'Diajukan' },
+          { key: 'type', label: 'Tipe' },
+          { key: 'original_amount', label: 'Nominal Awal' },
+          { key: 'refund_amount', label: 'Nominal Pengembalian' },
+          { key: 'reason', label: 'Alasan' },
+          { key: 'requested_by', label: 'Diajukan Oleh' },
+          { key: 'processed_by', label: 'Diproses Oleh' },
+          { key: 'processed_at', label: 'Diproses Pada' },
+          { key: 'completed_at', label: 'Selesai Pada' },
+          { key: 'reference_number', label: 'No. Referensi' },
+          { key: 'notes', label: 'Catatan' },
+        ],
+      }
+    );
+  };
+
+  const handleExportPdf = () => {
+    window.print();
+  };
+
+  const handlePrint = () => {
+    window.print();
   };
 
   const handleApprove = (refundId) => {
@@ -163,10 +218,20 @@ export default function RefundCenterPage() {
       , React.createElement(AdminHeader, {
         title: "Pengembalian Dana" ,
         subtitle: "Kelola permintaan pengembalian dana tiket"    ,
-        showSearch: false, __self: this, __source: {fileName: _jsxFileName, lineNumber: 162}}
+        showSearch: false,
+        className: "no-print", __self: this, __source: {fileName: _jsxFileName, lineNumber: 162}}
       )
 
-      , React.createElement('div', { className: "flex-1 overflow-auto p-6"  , __self: this, __source: {fileName: _jsxFileName, lineNumber: 168}}
+      , React.createElement('div', { className: "flex-1 overflow-auto p-6 print-wrap"  , __self: this, __source: {fileName: _jsxFileName, lineNumber: 168}}
+        , React.createElement('style', null, `
+          @media print {
+            .no-print { display: none !important; }
+            aside { display: none !important; }
+            .print-wrap { padding: 0 !important; }
+            .card-ocean { box-shadow: none !important; border: 1px solid #ddd !important; }
+            table { width: 100% !important; }
+          }
+        `)
         /* Stats Cards */
         , React.createElement('div', { className: "grid grid-cols-2 md:grid-cols-4 gap-4 mb-6"    , __self: this, __source: {fileName: _jsxFileName, lineNumber: 170}}
           , React.createElement(Card, { className: "card-ocean p-4" , __self: this, __source: {fileName: _jsxFileName, lineNumber: 171}}
@@ -216,8 +281,8 @@ export default function RefundCenterPage() {
         )
 
         /* Search & Filter */
-        , React.createElement('div', { className: "flex items-center gap-4 mb-4"   , __self: this, __source: {fileName: _jsxFileName, lineNumber: 218}}
-          , React.createElement('div', { className: "relative flex-1 max-w-md"  , __self: this, __source: {fileName: _jsxFileName, lineNumber: 219}}
+        , React.createElement('div', { className: "flex flex-wrap items-center gap-3 mb-4 no-print"   , __self: this, __source: {fileName: _jsxFileName, lineNumber: 218}}
+            , React.createElement('div', { className: "relative flex-1 min-w-[220px] max-w-md"  , __self: this, __source: {fileName: _jsxFileName, lineNumber: 219}}
             , React.createElement(Search, { className: "absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground"      , __self: this, __source: {fileName: _jsxFileName, lineNumber: 220}} )
             , React.createElement(Input, {
               placeholder: "Cari ID Pengembalian, ID Tiket, atau nama..."      ,
@@ -226,14 +291,24 @@ export default function RefundCenterPage() {
               className: "pl-9 bg-card" , __self: this, __source: {fileName: _jsxFileName, lineNumber: 221}}
             )
           )
-          , React.createElement(Button, { variant: "outline", size: "sm", className: "gap-2", __self: this, __source: {fileName: _jsxFileName, lineNumber: 228}}
-            , React.createElement(Download, { className: "w-4 h-4" , __self: this, __source: {fileName: _jsxFileName, lineNumber: 229}} ), "Ekspor"
+            , React.createElement('div', { className: "flex flex-wrap items-center gap-2" , __self: this, __source: {fileName: _jsxFileName, lineNumber: 228}}
+            , React.createElement(Button, { variant: "outline", size: "sm", className: "gap-2", onClick: handleExportExcel, __self: this, __source: {fileName: _jsxFileName, lineNumber: 229}}
+              , React.createElement(Download, { className: "w-4 h-4" , __self: this, __source: {fileName: _jsxFileName, lineNumber: 229}} ), "Export XLS"
 
+            )
+            , React.createElement(Button, { variant: "outline", size: "sm", className: "gap-2", onClick: handleExportPdf, __self: this, __source: {fileName: _jsxFileName, lineNumber: 231}}
+              , React.createElement(FileText, { className: "w-4 h-4" , __self: this, __source: {fileName: _jsxFileName, lineNumber: 231}} ), "Export PDF"
+
+            )
+            , React.createElement(Button, { variant: "outline", size: "sm", className: "gap-2", onClick: handlePrint, __self: this, __source: {fileName: _jsxFileName, lineNumber: 233}}
+              , React.createElement(Printer, { className: "w-4 h-4" , __self: this, __source: {fileName: _jsxFileName, lineNumber: 233}} ), "Print"
+
+            )
           )
         )
 
-        , React.createElement(Tabs, { defaultValue: "menunggu", className: "w-full", __self: this, __source: {fileName: _jsxFileName, lineNumber: 234}}
-          , React.createElement(TabsList, { className: "grid w-full grid-cols-3 mb-4"   , __self: this, __source: {fileName: _jsxFileName, lineNumber: 235}}
+        , React.createElement(Tabs, { value: activeTab, onValueChange: setActiveTab, className: "w-full", __self: this, __source: {fileName: _jsxFileName, lineNumber: 234}}
+          , React.createElement(TabsList, { className: "grid w-full grid-cols-3 mb-4 no-print"   , __self: this, __source: {fileName: _jsxFileName, lineNumber: 235}}
             , React.createElement(TabsTrigger, { value: "menunggu", className: "gap-2", __self: this, __source: {fileName: _jsxFileName, lineNumber: 236}}
               , React.createElement(Clock, { className: "w-4 h-4" , __self: this, __source: {fileName: _jsxFileName, lineNumber: 237}} ), "Menunggu ("
                , refundsByStatus.menunggu.length, ")"

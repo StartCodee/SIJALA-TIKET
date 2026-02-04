@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { AdminLayout } from '@/components/AdminLayout';
 import { AdminHeader } from '@/components/AdminHeader';
 import {
-  dummyTickets,
+  getAllTickets,
   formatShortId,
   FEE_PRICING,
   DOMISILI_LABELS,
@@ -17,15 +17,18 @@ import {
   ChevronUp,
   User,
   FileText,
+  Printer,
   Users,
   FileCheck,
   Landmark,
   IdCard,
+  Eye,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
+import { exportExcel } from '@/lib/exporters';
 import {
   Select,
   SelectContent,
@@ -71,8 +74,10 @@ export default function TicketListPage() {
       minute: '2-digit',
     });
 
+  const allTickets = getAllTickets();
+
   // Filter tickets
-  const filteredTickets = dummyTickets.filter((ticket) => {
+  const filteredTickets = allTickets.filter((ticket) => {
     const matchesSearch =
       ticket.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
       ticket.namaLengkap.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -113,6 +118,34 @@ export default function TicketListPage() {
     );
   };
 
+  const handleExportXls = () => {
+    exportExcel(
+      sortedTickets.map((ticket) => ({
+        ticket_id: ticket.id,
+        nama: ticket.namaLengkap,
+        email: ticket.email,
+        no_hp: ticket.noHP,
+        domisili: DOMISILI_LABELS[ticket.domisiliOCR] || ticket.domisiliOCR,
+        booking_type: BOOKING_TYPE_LABELS[ticket.bookingType] || ticket.bookingType,
+        fee_category: FEE_PRICING[ticket.feeCategory]?.label || ticket.feeCategory,
+        total_biaya: ticket.totalBiaya,
+        payment_status: ticket.paymentStatus,
+        approval_status: ticket.approvalStatus,
+        created_at: ticket.createdAt,
+      })),
+      `tickets_export_${new Date().toISOString().slice(0, 10)}.xlsx`,
+      { sheetName: 'Tickets' }
+    );
+  };
+
+  const handleExportPdf = () => {
+    window.print();
+  };
+
+  const handlePrint = () => {
+    window.print();
+  };
+
   return (
     <AdminLayout>
       <AdminHeader
@@ -123,8 +156,8 @@ export default function TicketListPage() {
 
       <div className="flex-1 overflow-auto p-6">
         {/* Search & Actions Bar */}
-        <div className="flex items-center gap-4 mb-4">
-          <div className="relative flex-1 max-w-md">
+        <div className="flex flex-wrap items-center gap-3 mb-4">
+          <div className="relative flex-1 min-w-[220px] max-w-md">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
               placeholder="Cari ID Tiket, nama, atau email..."
@@ -149,9 +182,19 @@ export default function TicketListPage() {
             )}
           </Button>
 
-          <Button variant="outline" size="sm" className="gap-2">
+          <Button variant="outline" size="sm" className="gap-2" onClick={handleExportXls}>
             <Download className="w-4 h-4" />
-            Ekspor
+            Ekspor XLS
+          </Button>
+
+          <Button variant="outline" size="sm" className="gap-2" onClick={handleExportPdf}>
+            <FileText className="w-4 h-4" />
+            Ekspor PDF
+          </Button>
+
+          <Button variant="outline" size="sm" className="gap-2" onClick={handlePrint}>
+            <Printer className="w-4 h-4" />
+            Print
           </Button>
         </div>
 
@@ -254,7 +297,7 @@ export default function TicketListPage() {
         <div className="flex items-center justify-between mb-3">
           <p className="text-sm text-muted-foreground">
             Menampilkan <span className="font-medium text-foreground">{sortedTickets.length}</span> dari{' '}
-            <span className="font-medium text-foreground">{dummyTickets.length}</span> tiket
+            <span className="font-medium text-foreground">{allTickets.length}</span> tiket
           </p>
         </div>
 
@@ -343,7 +386,7 @@ export default function TicketListPage() {
                         <div className="flex items-center justify-center gap-1">
                           <Link to={`/tickets/${ticket.id}`}>
                             <Button variant="ghost" size="icon" className="h-8 w-8" title="Detail tiket">
-                              <Users className="w-4 h-4" />
+                              <Eye className="w-4 h-4" />
                             </Button>
                           </Link>
 

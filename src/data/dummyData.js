@@ -98,22 +98,24 @@ export const REFUND_TYPE_LABELS = {
 };
 
 export const ROLE_LABELS = {
-  admin: 'Admin',
-  operator_keuangan: 'Operator Keuangan',
-  operator_persetujuan: 'Operator Persetujuan',
+  admin_utama: 'Admin Utama',
+  admin_tiket: 'Admin Tiket',
+  petugas_tiket: 'Petugas Tiket',
 };
 
 export const dummyPermissionMatrix = [
-  { perm: 'Lihat Dashboard', admin: true, finance: true, approver: true },
-  { perm: 'Lihat Tiket', admin: true, finance: true, approver: true },
-  { perm: 'Setujui/Tolak Tiket', admin: true, finance: false, approver: true },
-  { perm: 'Proses Pengembalian Dana', admin: true, finance: true, approver: false },
-  { perm: 'Lihat Laporan Keuangan', admin: true, finance: true, approver: false },
-  { perm: 'Ekspor Data', admin: true, finance: true, approver: true },
-  { perm: 'Kelola Pengguna', admin: true, finance: false, approver: false },
-  { perm: 'Lihat Log Aktivitas', admin: true, finance: true, approver: true },
-  { perm: 'Ubah Hasil OCR', admin: true, finance: false, approver: true },
-  { perm: 'Ubah Pengaturan', admin: true, finance: false, approver: false },
+  { perm: 'Akses Tiketing', admin_utama: true, admin_tiket: true, petugas_tiket: true },
+  { perm: 'Akses Sijala', admin_utama: true, admin_tiket: false, petugas_tiket: false },
+  { perm: 'Akses Panel Administrasi', admin_utama: true, admin_tiket: false, petugas_tiket: false },
+  { perm: 'Grant akses registrasi tipe pengguna', admin_utama: true, admin_tiket: false, petugas_tiket: false },
+  { perm: 'Approval Tiket', admin_utama: true, admin_tiket: true, petugas_tiket: false },
+  { perm: 'Filling Tiket', admin_utama: true, admin_tiket: true, petugas_tiket: true },
+  { perm: 'Editing Tiket', admin_utama: true, admin_tiket: true, petugas_tiket: true },
+  { perm: 'Submitting Tiket', admin_utama: true, admin_tiket: true, petugas_tiket: true },
+  { perm: 'Printing Result', admin_utama: true, admin_tiket: true, petugas_tiket: false },
+  { perm: 'Akses Screenshot', admin_utama: true, admin_tiket: true, petugas_tiket: false },
+  { perm: 'Export Data', admin_utama: true, admin_tiket: true, petugas_tiket: false },
+  { perm: 'Lihat Time Series Keuangan', admin_utama: true, admin_tiket: false, petugas_tiket: false },
 ];
 
 // Dummy Tickets
@@ -569,7 +571,7 @@ export const dummyAdminUsers = [
     id: 'ADM-001',
     name: 'Rudi Hartono',
     email: 'rudi.hartono@rajaampat.go.id',
-    role: 'admin',
+    role: 'admin_utama',
     status: 'active',
     lastLogin: '2024-01-19T08:30:00',
     createdAt: '2023-01-01T00:00:00',
@@ -578,7 +580,7 @@ export const dummyAdminUsers = [
     id: 'ADM-002',
     name: 'Dewi Anggraini',
     email: 'dewi.anggraini@rajaampat.go.id',
-    role: 'operator_persetujuan',
+    role: 'admin_tiket',
     status: 'active',
     lastLogin: '2024-01-19T09:15:00',
     createdAt: '2023-03-15T00:00:00',
@@ -587,7 +589,7 @@ export const dummyAdminUsers = [
     id: 'ADM-003',
     name: 'Bambang Susilo',
     email: 'bambang.susilo@rajaampat.go.id',
-    role: 'operator_keuangan',
+    role: 'petugas_tiket',
     status: 'active',
     lastLogin: '2024-01-18T16:45:00',
     createdAt: '2023-06-01T00:00:00',
@@ -600,7 +602,7 @@ export const dummyAuditLogs = [
     id: 'LOG-001',
     timestamp: '2024-01-19T16:00:00',
     adminUser: 'Sistem',
-    adminRole: 'admin',
+    adminRole: 'admin_utama',
     actionType: 'payment_received',
     entityType: 'Payment',
     entityId: 'RA-2024-012',
@@ -611,7 +613,7 @@ export const dummyAuditLogs = [
     id: 'LOG-002',
     timestamp: '2024-01-19T11:00:00',
     adminUser: 'Sistem',
-    adminRole: 'admin',
+    adminRole: 'admin_utama',
     actionType: 'ticket_created',
     entityType: 'Ticket',
     entityId: 'RA-2024-010',
@@ -621,7 +623,7 @@ export const dummyAuditLogs = [
     id: 'LOG-003',
     timestamp: '2024-01-18T16:00:00',
     adminUser: 'Rudi Hartono',
-    adminRole: 'admin',
+    adminRole: 'admin_utama',
     actionType: 'refund_processing',
     entityType: 'Refund',
     entityId: 'REF-2024-002',
@@ -633,7 +635,7 @@ export const dummyAuditLogs = [
     id: 'LOG-004',
     timestamp: '2024-01-17T16:00:00',
     adminUser: 'Dewi Anggraini',
-    adminRole: 'operator_persetujuan',
+    adminRole: 'admin_tiket',
     actionType: 'ticket_rejected',
     entityType: 'Ticket',
     entityId: 'RA-2024-008',
@@ -645,7 +647,7 @@ export const dummyAuditLogs = [
     id: 'LOG-005',
     timestamp: '2024-01-17T15:00:00',
     adminUser: 'Dewi Anggraini',
-    adminRole: 'operator_persetujuan',
+    adminRole: 'admin_tiket',
     actionType: 'refund_completed',
     entityType: 'Refund',
     entityId: 'REF-2024-005',
@@ -656,7 +658,7 @@ export const dummyAuditLogs = [
     id: 'LOG-006',
     timestamp: '2024-01-14T11:00:00',
     adminUser: 'Rudi Hartono',
-    adminRole: 'admin',
+    adminRole: 'admin_utama',
     actionType: 'ticket_rejected',
     entityType: 'Ticket',
     entityId: 'RA-2024-007',
@@ -668,7 +670,7 @@ export const dummyAuditLogs = [
     id: 'LOG-007',
     timestamp: '2024-01-10T09:00:00',
     adminUser: 'Dewi Anggraini',
-    adminRole: 'operator_persetujuan',
+    adminRole: 'admin_tiket',
     actionType: 'ticket_approved',
     entityType: 'Ticket',
     entityId: 'RA-2024-006',
@@ -680,7 +682,7 @@ export const dummyAuditLogs = [
     id: 'LOG-008',
     timestamp: '2024-01-05T14:30:00',
     adminUser: 'Rudi Hartono',
-    adminRole: 'admin',
+    adminRole: 'admin_utama',
     actionType: 'user_disabled',
     entityType: 'User',
     entityId: 'ADM-005',
@@ -893,3 +895,55 @@ export const formatShortId = (id) => {
   const shortSuffix = suffix.length > 3 ? suffix.slice(-3) : suffix.padStart(3, '0');
   return `${prefix}-${shortSuffix}`;
 };
+
+const TICKET_OVERRIDE_KEY = 'ticket_overrides_v1';
+
+const canUseStorage = () =>
+  typeof window !== 'undefined' && typeof window.localStorage !== 'undefined';
+
+const loadTicketOverrides = () => {
+  if (!canUseStorage()) return {};
+  try {
+    const raw = window.localStorage.getItem(TICKET_OVERRIDE_KEY);
+    return raw ? JSON.parse(raw) : {};
+  } catch (error) {
+    console.warn('Gagal membaca override tiket:', error);
+    return {};
+  }
+};
+
+const saveTicketOverrides = (overrides) => {
+  if (!canUseStorage()) return overrides;
+  try {
+    window.localStorage.setItem(TICKET_OVERRIDE_KEY, JSON.stringify(overrides));
+  } catch (error) {
+    console.warn('Gagal menyimpan override tiket:', error);
+  }
+  return overrides;
+};
+
+export const getTicketOverride = (ticketId) => {
+  const overrides = loadTicketOverrides();
+  return overrides[ticketId] || null;
+};
+
+export const saveTicketOverride = (ticketId, patch) => {
+  const overrides = loadTicketOverrides();
+  overrides[ticketId] = { ...(overrides[ticketId] || {}), ...patch };
+  saveTicketOverrides(overrides);
+  return overrides[ticketId];
+};
+
+export const applyTicketOverride = (ticket) => {
+  if (!ticket) return ticket;
+  const override = getTicketOverride(ticket.id);
+  if (!override) return ticket;
+  return { ...ticket, ...override };
+};
+
+export const getTicketById = (ticketId) => {
+  const ticket = dummyTickets.find((t) => t.id === ticketId);
+  return ticket ? applyTicketOverride(ticket) : null;
+};
+
+export const getAllTickets = () => dummyTickets.map((t) => applyTicketOverride(t));
