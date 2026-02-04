@@ -575,7 +575,21 @@ export default function OverviewPage() {
             </CardContent>
           )}
         </Card>
-        <div className="flex flex-col gap-4 mb-6">
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-6 xl:hidden">
+          {visibleKpis.map((kpi) => (
+            <KPICard
+              key={kpi.id}
+              title={kpi.title}
+              value={kpi.value}
+              icon={kpi.icon}
+              variant={kpi.variant}
+              subtitle={kpi.subtitle}
+              trend={kpi.trend}
+            />
+          ))}
+        </div>
+
+        <div className="hidden xl:flex xl:flex-col xl:gap-4 xl:mb-6">
           {kpiRows.map((row, rowIndex) => (
             <div
               key={`kpi-row-${rowIndex}`}
