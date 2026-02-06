@@ -7,13 +7,13 @@ import {
   ClipboardCheck,
   CreditCard,
   Tag,
-  DoorOpen,
   BarChart3,
   RotateCcw,
   Users,
   History,
   ChevronLeft,
   ChevronRight,
+  ChevronDown, // ✅ dropdown icon
   LogOut,
   X,
 } from 'lucide-react';
@@ -22,16 +22,26 @@ import motifSidebar from '@/assets/motif-sidebar.svg';
 
 const navItems = [
   { to: '/', icon: LayoutDashboard, label: 'Ringkasan' },
-  { to: '/tickets', icon: Ticket, label: 'Daftar Tiket' },
+
+  // Tiket (collapsible)
+  {
+    to: '/tickets',
+    icon: Ticket,
+    label: 'Tiket',
+    children: [
+      { to: '/tickets', icon: Ticket, label: 'Daftar Tiket' },
+      { to: '/ticket-designer', icon: Tag, label: 'Tampilan Tiket' },
+    ],
+  },
+
+  // Urutan setelah tiket
   { to: '/invoices', icon: CreditCard, label: 'Invoice' },
+  { to: '/payments', icon: CreditCard, label: 'Pembayaran' },
+  { to: '/refunds', icon: RotateCcw, label: 'Pengembalian Dana' },
 
   { to: '/approval', icon: ClipboardCheck, label: 'Antrian Persetujuan' },
-  { to: '/payments', icon: CreditCard, label: 'Pembayaran' },
   { to: '/tarif', icon: Tag, label: 'Tarif Layanan' },
-  { to: '/ticket-designer', icon: Tag, label: 'Tampilan Tiket' },
-  // { to: '/gate', icon: DoorOpen, label: 'Monitor Gerbang' },
   { to: '/reports', icon: BarChart3, label: 'Laporan Keuangan' },
-  { to: '/refunds', icon: RotateCcw, label: 'Pengembalian Dana' },
 ];
 
 const adminItems = [
@@ -41,6 +51,10 @@ const adminItems = [
 
 export function AdminSidebar({ className, mobileOpen = false, onMobileClose }) {
   const [collapsed, setCollapsed] = useState(false);
+
+  // ✅ submenu tiket: default tertutup
+  const [ticketOpen, setTicketOpen] = useState(false);
+
   const location = useLocation();
   const previousPath = useRef(location.pathname);
   const isCollapsed = collapsed && !mobileOpen;
@@ -54,8 +68,24 @@ export function AdminSidebar({ className, mobileOpen = false, onMobileClose }) {
     }
   }, [location.pathname, mobileOpen, onMobileClose]);
 
+  // ✅ kalau user ada di halaman child tiket, auto-open biar jelas menu aktifnya
+  useEffect(() => {
+    const inTicketSection =
+      location.pathname === '/tickets' ||
+      location.pathname.startsWith('/tickets/') ||
+      location.pathname === '/ticket-designer' ||
+      location.pathname.startsWith('/ticket-designer/');
+    if (inTicketSection) setTicketOpen(true);
+  }, [location.pathname]);
+
   const handleMobileClose = () => {
     onMobileClose?.();
+  };
+
+  const isPathActive = (path) => {
+    if (!path) return false;
+    if (path === '/') return location.pathname === '/';
+    return location.pathname === path || location.pathname.startsWith(path + '/');
   };
 
   return (
@@ -68,6 +98,7 @@ export function AdminSidebar({ className, mobileOpen = false, onMobileClose }) {
         onClick={handleMobileClose}
         aria-hidden="true"
       />
+
       <aside
         className={cn(
           'flex flex-col relative h-screen bg-sidebar border-r border-sidebar-border transition-[width,transform] duration-300',
@@ -133,22 +164,94 @@ export function AdminSidebar({ className, mobileOpen = false, onMobileClose }) {
                 Menu Utama
               </p>
             )}
-            {navItems.map((item) => (
-              <NavLink
-                key={item.to}
-                to={item.to}
-                className={({ isActive }) => cn(
-                  'nav-item',
-                  isActive && 'active',
-                  isCollapsed && 'justify-center px-2'
-                )}
-                title={isCollapsed ? item.label : undefined}
-                onClick={handleMobileClose}
-              >
-                <item.icon className="w-5 h-5 flex-shrink-0" />
-                {!isCollapsed && <span className="truncate">{item.label}</span>}
-              </NavLink>
-            ))}
+
+            {navItems.map((item) => {
+              const parentHasChildren = Array.isArray(item.children) && item.children.length > 0;
+              const isParentActive =
+                parentHasChildren
+                  ? isPathActive(item.to) || item.children.some((c) => isPathActive(c.to))
+                  : isPathActive(item.to);
+
+              // khusus menu Tiket (collapsible)
+              const isTicketMenu = item.to === '/tickets' && parentHasChildren;
+
+              return (
+                <div key={item.to} className="space-y-1">
+                  {isTicketMenu ? (
+                    <NavLink
+                      to={item.to}
+                      className={({ isActive }) =>
+                        cn(
+                          'nav-item',
+                          (isActive || isParentActive) && 'active',
+                          isCollapsed && 'justify-center px-2'
+                        )
+                      }
+                      title={isCollapsed ? item.label : undefined}
+                      aria-expanded={!isCollapsed ? ticketOpen : undefined}
+                      aria-controls={!isCollapsed ? 'submenu-tiket' : undefined}
+                      onClick={(e) => {
+                        // ✅ default tertutup, klik parent hanya toggle (tidak navigate)
+                        if (!isCollapsed) {
+                          e.preventDefault();
+                          setTicketOpen((v) => !v);
+                          return;
+                        }
+                        // kalau collapsed, biarkan navigate normal
+                        handleMobileClose();
+                      }}
+                    >
+                      <item.icon className="w-5 h-5 flex-shrink-0" />
+                      {!isCollapsed && <span className="truncate">{item.label}</span>}
+
+                      {/* ✅ dropdown chevron indicator */}
+                      {!isCollapsed && (
+                        <ChevronDown
+                          className={cn(
+                            'ml-auto w-4 h-4 flex-shrink-0 text-sidebar-foreground/70 transition-transform duration-200',
+                            ticketOpen && 'rotate-180'
+                          )}
+                          aria-hidden="true"
+                        />
+                      )}
+                    </NavLink>
+                  ) : (
+                    <NavLink
+                      to={item.to}
+                      className={({ isActive }) =>
+                        cn(
+                          'nav-item',
+                          (isActive || isParentActive) && 'active',
+                          isCollapsed && 'justify-center px-2'
+                        )
+                      }
+                      title={isCollapsed ? item.label : undefined}
+                      onClick={handleMobileClose}
+                    >
+                      <item.icon className="w-5 h-5 flex-shrink-0" />
+                      {!isCollapsed && <span className="truncate">{item.label}</span>}
+                    </NavLink>
+                  )}
+
+                  {/* Submenu Tiket (muncul hanya saat tidak collapsed & ticketOpen=true) */}
+                  {isTicketMenu && !isCollapsed && ticketOpen && (
+                    <div id="submenu-tiket" className="space-y-1">
+                      {item.children.map((child) => (
+                        <NavLink
+                          key={child.to}
+                          to={child.to}
+                          className={({ isActive }) => cn('nav-item', isActive && 'active', 'pl-12')}
+                          onClick={handleMobileClose}
+                        >
+                          <child.icon className="w-4 h-4 flex-shrink-0" />
+                          <span className="truncate">{child.label}</span>
+                        </NavLink>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
 
           {/* Admin Section */}
@@ -162,11 +265,7 @@ export function AdminSidebar({ className, mobileOpen = false, onMobileClose }) {
               <NavLink
                 key={item.to}
                 to={item.to}
-                className={({ isActive }) => cn(
-                  'nav-item',
-                  isActive && 'active',
-                  isCollapsed && 'justify-center px-2'
-                )}
+                className={({ isActive }) => cn('nav-item', isActive && 'active', isCollapsed && 'justify-center px-2')}
                 title={isCollapsed ? item.label : undefined}
                 onClick={handleMobileClose}
               >
@@ -192,12 +291,7 @@ export function AdminSidebar({ className, mobileOpen = false, onMobileClose }) {
         </button>
 
         {/* User Section */}
-        <div
-          className={cn(
-            'p-4 border-t border-sidebar-border',
-            isCollapsed && 'md:flex md:justify-center'
-          )}
-        >
+        <div className={cn('p-4 border-t border-sidebar-border', isCollapsed && 'md:flex md:justify-center')}>
           <div className={cn('flex items-center gap-3', isCollapsed && 'md:justify-center')}>
             <NavLink
               to="/profile"

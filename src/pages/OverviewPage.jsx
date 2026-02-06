@@ -477,7 +477,7 @@ export default function OverviewPage() {
       />
       <div className="flex-1 overflow-auto p-6">
         <Card className="card-ocean mb-6">
-          <CardHeader className="pb-2">
+          <CardHeader className="">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <CardTitle className="text-base font-semibold">
                 Pengaturan Ringkasan
@@ -527,7 +527,7 @@ export default function OverviewPage() {
                       onDragStart={(event) => handleDragStart(event, kpi.id)}
                       onDragOver={handleDragOver}
                       onDrop={(event) => handleDrop(event, kpi.id)}
-                      className={`relative rounded-2xl border border-border bg-card p-4 transition cursor-grab active:cursor-grabbing kpi-config-wiggle ${active ? "shadow-sm" : "opacity-60 grayscale"}`}
+                      className={`relative pt-[40px] rounded-2xl border border-border bg-card p-4 transition cursor-grab active:cursor-grabbing kpi-config-wiggle ${active ? "shadow-sm" : "opacity-60 grayscale"}`}
                       style={{
                         animationDelay: `${index * 0.08}s`,
                       }}
