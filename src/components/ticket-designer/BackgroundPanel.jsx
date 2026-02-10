@@ -1,195 +1,208 @@
 import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
-import { Paintbrush, Image, Palette, Grid3X3 } from 'lucide-react';
+import { Paintbrush, Image, Palette, Grid3X3, SquareDashed, Droplets, Waves } from 'lucide-react';
+import { defaultTicketDesign } from '@/types/ticket';
 
 const solidColors = [
-  { name: 'Ocean Deep', value: '#0d4f4f' },
-  { name: 'Navy', value: '#0f172a' },
-  { name: 'Forest', value: '#14532d' },
-  { name: 'Midnight', value: '#1e1b4b' },
-  { name: 'Charcoal', value: '#1f2937' },
-  { name: 'Slate', value: '#334155' },
+  { name: 'White', value: '#ffffff' },
+  { name: 'Light Blue', value: '#e2f5ff' },
+  { name: 'Slate', value: '#f1f5f9' },
+  { name: 'Charcoal', value: '#111827' },
 ];
 
 const gradients = [
-  {
-    name: 'Ocean',
-    value: 'linear-gradient(135deg, #0d4f4f 0%, #1a7a7a 50%, #0d9488 100%)'
-  },
-  {
-    name: 'Sunset Coral',
-    value: 'linear-gradient(135deg, #7c2d12 0%, #ea580c 50%, #f97316 100%)'
-  },
-  {
-    name: 'Deep Sea',
-    value: 'linear-gradient(135deg, #0c4a6e 0%, #0369a1 50%, #0284c7 100%)'
-  },
-  {
-    name: 'Forest',
-    value: 'linear-gradient(135deg, #14532d 0%, #15803d 50%, #22c55e 100%)'
-  },
-  {
-    name: 'Twilight',
-    value: 'linear-gradient(135deg, #312e81 0%, #4f46e5 50%, #6366f1 100%)'
-  },
-  {
-    name: 'Aurora',
-    value: 'linear-gradient(135deg, #134e4a 0%, #0d9488 50%, #2dd4bf 100%)'
-  },
+  { name: 'Orange (Ticket)', value: 'linear-gradient(90deg, #ea580c 0%, #f97316 45%, #fb923c 100%)' },
+  { name: 'Ocean', value: 'linear-gradient(135deg, #0d4f4f 0%, #1a7a7a 50%, #0d9488 100%)' },
+  { name: 'Deep Sea', value: 'linear-gradient(135deg, #0c4a6e 0%, #0369a1 50%, #0284c7 100%)' },
+  { name: 'Twilight', value: 'linear-gradient(135deg, #312e81 0%, #4f46e5 50%, #6366f1 100%)' },
 ];
 
 const patterns = [
-  {
-    name: 'Waves',
-    value: `url("data:image/svg+xml,%3Csvg width='100' height='20' viewBox='0 0 100 20' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M21.184 20c.357-.13.72-.264 1.088-.402l1.768-.661C33.64 15.347 39.647 14 50 14c10.271 0 15.362 1.222 24.629 4.928.955.383 1.869.74 2.75 1.072h6.225c-2.51-.73-5.139-1.691-8.233-2.928C65.888 13.278 60.562 12 50 12c-10.626 0-16.855 1.397-26.66 5.063l-1.767.662c-2.475.923-4.66 1.674-6.724 2.275h6.335zm0-20C13.258 2.892 8.077 4 0 4V2c5.744 0 9.951-.574 14.85-2h6.334zM77.38 0C85.239 2.966 90.502 4 100 4V2c-6.842 0-11.386-.542-16.396-2h-6.225zM0 14c8.44 0 13.718-1.21 22.272-4.402l1.768-.661C33.64 5.347 39.647 4 50 4c10.271 0 15.362 1.222 24.629 4.928C84.112 12.722 89.438 14 100 14v-2c-10.271 0-15.362-1.222-24.629-4.928C65.888 3.278 60.562 2 50 2 39.374 2 33.145 3.397 23.34 7.063l-1.767.662C13.223 10.84 8.163 12 0 12v2z' fill='%2314b8a6' fill-opacity='0.1' fill-rule='evenodd'/%3E%3C/svg%3E")`,
-  },
-  {
-    name: 'Dots',
-    value: `url("data:image/svg+xml,%3Csvg width='20' height='20' viewBox='0 0 20 20' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%2314b8a6' fill-opacity='0.15' fill-rule='evenodd'%3E%3Ccircle cx='3' cy='3' r='3'/%3E%3Ccircle cx='13' cy='13' r='3'/%3E%3C/g%3E%3C/svg%3E")`,
-  },
-  {
-    name: 'Triangles',
-    value: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='36' height='72' viewBox='0 0 36 72'%3E%3Cg fill-rule='evenodd'%3E%3Cg fill='%2314b8a6' fill-opacity='0.1'%3E%3Cpath d='M2 6h12L8 18 2 6zm18 36h12l-6 12-6-12z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
-  },
+  { name: 'Waves', value: `url("data:image/svg+xml,%3Csvg width='100' height='20' viewBox='0 0 100 20' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M21.184 20c.357-.13.72-.264 1.088-.402l1.768-.661C33.64 15.347 39.647 14 50 14c10.271 0 15.362 1.222 24.629 4.928.955.383 1.869.74 2.75 1.072h6.225c-2.51-.73-5.139-1.691-8.233-2.928C65.888 13.278 60.562 12 50 12c-10.626 0-16.855 1.397-26.66 5.063l-1.767.662c-2.475.923-4.66 1.674-6.724 2.275h6.335zm0-20C13.258 2.892 8.077 4 0 4V2c5.744 0 9.951-.574 14.85-2h6.334zM77.38 0C85.239 2.966 90.502 4 100 4V2c-6.842 0-11.386-.542-16.396-2h-6.225zM0 14c8.44 0 13.718-1.21 22.272-4.402l1.768-.661C33.64 5.347 39.647 4 50 4c10.271 0 15.362 1.222 24.629 4.928C84.112 12.722 89.438 14 100 14v-2c-10.271 0-15.362-1.222-24.629-4.928C65.888 3.278 60.562 2 50 2 39.374 2 33.145 3.397 23.34 7.063l-1.767.662C13.223 10.84 8.163 12 0 12v2z' fill='%23ea580c' fill-opacity='0.10' fill-rule='evenodd'/%3E%3C/svg%3E")` },
 ];
 
-export function BackgroundPanel({ background, onChange }) {
+const borderSolids = [
+  { name: 'Neutral', value: '#e2e8f0' },
+  { name: 'Slate', value: '#334155' },
+  { name: 'Blue', value: '#1d4ed8' },
+  { name: 'Teal', value: '#0d9488' },
+  { name: 'Orange', value: '#ea580c' },
+];
+
+const borderGradients = [
+  { name: 'Orange', value: 'linear-gradient(90deg, #ea580c 0%, #f97316 45%, #fb923c 100%)' },
+  { name: 'Ocean Teal', value: 'linear-gradient(90deg, #0d9488 0%, #14b8a6 60%, #2dd4bf 100%)' },
+  { name: 'Deep Sea Blue', value: 'linear-gradient(90deg, #0369a1 0%, #0284c7 60%, #38bdf8 100%)' },
+];
+
+
+export function BackgroundPanel({ design, onChange }) {
+  const background = design.background;
+
   const backgroundTypes = [
     { type: 'solid', icon: Paintbrush, label: 'Solid' },
     { type: 'gradient', icon: Palette, label: 'Gradient' },
     { type: 'pattern', icon: Grid3X3, label: 'Pattern' },
-    { type: 'image', icon: Image, label: 'Image' },
+    { type: 'image', icon: Image, label: 'Gambar' },
   ];
+
+  const updateBackground = (nextBg) => onChange({ background: nextBg });
+
+  const isBorderGradient = typeof design.borderColor === 'string' &&
+    (design.borderColor.includes('linear-gradient') || design.borderColor.includes('radial-gradient') || design.borderColor.includes('conic-gradient'));
 
   return (
     <div className="space-y-6">
-      {/* Background Type Selection */}
-      <div className="space-y-3">
-        <Label className="text-sm font-medium text-foreground">Tipe Background</Label>
-        <div className="grid grid-cols-4 gap-2">
+      {/* Border Section */}
+      <div className="panel-section">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <SquareDashed size={16} className="text-muted-foreground" />
+            <Label className="text-sm font-semibold">Garis / Border</Label>
+          </div>
+          <div
+            className="w-14 h-5 rounded border border-border"
+            style={{
+              background: isBorderGradient ? (design.borderColor || '#e2e8f0') : undefined,
+              backgroundColor: !isBorderGradient ? (design.borderColor || '#e2e8f0') : undefined,
+            }}
+          />
+        </div>
+
+        <div className="grid grid-cols-2 gap-4 pt-1">
+          <div className="space-y-2">
+            <Label className="text-xs text-muted-foreground">Tebal</Label>
+            <Slider value={[design.borderWidth ?? 2]} onValueChange={([v]) => onChange({ borderWidth: v })} min={0} max={10} step={1} />
+            <p className="text-xs text-muted-foreground text-center">{design.borderWidth ?? 2}px</p>
+          </div>
+          <div className="space-y-2">
+            <Label className="text-xs text-muted-foreground">Mode</Label>
+            <div className="grid grid-cols-2 gap-1.5">
+              <button
+                type="button"
+                className={`px-2 py-1.5 text-xs rounded-md flex items-center justify-center gap-1.5 transition-all ${!isBorderGradient ? 'bg-primary text-primary-foreground' : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'}`}
+                onClick={() => onChange({ borderColor: '#e2e8f0', borderWidth: design.borderWidth ?? 2 })}
+              >
+                <Droplets size={12} /> Solid
+              </button>
+              <button
+                type="button"
+                className={`px-2 py-1.5 text-xs rounded-md flex items-center justify-center gap-1.5 transition-all ${isBorderGradient ? 'bg-primary text-primary-foreground' : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'}`}
+                onClick={() => onChange({ borderColor: borderGradients[0].value, borderWidth: design.borderWidth ?? 2 })}
+              >
+                <Waves size={12} /> Gradient
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {!isBorderGradient ? (
+          <div className="space-y-2 pt-1">
+            <div className="flex flex-wrap gap-1.5">
+              {borderSolids.map((c) => (
+                <button key={c.value} onClick={() => onChange({ borderColor: c.value })} type="button" title={c.name}
+                  className={`color-swatch ${design.borderColor === c.value ? 'color-swatch-active' : ''}`}
+                  style={{ backgroundColor: c.value }}
+                />
+              ))}
+            </div>
+            <div className="flex items-center gap-2">
+              <input type="color" value={typeof design.borderColor === 'string' && design.borderColor.startsWith('#') ? design.borderColor : '#e2e8f0'} onChange={(e) => onChange({ borderColor: e.target.value })} className="w-8 h-7 rounded cursor-pointer border-0" />
+              <input type="text" value={typeof design.borderColor === 'string' ? design.borderColor : ''} onChange={(e) => onChange({ borderColor: e.target.value })} placeholder="#e2e8f0" className="input-designer text-xs flex-1" />
+            </div>
+          </div>
+        ) : (
+          <div className="space-y-2 pt-1">
+            <div className="grid grid-cols-3 gap-1.5">
+              {borderGradients.map((g) => (
+                <button key={g.name} onClick={() => onChange({ borderColor: g.value })} type="button" title={g.name}
+                  className={`h-8 rounded-md transition-all ${design.borderColor === g.value ? 'ring-2 ring-primary ring-offset-2 ring-offset-background' : 'hover:scale-[1.02]'}`}
+                  style={{ background: g.value }}
+                />
+              ))}
+            </div>
+            <input type="text" value={design.borderColor || ''} onChange={(e) => onChange({ borderColor: e.target.value })} placeholder="linear-gradient(...)" className="input-designer text-xs" />
+          </div>
+        )}
+      </div>
+
+      {/* Background Type */}
+      <div className="panel-section">
+        <Label className="text-sm font-semibold">Background</Label>
+        <div className="grid grid-cols-4 gap-1.5">
           {backgroundTypes.map(({ type, icon: Icon, label }) => (
-            <button
-              key={type}
-              onClick={() => onChange({ ...background, type })}
-              className={`flex flex-col items-center gap-1 p-3 rounded-lg transition-all ${
-                background.type === type
-                  ? 'bg-primary text-primary-foreground'
-                  : 'bg-secondary hover:bg-secondary/80 text-secondary-foreground'
-              }`}
+            <button key={type} onClick={() => updateBackground({ ...background, type })} type="button"
+              className={`flex flex-col items-center gap-1 py-2.5 px-2 rounded-lg transition-all text-xs ${background.type === type ? 'bg-primary text-primary-foreground' : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'}`}
             >
-              <Icon size={18} />
-              <span className="text-xs">{label}</span>
+              <Icon size={16} />
+              <span>{label}</span>
             </button>
           ))}
         </div>
+
+        {background.type === 'solid' && (
+          <div className="space-y-2 pt-1">
+            <div className="flex flex-wrap gap-1.5">
+              {solidColors.map((color) => (
+                <button key={color.value} onClick={() => updateBackground({ ...background, value: color.value })} type="button" title={color.name}
+                  className={`color-swatch ${background.value === color.value ? 'color-swatch-active' : ''}`}
+                  style={{ backgroundColor: color.value }}
+                />
+              ))}
+            </div>
+            <div className="flex items-center gap-2">
+              <Label className="text-xs text-muted-foreground">Custom:</Label>
+              <input type="color" value={background.value.startsWith('#') ? background.value : '#ffffff'} onChange={(e) => updateBackground({ ...background, value: e.target.value })} className="w-8 h-7 rounded cursor-pointer border-0" />
+            </div>
+          </div>
+        )}
+
+        {background.type === 'gradient' && (
+          <div className="space-y-2 pt-1">
+            <div className="grid grid-cols-2 gap-1.5">
+              {gradients.map((g) => (
+                <button key={g.name} onClick={() => updateBackground({ ...background, value: g.value })} type="button" title={g.name}
+                  className={`h-10 rounded-lg transition-all ${background.value === g.value ? 'ring-2 ring-primary ring-offset-2 ring-offset-background' : 'hover:scale-[1.02]'}`}
+                  style={{ background: g.value }}
+                />
+              ))}
+            </div>
+            <input type="text" value={background.value} onChange={(e) => updateBackground({ ...background, value: e.target.value })} placeholder="linear-gradient(...)" className="input-designer text-xs" />
+          </div>
+        )}
+
+        {background.type === 'pattern' && (
+          <div className="space-y-2 pt-1">
+            <div className="grid grid-cols-2 gap-1.5">
+              {patterns.map((p) => (
+                <button key={p.name} onClick={() => updateBackground({ ...background, value: p.value })} type="button" title={p.name}
+                  className={`h-10 rounded-lg transition-all ${background.value === p.value ? 'ring-2 ring-primary ring-offset-2 ring-offset-background' : 'hover:scale-[1.02]'}`}
+                  style={{ backgroundColor: '#ffffff', backgroundImage: p.value }}
+                />
+              ))}
+            </div>
+          </div>
+        )}
+
+        {background.type === 'image' && (
+          <div className="space-y-2 pt-1">
+            <input type="text" value={background.value} onChange={(e) => updateBackground({ ...background, value: e.target.value })} placeholder="https://example.com/image.jpg" className="input-designer text-xs" />
+            <p className="text-[11px] text-muted-foreground">URL gambar untuk background tiket.</p>
+            <div className="space-y-1.5 pt-1">
+              <Label className="text-xs text-muted-foreground">Overlay (opsional)</Label>
+              <input type="text" value={background.overlay || ''} onChange={(e) => updateBackground({ ...background, overlay: e.target.value })} placeholder="rgba(255,255,255,0.6)" className="input-designer text-xs" />
+            </div>
+          </div>
+        )}
       </div>
 
-      {/* Solid Colors */}
-      {background.type === 'solid' && (
-        <div className="space-y-3">
-          <Label className="text-sm font-medium text-foreground">Pilih Warna</Label>
-          <div className="grid grid-cols-6 gap-2">
-            {solidColors.map((color) => (
-              <button
-                key={color.value}
-                onClick={() => onChange({ ...background, value: color.value })}
-                className={`color-swatch ${
-                  background.value === color.value ? 'color-swatch-active' : ''
-                }`}
-                style={{ backgroundColor: color.value }}
-                title={color.name}
-              />
-            ))}
-          </div>
-          <div className="flex items-center gap-2">
-            <Label className="text-xs text-muted-foreground">Custom:</Label>
-            <input
-              type="color"
-              value={background.value.startsWith('#') ? background.value : '#0d4f4f'}
-              onChange={(e) => onChange({ ...background, value: e.target.value })}
-              className="w-10 h-8 rounded cursor-pointer border-0"
-            />
-          </div>
-        </div>
-      )}
-
-      {/* Gradients */}
-      {background.type === 'gradient' && (
-        <div className="space-y-3">
-          <Label className="text-sm font-medium text-foreground">Pilih Gradient</Label>
-          <div className="grid grid-cols-3 gap-2">
-            {gradients.map((gradient) => (
-              <button
-                key={gradient.name}
-                onClick={() => onChange({ ...background, value: gradient.value })}
-                className={`h-12 rounded-lg transition-all ${
-                  background.value === gradient.value
-                    ? 'ring-2 ring-primary ring-offset-2 ring-offset-background'
-                    : 'hover:scale-105'
-                }`}
-                style={{ background: gradient.value }}
-                title={gradient.name}
-              />
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Patterns */}
-      {background.type === 'pattern' && (
-        <div className="space-y-3">
-          <Label className="text-sm font-medium text-foreground">Pilih Pattern</Label>
-          <div className="grid grid-cols-3 gap-2">
-            {patterns.map((pattern) => (
-              <button
-                key={pattern.name}
-                onClick={() => onChange({ ...background, value: pattern.value })}
-                className={`h-12 rounded-lg bg-ocean-deep transition-all ${
-                  background.value === pattern.value
-                    ? 'ring-2 ring-primary ring-offset-2 ring-offset-background'
-                    : 'hover:scale-105'
-                }`}
-                style={{ backgroundImage: pattern.value }}
-                title={pattern.name}
-              />
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Image URL */}
-      {background.type === 'image' && (
-        <div className="space-y-3">
-          <Label className="text-sm font-medium text-foreground">URL Gambar</Label>
-          <input
-            type="text"
-            value={background.value}
-            onChange={(e) => onChange({ ...background, value: e.target.value })}
-            placeholder="https://example.com/image.jpg"
-            className="input-designer"
-          />
-          <p className="text-xs text-muted-foreground">
-            Masukkan URL gambar untuk background tiket
-          </p>
-        </div>
-      )}
-
-      {/* Opacity Slider */}
-      <div className="space-y-3">
+      {/* Opacity */}
+      <div className="panel-section">
         <div className="flex items-center justify-between">
-          <Label className="text-sm font-medium text-foreground">Opacity</Label>
-          <span className="text-sm text-muted-foreground">
-            {Math.round(background.opacity * 100)}%
-          </span>
+          <Label className="text-sm font-semibold">Opacity Background</Label>
+          <span className="text-xs text-muted-foreground font-medium">{Math.round((background.opacity ?? 1) * 100)}%</span>
         </div>
-        <Slider
-          value={[background.opacity * 100]}
-          onValueChange={([value]) => onChange({ ...background, opacity: value / 100 })}
-          min={20}
-          max={100}
-          step={5}
-          className="w-full"
-        />
+        <Slider value={[(background.opacity ?? 1) * 100]} onValueChange={([v]) => updateBackground({ ...background, opacity: v / 100 })} min={20} max={100} step={5} />
       </div>
     </div>
   );

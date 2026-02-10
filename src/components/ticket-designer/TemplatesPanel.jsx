@@ -1,154 +1,209 @@
-import { defaultTicketDesign } from '@/types/ticket';
+import { useState } from 'react';
 import { Label } from '@/components/ui/label';
-import { Fish, Waves, TreePalm, Sunset, Mountain, Anchor } from 'lucide-react';
+import {
+  Sunset,
+  Waves,
+  Anchor,
+  Palette,
+  Mountain,
+  Fish,
+  TreePalm,
+} from 'lucide-react';
 
 const templates = [
   {
-    id: 'ocean',
+    id: 'raja-ampat-orange',
+    name: 'Raja Ampat (Orange)',
+    icon: Sunset,
+    preview: {
+      background: 'linear-gradient(90deg, #ea580c 0%, #f97316 45%, #fb923c 100%)',
+    },
+    borderColor: 'linear-gradient(90deg, #ea580c 0%, #f97316 45%, #fb923c 100%)',
+    accent: 'linear-gradient(90deg, #ea580c 0%, #f97316 45%, #fb923c 100%)',
+  },
+  {
+    id: 'ocean-teal',
     name: 'Ocean Teal',
     icon: Waves,
     preview: {
-      background: 'linear-gradient(135deg, #0d4f4f 0%, #1a7a7a 50%, #0d9488 100%)',
-      accent: '#14b8a6',
+      background: 'linear-gradient(90deg, #0d9488 0%, #14b8a6 60%, #2dd4bf 100%)',
     },
-    design: {
-      background: {
-        type: 'gradient',
-        value: 'linear-gradient(135deg, #0d4f4f 0%, #1a7a7a 50%, #0d9488 100%)',
-        opacity: 1,
-      },
-      borderColor: '#14b8a6',
-    },
+    borderColor: 'linear-gradient(90deg, #0d9488 0%, #14b8a6 60%, #2dd4bf 100%)',
+    accent: 'linear-gradient(90deg, #0d9488 0%, #14b8a6 60%, #2dd4bf 100%)',
   },
   {
-    id: 'coral',
-    name: 'Coral Reef',
-    icon: Fish,
-    preview: {
-      background: 'linear-gradient(135deg, #7c2d12 0%, #ea580c 50%, #f97316 100%)',
-      accent: '#fb923c',
-    },
-    design: {
-      background: {
-        type: 'gradient',
-        value: 'linear-gradient(135deg, #7c2d12 0%, #ea580c 50%, #f97316 100%)',
-        opacity: 1,
-      },
-      borderColor: '#fb923c',
-    },
-  },
-  {
-    id: 'deep-sea',
-    name: 'Deep Sea',
+    id: 'deep-sea-blue',
+    name: 'Deep Sea Blue',
     icon: Anchor,
     preview: {
-      background: 'linear-gradient(135deg, #0c4a6e 0%, #0369a1 50%, #0284c7 100%)',
-      accent: '#38bdf8',
+      background: 'linear-gradient(90deg, #0369a1 0%, #0284c7 60%, #38bdf8 100%)',
     },
-    design: {
-      background: {
-        type: 'gradient',
-        value: 'linear-gradient(135deg, #0c4a6e 0%, #0369a1 50%, #0284c7 100%)',
-        opacity: 1,
-      },
-      borderColor: '#38bdf8',
-    },
+    borderColor: 'linear-gradient(90deg, #0369a1 0%, #0284c7 60%, #38bdf8 100%)',
+    accent: 'linear-gradient(90deg, #0369a1 0%, #0284c7 60%, #38bdf8 100%)',
   },
   {
-    id: 'forest',
-    name: 'Mangrove',
+    id: 'tropical-green',
+    name: 'Tropical Green',
     icon: TreePalm,
     preview: {
-      background: 'linear-gradient(135deg, #14532d 0%, #15803d 50%, #22c55e 100%)',
-      accent: '#4ade80',
+      background: 'linear-gradient(90deg, #15803d 0%, #22c55e 60%, #86efac 100%)',
     },
-    design: {
-      background: {
-        type: 'gradient',
-        value: 'linear-gradient(135deg, #14532d 0%, #15803d 50%, #22c55e 100%)',
-        opacity: 1,
-      },
-      borderColor: '#4ade80',
-    },
+    borderColor: 'linear-gradient(90deg, #15803d 0%, #22c55e 60%, #86efac 100%)',
+    accent: 'linear-gradient(90deg, #15803d 0%, #22c55e 60%, #86efac 100%)',
   },
   {
-    id: 'sunset',
-    name: 'Sunset',
-    icon: Sunset,
+    id: 'sunrise-pink',
+    name: 'Sunrise Pink',
+    icon: Fish,
     preview: {
-      background: 'linear-gradient(135deg, #581c87 0%, #a21caf 50%, #d946ef 100%)',
-      accent: '#e879f9',
+      background: 'linear-gradient(90deg, #be185d 0%, #ec4899 55%, #f9a8d4 100%)',
     },
-    design: {
-      background: {
-        type: 'gradient',
-        value: 'linear-gradient(135deg, #581c87 0%, #a21caf 50%, #d946ef 100%)',
-        opacity: 1,
-      },
-      borderColor: '#e879f9',
-    },
+    borderColor: 'linear-gradient(90deg, #be185d 0%, #ec4899 55%, #f9a8d4 100%)',
+    accent: 'linear-gradient(90deg, #be185d 0%, #ec4899 55%, #f9a8d4 100%)',
   },
   {
-    id: 'mountain',
-    name: 'Highland',
+    id: 'mountain-slate',
+    name: 'Mountain Slate',
     icon: Mountain,
     preview: {
-      background: 'linear-gradient(135deg, #1e293b 0%, #334155 50%, #475569 100%)',
-      accent: '#94a3b8',
+      background: 'linear-gradient(90deg, #334155 0%, #475569 60%, #94a3b8 100%)',
     },
-    design: {
-      background: {
-        type: 'gradient',
-        value: 'linear-gradient(135deg, #1e293b 0%, #334155 50%, #475569 100%)',
-        opacity: 1,
-      },
-      borderColor: '#94a3b8',
-    },
+    borderColor: 'linear-gradient(90deg, #334155 0%, #475569 60%, #94a3b8 100%)',
+    accent: 'linear-gradient(90deg, #334155 0%, #475569 60%, #94a3b8 100%)',
   },
 ];
 
 export function TemplatesPanel({ currentDesignId, onSelectTemplate }) {
+  const [mode, setMode] = useState('solid'); // solid | gradient
+  const [solidColor, setSolidColor] = useState('#0ea5e9');
+  const [gradFrom, setGradFrom] = useState('#0ea5e9');
+  const [gradTo, setGradTo] = useState('#22d3ee');
+
+  const gradientValue = `linear-gradient(90deg, ${gradFrom} 0%, ${gradTo} 100%)`;
+
+  const handleApplyCustom = () => {
+    const value = mode === 'solid' ? solidColor : gradientValue;
+
+    onSelectTemplate({
+      id: 'custom',
+      borderColor: value,
+      accent: value,
+    });
+  };
+
   return (
     <div className="space-y-4">
-      <Label className="text-sm font-medium text-foreground">Template Siap Pakai</Label>
+      <Label className="text-sm font-semibold">Template Aksen</Label>
 
-      <div className="grid grid-cols-2 gap-3">
-        {templates.map((template) => {
-          const Icon = template.icon;
-          const isActive = currentDesignId === template.id;
+      <div className="grid grid-cols-1 gap-2.5">
+        {templates.map((t) => {
+          const Icon = t.icon;
+          const isActive = currentDesignId === t.id;
 
           return (
             <button
-              key={template.id}
-              onClick={() => onSelectTemplate({ ...template.design, id: template.id })}
-              className={`template-card group ${isActive ? 'template-card-active' : ''}`}
+              key={t.id}
+              onClick={() =>
+                onSelectTemplate({
+                  id: t.id,
+                  borderColor: t.borderColor,
+                  accent: t.accent,
+                })
+              }
+              className={`template-card group flex items-center gap-3 p-3 ${
+                isActive ? 'template-card-active' : ''
+              }`}
             >
               <div
-                className="aspect-[16/9] rounded-lg flex items-center justify-center transition-transform group-hover:scale-[1.02]"
-                style={{ background: template.preview.background }}
+                className="w-12 h-12 rounded-lg flex items-center justify-center shrink-0 transition-transform group-hover:scale-105"
+                style={{ background: t.preview.background }}
               >
-                <Icon
-                  size={32}
-                  color={template.preview.accent}
-                  className="opacity-80 group-hover:opacity-100 transition-opacity"
-                />
+                <Icon size={22} className="text-primary-foreground opacity-90" />
               </div>
-              <div className="p-2 text-center">
-                <span className={`text-xs font-medium ${isActive ? 'text-primary' : 'text-muted-foreground'}`}>
-                  {template.name}
-                </span>
-              </div>
+
+              <span
+                className={`text-sm font-medium ${
+                  isActive ? 'text-primary' : 'text-foreground'
+                }`}
+              >
+                {t.name}
+              </span>
             </button>
           );
         })}
       </div>
 
-      <div className="pt-4 border-t border-border">
+      {/* 🎨 CUSTOM COLOR */}
+      <div className="pt-3 border-t border-border space-y-3">
+        <Label className="text-xs text-muted-foreground">
+          Warna Kustom
+        </Label>
+
+        {/* MODE TOGGLE */}
+        <div className="flex gap-2">
+          <button
+            onClick={() => setMode('solid')}
+            className={`flex-1 text-xs py-1.5 rounded ${
+              mode === 'solid'
+                ? 'bg-primary text-primary-foreground'
+                : 'bg-muted'
+            }`}
+          >
+            Solid
+          </button>
+          <button
+            onClick={() => setMode('gradient')}
+            className={`flex-1 text-xs py-1.5 rounded ${
+              mode === 'gradient'
+                ? 'bg-primary text-primary-foreground'
+                : 'bg-muted'
+            }`}
+          >
+            Gradient
+          </button>
+        </div>
+
+        {/* PICKER */}
+        {mode === 'solid' ? (
+          <div className="flex items-center gap-2">
+            <input
+              type="color"
+              value={solidColor}
+              onChange={(e) => setSolidColor(e.target.value)}
+              className="w-10 h-10 rounded border border-border cursor-pointer"
+            />
+            <div
+              className="flex-1 h-10 rounded border"
+              style={{ background: solidColor }}
+            />
+          </div>
+        ) : (
+          <div className="flex items-center gap-2">
+            <input
+              type="color"
+              value={gradFrom}
+              onChange={(e) => setGradFrom(e.target.value)}
+              className="w-10 h-10 rounded border border-border cursor-pointer"
+            />
+            <input
+              type="color"
+              value={gradTo}
+              onChange={(e) => setGradTo(e.target.value)}
+              className="w-10 h-10 rounded border border-border cursor-pointer"
+            />
+            <div
+              className="flex-1 h-10 rounded border"
+              style={{ background: gradientValue }}
+            />
+          </div>
+        )}
+
         <button
-          onClick={() => onSelectTemplate(defaultTicketDesign)}
-          className="w-full btn-designer-secondary text-sm"
+          onClick={handleApplyCustom}
+          className="w-full btn-designer-secondary text-xs justify-center"
         >
-          Reset ke Default
+          <Palette size={14} />
+          Pakai Warna Kustom
         </button>
       </div>
     </div>
