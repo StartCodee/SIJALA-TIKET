@@ -20,27 +20,27 @@ import {
 import logoRajaAmpat from '@/assets/image/KKP-RajaAmpat.png';
 import motifSidebar from '@/assets/motif-sidebar.svg';
 
-const navItems = [
+const mainNavItems = [
   { to: '/', icon: LayoutDashboard, label: 'Ringkasan' },
-  { to: '/tickets', icon: Ticket, label: 'Daftar Tiket' },
+  { to: '/tickets', icon: Ticket, label: 'Tiket' },
   { to: '/invoices', icon: CreditCard, label: 'Invoice' },
-
-  { to: '/approval', icon: ClipboardCheck, label: 'Antrian Persetujuan' },
   { to: '/payments', icon: CreditCard, label: 'Pembayaran' },
-  { to: '/tarif', icon: Tag, label: 'Tarif Layanan' },
-  { to: '/ticket-designer', icon: Tag, label: 'Tampilan Tiket' },
-  // { to: '/gate', icon: DoorOpen, label: 'Monitor Gerbang' },
-  { to: '/reports', icon: BarChart3, label: 'Laporan Keuangan' },
   { to: '/refunds', icon: RotateCcw, label: 'Pengembalian Dana' },
+  { to: '/approval', icon: ClipboardCheck, label: 'Antrian Persetujuan' },
+  { to: '/reports', icon: BarChart3, label: 'Laporan Keuangan' },
+  { to: '/gate', icon: DoorOpen, label: 'Tiket Langsung (Onsite Ticket)' },
 ];
 
-const adminItems = [
-  { to: '/users', icon: Users, label: 'Manajemen Pengguna' },
+const settingsItems = [
+  { to: '/tarif', icon: Tag, label: 'Tarif Layanan' },
+  { to: '/ticket-designer', icon: Tag, label: 'Editing Kartu' },
+  { to: '/users', icon: Users, label: 'Kelola tim' },
   { to: '/logs', icon: History, label: 'Log Aktivitas' },
 ];
 
 export function AdminSidebar({ className, mobileOpen = false, onMobileClose }) {
   const [collapsed, setCollapsed] = useState(false);
+  const [language, setLanguage] = useState('id');
   const location = useLocation();
   const previousPath = useRef(location.pathname);
   const isCollapsed = collapsed && !mobileOpen;
@@ -133,7 +133,7 @@ export function AdminSidebar({ className, mobileOpen = false, onMobileClose }) {
                 Menu Utama
               </p>
             )}
-            {navItems.map((item) => (
+            {mainNavItems.map((item) => (
               <NavLink
                 key={item.to}
                 to={item.to}
@@ -155,10 +155,10 @@ export function AdminSidebar({ className, mobileOpen = false, onMobileClose }) {
           <div className="mt-6 space-y-1">
             {!isCollapsed && (
               <p className="text-[10px] font-semibold text-sidebar-foreground/40 uppercase tracking-wider px-4 mb-2">
-                Administrasi
+                Pengaturan
               </p>
             )}
-            {adminItems.map((item) => (
+            {settingsItems.map((item) => (
               <NavLink
                 key={item.to}
                 to={item.to}
@@ -198,6 +198,42 @@ export function AdminSidebar({ className, mobileOpen = false, onMobileClose }) {
             isCollapsed && 'md:flex md:justify-center'
           )}
         >
+          {!isCollapsed && (
+            <div className="mb-3 rounded-lg border border-sidebar-border/70 bg-sidebar-accent/30 p-2">
+              <p className="text-[10px] text-white uppercase tracking-wider">Bahasa</p>
+              <div className="mt-1 grid grid-cols-2 gap-1">
+                <button
+                  type="button"
+                  onClick={() => setLanguage('id')}
+                  className={cn(
+                    'rounded-md px-2 py-1 transition-colors flex items-center justify-center',
+                    language === 'id'
+                      ? 'bg-sidebar-primary/20 ring-1 ring-sidebar-primary/40'
+                      : 'hover:bg-sidebar-accent'
+                  )}
+                  aria-pressed={language === 'id'}
+                  aria-label="Bahasa Indonesia"
+                >
+                  <img src="/flags/id.svg" alt="Bendera Indonesia" className="h-4 w-6 rounded-[2px] object-cover" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setLanguage('en')}
+                  className={cn(
+                    'rounded-md px-2 py-1 transition-colors flex items-center justify-center',
+                    language === 'en'
+                      ? 'bg-sidebar-primary/20 ring-1 ring-sidebar-primary/40'
+                      : 'hover:bg-sidebar-accent'
+                  )}
+                  aria-pressed={language === 'en'}
+                  aria-label="Bahasa Inggris"
+                >
+                  <img src="/flags/gb.svg" alt="Bendera Inggris" className="h-4 w-6 rounded-[2px] object-cover" />
+                </button>
+              </div>
+            </div>
+          )}
+
           <div className={cn('flex items-center gap-3', isCollapsed && 'md:justify-center')}>
             <NavLink
               to="/profile"
