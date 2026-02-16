@@ -3,6 +3,7 @@ import { AdminLayout } from "@/components/AdminLayout";
 import { AdminHeader } from "@/components/AdminHeader";
 import {
   getAllTickets,
+  getInvoiceIdForTicket,
   formatShortId,
   FEE_PRICING,
   DOMISILI_LABELS,
@@ -15,10 +16,8 @@ import {
   Download,
   ChevronDown,
   ChevronUp,
-  User,
   FileText,
   Printer,
-  Users,
   FileCheck,
   Landmark,
   IdCard,
@@ -38,56 +37,109 @@ import {
 } from "@/components/ui/select";
 export default function TicketListPage() {
   const [searchQuery, setSearchQuery] = useState("");
-  const [approvalFilter, setApprovalFilter] = useState("all");
-  const [paymentFilter, setPaymentFilter] = useState("all");
-  const [paymentTypeFilter, setPaymentTypeFilter] = useState("all");
-  const [categoryFilter, setCategoryFilter] = useState("all");
+  const [typeFilter, setTypeFilter] = useState("all");
+  const [locationFilter, setLocationFilter] = useState("all");
+  const [targetFilter, setTargetFilter] = useState("all");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [gateFilter, setGateFilter] = useState("all");
   const [showFilters, setShowFilters] = useState(true);
-  const [sortField, setSortField] = useState("createdAt");
+  const [sortField, setSortField] = useState("activeStartAt");
   const [sortDir, setSortDir] = useState("desc");
   const getPaymentType = (ticket) => {
     if (ticket.operatorType === "doku") return "online";
     return "on_the_spot";
   };
+  const getGatewayLabel = (ticket) =>
+    getPaymentType(ticket) === "online" ? "Doku" : "Onsite";
+  const getPetugasGerbangName = (ticket) => {
+    if (ticket.lastActionBy && ticket.lastActionBy !== "Pemindai Gerbang" && ticket.lastActionBy !== "Sistem") {
+      return ticket.lastActionBy;
+    }
+    if (ticket.gateStatus === "masuk" || ticket.gateStatus === "keluar") {
+      return "Bambang Susilo";
+    }
+    const petugasByOperator = {
+      loket: "Bambang Susilo",
+      qris: "Dewi Anggraini",
+      transfer: "Rudi Hartono",
+      doku: "Dwi Prasetyo",
+    };
+    return petugasByOperator[ticket.operatorType] || "Bambang Susilo";
+  };
+  const getGerbangDisplay = (ticket) =>
+    getPaymentType(ticket) === "online" ? "DOKU" : getPetugasGerbangName(ticket);
   const isInternationalTicket = (ticket) =>
     ticket.domisiliOCR === "mancanegara" ||
     ticket.feeCategory?.includes("mancanegara");
-  const getPaymentStatusLabel = (ticket) => {
-    switch (ticket.paymentStatus) {
-      case "sudah_bayar":
-        return {
-          label: "Success",
-          className: "bg-status-approved-bg text-status-approved",
-        };
-      case "belum_bayar":
-        return {
-          label: "Pending",
-          className: "bg-status-pending-bg text-status-pending",
-        };
-      case "gagal":
-      case "unsuccessful":
-        return {
-          label: "Unsuccessful",
-          className: "bg-status-rejected-bg text-status-rejected",
-        };
-      case "no_activity":
-        return {
-          label: "No Activity",
-          className: "bg-muted text-muted-foreground",
-        };
-      default:
-        return {
-          label: "No Activity",
-          className: "bg-muted text-muted-foreground",
-        };
+  const getCardActiveStart = (ticket) => ticket.paidAt || ticket.createdAt;
+  const getValidityMonths = (ticket) => {
+    const validityLabel = FEE_PRICING[ticket.feeCategory]?.validity || "12 bulan";
+    const monthMatch = String(validityLabel).match(/(\d+)/);
+    return monthMatch ? Number(monthMatch[1]) : 12;
+  };
+  const getTargetPengunjungLabel = (ticket) => {
+    const map = {
+      wisatawan_mancanegara: "Mancanegara",
+      wisatawan_domestik_luar_papua: "Domestik",
+      wisatawan_domestik_pbd: "PBD",
+      wisatawan_domestik_papua: "Tanah Papua",
+      peneliti_mancanegara: "Peneliti Mancanegara",
+      peneliti_domestik: "Peneliti Domestik",
+      sport_fishing: "Sport Fishing",
+      mooring: "Mooring",
+    };
+    return map[ticket.feeCategory] || DOMISILI_LABELS[ticket.domisiliOCR] || "-";
+  };
+  const getTjlRemainingDays = (ticket) => {
+    if (ticket.paymentStatus !== "sudah_bayar") {
+      return 0;
     }
+
+    const activeStart = new Date(getCardActiveStart(ticket));
+    if (Number.isNaN(activeStart.getTime())) {
+      return 0;
+    }
+
+    const expiresAt = new Date(activeStart);
+    expiresAt.setMonth(expiresAt.getMonth() + getValidityMonths(ticket));
+    const remainingMs = expiresAt.getTime() - Date.now();
+    return Math.max(0, Math.ceil(remainingMs / (1000 * 60 * 60 * 24)));
+  };
+  const isTjlActive = (ticket) => getTjlRemainingDays(ticket) > 0;
+  const getTjlStatus = (ticket) => {
+    const remainingDays = getTjlRemainingDays(ticket);
+
+    if (remainingDays > 0) {
+      return {
+        label: `${remainingDays} hari`,
+        className: "bg-status-approved-bg text-status-approved",
+      };
+    }
+
+    return {
+      label: "0 hari",
+      className: "bg-slate-200 text-slate-700",
+    };
   };
   const getTicketTime = (ticket) =>
-    new Date(ticket.createdAt).toLocaleTimeString("id-ID", {
+    new Date(getCardActiveStart(ticket)).toLocaleTimeString("id-ID", {
       hour: "2-digit",
       minute: "2-digit",
     });
-  const allTickets = getAllTickets();
+  const getSortValue = (ticket, field) => {
+    if (field === "activeStartAt") {
+      return new Date(getCardActiveStart(ticket)).getTime();
+    }
+    if (field === "id") return ticket.id;
+    if (field === "namaLengkap") return ticket.namaLengkap;
+    if (field === "targetPengunjung") return getTargetPengunjungLabel(ticket);
+    return ticket[field];
+  };
+  const isPublishedTicket = (ticket) =>
+    ticket.paymentStatus === "sudah_bayar" ||
+    ticket.gateStatus === "masuk" ||
+    ticket.gateStatus === "keluar";
+  const allTickets = getAllTickets().filter(isPublishedTicket);
 
   // Filter tickets
   const filteredTickets = allTickets.filter((ticket) => {
@@ -95,28 +147,35 @@ export default function TicketListPage() {
       ticket.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
       ticket.namaLengkap.toLowerCase().includes(searchQuery.toLowerCase()) ||
       ticket.email.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesApproval =
-      approvalFilter === "all" || ticket.approvalStatus === approvalFilter;
-    const matchesPayment =
-      paymentFilter === "all" || ticket.paymentStatus === paymentFilter;
-    const matchesPaymentType =
-      paymentTypeFilter === "all" ||
-      getPaymentType(ticket) === paymentTypeFilter;
-    const matchesCategory =
-      categoryFilter === "all" || ticket.feeCategory === categoryFilter;
+    const matchesType =
+      typeFilter === "all" || ticket.bookingType === typeFilter;
+    const matchesLocation =
+      locationFilter === "all" || getPaymentType(ticket) === locationFilter;
+    const matchesTarget =
+      targetFilter === "all" || getTargetPengunjungLabel(ticket) === targetFilter;
+    const matchesStatus =
+      statusFilter === "all" ||
+      (statusFilter === "active" ? isTjlActive(ticket) : !isTjlActive(ticket));
+    const matchesGate =
+      gateFilter === "all" ||
+      getGatewayLabel(ticket).toLowerCase() === gateFilter;
     return (
       matchesSearch &&
-      matchesApproval &&
-      matchesPayment &&
-      matchesPaymentType &&
-      matchesCategory
+      matchesType &&
+      matchesLocation &&
+      matchesTarget &&
+      matchesStatus &&
+      matchesGate
     );
   });
 
   // Sort tickets
   const sortedTickets = [...filteredTickets].sort((a, b) => {
-    const aVal = a[sortField];
-    const bVal = b[sortField];
+    const aVal = getSortValue(a, sortField);
+    const bVal = getSortValue(b, sortField);
+    if (typeof aVal === "number" && typeof bVal === "number") {
+      return sortDir === "asc" ? aVal - bVal : bVal - aVal;
+    }
     if (typeof aVal === "string" && typeof bVal === "string") {
       return sortDir === "asc"
         ? aVal.localeCompare(bVal)
@@ -173,7 +232,7 @@ export default function TicketListPage() {
     <AdminLayout>
       <AdminHeader
         title="Daftar Tiket"
-        subtitle="Data master semua tiket biaya konservasi"
+        subtitle="Data tiket tarif jasa lingkungan masuk kawasan konservasi."
         showSearch={false}
       />
 
@@ -242,59 +301,30 @@ export default function TicketListPage() {
         {showFilters && (
           <Card className="mb-4 card-ocean animate-fade-in">
             <CardContent className="p-4">
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4">
                 <div>
                   <label className="text-xs font-medium text-muted-foreground mb-1.5 block">
-                    Status Persetujuan
+                    Tipe
                   </label>
-                  <Select
-                    value={approvalFilter}
-                    onValueChange={setApprovalFilter}
-                  >
+                  <Select value={typeFilter} onValueChange={setTypeFilter}>
                     <SelectTrigger className="bg-background">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent className="bg-popover border-border">
                       <SelectItem value="all">Semua</SelectItem>
-                      <SelectItem value="menunggu">Menunggu</SelectItem>
-                      <SelectItem value="disetujui">Disetujui</SelectItem>
-                      <SelectItem value="ditolak">Ditolak</SelectItem>
+                      <SelectItem value="group">Grup</SelectItem>
+                      <SelectItem value="perorangan">Individu</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
 
                 <div>
                   <label className="text-xs font-medium text-muted-foreground mb-1.5 block">
-                    Status Pembayaran
+                    Lokasi Pembayaran
                   </label>
                   <Select
-                    value={paymentFilter}
-                    onValueChange={setPaymentFilter}
-                  >
-                    <SelectTrigger className="bg-background">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent className="bg-popover border-border">
-                      <SelectItem value="all">Semua</SelectItem>
-                      <SelectItem value="belum_bayar">Belum Bayar</SelectItem>
-                      <SelectItem value="sudah_bayar">Sudah Bayar</SelectItem>
-                      <SelectItem value="refund_diproses">
-                        Pengembalian Diproses
-                      </SelectItem>
-                      <SelectItem value="refund_selesai">
-                        Pengembalian Selesai
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div>
-                  <label className="text-xs font-medium text-muted-foreground mb-1.5 block">
-                    Tipe Pembayaran
-                  </label>
-                  <Select
-                    value={paymentTypeFilter}
-                    onValueChange={setPaymentTypeFilter}
+                    value={locationFilter}
+                    onValueChange={setLocationFilter}
                   >
                     <SelectTrigger className="bg-background">
                       <SelectValue />
@@ -302,29 +332,65 @@ export default function TicketListPage() {
                     <SelectContent className="bg-popover border-border">
                       <SelectItem value="all">Semua</SelectItem>
                       <SelectItem value="online">Online</SelectItem>
-                      <SelectItem value="on_the_spot">On the spot</SelectItem>
+                      <SelectItem value="on_the_spot">Onsite</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
 
                 <div>
                   <label className="text-xs font-medium text-muted-foreground mb-1.5 block">
-                    Kategori Biaya
+                    Target Pengunjung
                   </label>
-                  <Select
-                    value={categoryFilter}
-                    onValueChange={setCategoryFilter}
-                  >
+                  <Select value={targetFilter} onValueChange={setTargetFilter}>
                     <SelectTrigger className="bg-background">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent className="bg-popover border-border">
                       <SelectItem value="all">Semua</SelectItem>
-                      {Object.entries(FEE_PRICING).map(([key, value]) => (
-                        <SelectItem key={key} value={key}>
-                          {value.label}
-                        </SelectItem>
-                      ))}
+                      <SelectItem value="Mancanegara">Mancanegara</SelectItem>
+                      <SelectItem value="Domestik">Domestik</SelectItem>
+                      <SelectItem value="PBD">PBD</SelectItem>
+                      <SelectItem value="Tanah Papua">Tanah Papua</SelectItem>
+                      <SelectItem value="Peneliti Mancanegara">
+                        Peneliti Mancanegara
+                      </SelectItem>
+                      <SelectItem value="Peneliti Domestik">
+                        Peneliti Domestik
+                      </SelectItem>
+                      <SelectItem value="Sport Fishing">Sport Fishing</SelectItem>
+                      <SelectItem value="Mooring">Mooring</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground mb-1.5 block">
+                    Status
+                  </label>
+                  <Select value={statusFilter} onValueChange={setStatusFilter}>
+                    <SelectTrigger className="bg-background">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="bg-popover border-border">
+                      <SelectItem value="all">Semua</SelectItem>
+                      <SelectItem value="active">Aktif</SelectItem>
+                      <SelectItem value="inactive">Tidak Aktif</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground mb-1.5 block">
+                    Gerbang
+                  </label>
+                  <Select value={gateFilter} onValueChange={setGateFilter}>
+                    <SelectTrigger className="bg-background">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="bg-popover border-border">
+                      <SelectItem value="all">Semua</SelectItem>
+                      <SelectItem value="doku">Doku</SelectItem>
+                      <SelectItem value="onsite">Onsite</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -334,10 +400,11 @@ export default function TicketListPage() {
                     variant="ghost"
                     size="sm"
                     onClick={() => {
-                      setApprovalFilter("all");
-                      setPaymentFilter("all");
-                      setPaymentTypeFilter("all");
-                      setCategoryFilter("all");
+                      setTypeFilter("all");
+                      setLocationFilter("all");
+                      setTargetFilter("all");
+                      setStatusFilter("all");
+                      setGateFilter("all");
                     }}
                     className="text-xs w-full sm:w-auto"
                   >
@@ -369,39 +436,71 @@ export default function TicketListPage() {
           <div className="overflow-x-auto">
             <table className="data-table">
               <thead>
-                <tr>
+                <tr className="[&>th]:text-center">
                   <th
                     className="cursor-pointer hover:bg-muted/70 transition-colors"
-                    onClick={() => handleSort("createdAt")}
+                    onClick={() => handleSort("namaLengkap")}
                   >
-                    <div className="flex items-center gap-1">
-                      Tanggal <SortIcon field="createdAt" />
+                    <div className="flex items-center justify-center gap-1">
+                      Nama <SortIcon field="namaLengkap" />
                     </div>
                   </th>
-                  <th>Waktu</th>
+                  <th
+                    className="cursor-pointer hover:bg-muted/70 transition-colors"
+                    onClick={() => handleSort("activeStartAt")}
+                  >
+                    <div className="flex items-center justify-center gap-1">
+                      Tanggal <SortIcon field="activeStartAt" />
+                    </div>
+                  </th>
+                  <th>
+                    <div>Waktu</div>
+                  </th>
                   <th
                     className="cursor-pointer hover:bg-muted/70 transition-colors"
                     onClick={() => handleSort("id")}
                   >
-                    <div className="flex items-center gap-1">
-                      ID Tiket <SortIcon field="id" />
+                    <div className="flex items-center justify-center gap-1">
+                      ID tiket <SortIcon field="id" />
                     </div>
                   </th>
-                  <th>Tipe</th>
-                  <th>Tipe Pembayaran</th>
-                  <th>Domisili</th>
-                  <th>Status Pembayaran</th>
-                  <th className="text-center">Aksi</th>
+                  <th>
+                    <div>Tipe</div>
+                  </th>
+                  <th>
+                    <div>Lokasi Pembayaran</div>
+                  </th>
+                  <th
+                    className="cursor-pointer hover:bg-muted/70 transition-colors"
+                    onClick={() => handleSort("targetPengunjung")}
+                  >
+                    <div className="flex items-center justify-center gap-1">
+                      Target Pengunjung <SortIcon field="targetPengunjung" />
+                    </div>
+                  </th>
+                  <th>
+                    <div>Status</div>
+                  </th>
+                  <th className="text-center">
+                    <div>Aksi</div>
+                  </th>
+                  <th>
+                    <div>Gerbang</div>
+                  </th>
                 </tr>
               </thead>
 
               <tbody>
                 {sortedTickets.map((ticket) => {
-                  const paymentStatus = getPaymentStatusLabel(ticket);
+                  const tjlStatus = getTjlStatus(ticket);
+                  const invoiceId = getInvoiceIdForTicket(ticket.id);
                   return (
                     <tr key={ticket.id} className="group">
+                      <td className="whitespace-nowrap text-sm font-medium">
+                        {ticket.namaLengkap}
+                      </td>
                       <td className="whitespace-nowrap text-sm">
-                        {formatDate(ticket.createdAt)}
+                        {formatDate(getCardActiveStart(ticket))}
                       </td>
                       <td className="whitespace-nowrap text-sm text-muted-foreground">
                         {getTicketTime(ticket)}
@@ -416,12 +515,9 @@ export default function TicketListPage() {
                       </td>
 
                       <td>
-                        <div className="flex items-center gap-2">
-                          <User className="w-3.5 h-3.5 text-muted-foreground" />
-                          <span className="text-sm">
-                            {BOOKING_TYPE_LABELS[ticket.bookingType]}
-                          </span>
-                        </div>
+                        <span className="text-sm">
+                          {ticket.bookingType === "group" ? "Grup" : "Individu"}
+                        </span>
                       </td>
 
                       <td>
@@ -434,26 +530,26 @@ export default function TicketListPage() {
                         >
                           {getPaymentType(ticket) === "online"
                             ? "Online"
-                            : "On the spot"}
+                            : "Onsite"}
                         </span>
                       </td>
 
                       <td>
                         <span className="text-sm">
-                          {DOMISILI_LABELS[ticket.domisiliOCR]}
+                          {getTargetPengunjungLabel(ticket)}
                         </span>
                       </td>
 
-                      <td>
+                      <td className="whitespace-nowrap">
                         <span
-                          className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${paymentStatus.className}`}
+                          className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${tjlStatus.className}`}
                         >
-                          {paymentStatus.label}
+                          {tjlStatus.label}
                         </span>
                       </td>
 
                       <td>
-                        <div className="flex items-center justify-center gap-1">
+                        <div className="flex items-center justify-center gap-1.5">
                           <Link to={`/tickets/${ticket.id}`}>
                             <Button
                               variant="ghost"
@@ -464,6 +560,29 @@ export default function TicketListPage() {
                               <Eye className="w-4 h-4" />
                             </Button>
                           </Link>
+
+                          {invoiceId ? (
+                            <Link to={`/invoices/${invoiceId}`}>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8"
+                                title="Invoice"
+                              >
+                                <FileText className="w-4 h-4" />
+                              </Button>
+                            </Link>
+                          ) : (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 opacity-40"
+                              title="Invoice belum tersedia"
+                              disabled
+                            >
+                              <FileText className="w-4 h-4" />
+                            </Button>
+                          )}
 
                           {isInternationalTicket(ticket) ? (
                             <Link to={`/payments/${ticket.id}?type=turis`}>
@@ -500,6 +619,9 @@ export default function TicketListPage() {
                             </Button>
                           </Link>
                         </div>
+                      </td>
+                      <td className="whitespace-nowrap">
+                        <div className="text-sm">{getGerbangDisplay(ticket)}</div>
                       </td>
                     </tr>
                   );

@@ -1,24 +1,19 @@
-import React from "react";
-const _jsxFileName = "src\\pages\\ApprovalQueuePage.tsx";import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { Link, useLocation } from 'react-router-dom';
+import { CheckCircle, XCircle, Clock, Eye } from 'lucide-react';
 import { AdminLayout } from '@/components/AdminLayout';
 import { AdminHeader } from '@/components/AdminHeader';
 import { ApprovalStatusChip } from '@/components/StatusChip';
 import {
-  dummyTickets,
+  getAllTickets,
+  saveTicketOverride,
+  getInvoiceIdForTicket,
   formatRupiah,
   formatDateTime,
   formatShortId,
   FEE_PRICING,
   BOOKING_TYPE_LABELS,
-  DOMISILI_LABELS,
 } from '@/data/dummyData';
-import {
-  CheckCircle,
-  XCircle,
-  Clock,
-  Eye,
-} from 'lucide-react';
-import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -33,20 +28,64 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 
+const TAB_KEYS = ['menunggu', 'disetujui', 'ditolak'];
+
+const getInitialTab = (search) => {
+  const tab = new URLSearchParams(search).get('tab');
+  return TAB_KEYS.includes(tab) ? tab : 'menunggu';
+};
+
 export default function ApprovalQueuePage() {
+  const location = useLocation();
+  const [refreshKey, setRefreshKey] = useState(0);
+  const [activeTab, setActiveTab] = useState(getInitialTab(location.search));
   const [showRejectDialog, setShowRejectDialog] = useState(false);
   const [rejectTicketId, setRejectTicketId] = useState(null);
   const [rejectNotes, setRejectNotes] = useState('');
 
-  const approvalTickets = dummyTickets.filter((t) => t.needsApproval);
-  const ticketsByStatus = {
-    menunggu: approvalTickets.filter((t) => t.approvalStatus === 'menunggu'),
-    disetujui: approvalTickets.filter((t) => t.approvalStatus === 'disetujui'),
-    ditolak: approvalTickets.filter((t) => t.approvalStatus === 'ditolak'),
+  useEffect(() => {
+    setActiveTab(getInitialTab(location.search));
+  }, [location.search]);
+
+  const approvalTickets = useMemo(
+    () => getAllTickets().filter((ticket) => ticket.needsApproval),
+    [refreshKey],
+  );
+
+  const ticketsByStatus = useMemo(
+    () => ({
+      menunggu: approvalTickets.filter((ticket) => ticket.approvalStatus === 'menunggu'),
+      disetujui: approvalTickets.filter((ticket) => ticket.approvalStatus === 'disetujui'),
+      ditolak: approvalTickets.filter((ticket) => ticket.approvalStatus === 'ditolak'),
+    }),
+    [approvalTickets],
+  );
+
+  const getDetailLink = (ticket) => {
+    const invoiceId = getInvoiceIdForTicket(ticket.id);
+    if (!invoiceId) return `/invoices`;
+
+    const params = new URLSearchParams({
+      from: 'approval',
+      tab: activeTab,
+      ticketId: ticket.id,
+    });
+    if (ticket.approvalStatus === 'menunggu') {
+      params.set('approval', 'pending');
+    }
+    return `/invoices/${invoiceId}?${params.toString()}`;
   };
 
   const handleApprove = (ticketId) => {
-    console.log(`Aksi: approve pada tiket ${ticketId}`);
+    const now = new Date().toISOString();
+    saveTicketOverride(ticketId, {
+      approvalStatus: 'disetujui',
+      approvedBy: 'Admin Tiket',
+      approvedAt: now,
+      lastActionBy: 'Admin Tiket',
+      lastActionAt: now,
+    });
+    setRefreshKey((prev) => prev + 1);
   };
 
   const handleReject = (ticketId) => {
@@ -56,194 +95,198 @@ export default function ApprovalQueuePage() {
 
   const confirmReject = () => {
     if (!rejectTicketId) return;
-    console.log(`Aksi: reject pada tiket ${rejectTicketId} dengan catatan: ${rejectNotes}`);
+    const now = new Date().toISOString();
+    saveTicketOverride(rejectTicketId, {
+      approvalStatus: 'ditolak',
+      rejectionReason: rejectNotes.trim(),
+      approvedBy: 'Admin Tiket',
+      approvedAt: now,
+      lastActionBy: 'Admin Tiket',
+      lastActionAt: now,
+    });
     setShowRejectDialog(false);
     setRejectTicketId(null);
     setRejectNotes('');
+    setRefreshKey((prev) => prev + 1);
   };
 
   const renderTicketList = (tickets, showActions) => {
-    if (tickets.length === 0) {
+    if (!tickets.length) {
       return (
-        React.createElement(Card, { className: "card-ocean", __self: this, __source: {fileName: _jsxFileName, lineNumber: 67}}
-          , React.createElement(CardContent, { className: "flex flex-col items-center justify-center py-16"    , __self: this, __source: {fileName: _jsxFileName, lineNumber: 68}}
-            , React.createElement(CheckCircle, { className: "w-16 h-16 text-status-approved/30 mb-4"   , __self: this, __source: {fileName: _jsxFileName, lineNumber: 69}} )
-            , React.createElement('h3', { className: "text-lg font-semibold text-foreground mb-1"   , __self: this, __source: {fileName: _jsxFileName, lineNumber: 70}}, "Belum Ada Data"  )
-            , React.createElement('p', { className: "text-sm text-muted-foreground" , __self: this, __source: {fileName: _jsxFileName, lineNumber: 71}}, "Tidak ada tiket pada status ini."     )
-          )
-        )
+        <Card className="card-ocean">
+          <CardContent className="flex flex-col items-center justify-center py-16">
+            <CheckCircle className="w-16 h-16 text-status-approved/30 mb-4" />
+            <h3 className="text-lg font-semibold text-foreground mb-1">Belum Ada Data</h3>
+            <p className="text-sm text-muted-foreground">Tidak ada tiket pada status ini.</p>
+          </CardContent>
+        </Card>
       );
     }
 
     return (
-      React.createElement('div', { className: "grid gap-4" , __self: this, __source: {fileName: _jsxFileName, lineNumber: 78}}
-        , tickets.map((ticket) => (
-          React.createElement(Card, { key: ticket.id, className: "card-ocean overflow-hidden" , __self: this, __source: {fileName: _jsxFileName, lineNumber: 80}}
-            , React.createElement(CardContent, { className: "p-0", __self: this, __source: {fileName: _jsxFileName, lineNumber: 81}}
-              , React.createElement('div', { className: "p-5", __self: this, __source: {fileName: _jsxFileName, lineNumber: 82}}
-                  , React.createElement('div', { className: "flex items-start justify-between mb-4"   , __self: this, __source: {fileName: _jsxFileName, lineNumber: 83}}
-                    , React.createElement('div', {__self: this, __source: {fileName: _jsxFileName, lineNumber: 84}}
-                      , React.createElement('div', { className: "flex items-center gap-3 mb-1"   , __self: this, __source: {fileName: _jsxFileName, lineNumber: 85}}
-                        , React.createElement(Link, {
-                          to: `/tickets/${ticket.id}`,
-                          className: "font-mono text-lg font-semibold text-primary hover:underline"    , __self: this, __source: {fileName: _jsxFileName, lineNumber: 86}}
+      <div className="grid gap-4">
+        {tickets.map((ticket) => (
+          <Card key={ticket.id} className="card-ocean overflow-hidden">
+            <CardContent className="p-0">
+              <div className="p-5">
+                <div className="flex items-start justify-between mb-4">
+                  <div>
+                    <div className="flex items-center gap-3 mb-1">
+                      <Link
+                        to={getDetailLink(ticket)}
+                        className="font-mono text-lg font-semibold text-primary hover:underline"
+                      >
+                        {formatShortId(ticket.id)}
+                      </Link>
+                      <ApprovalStatusChip status={ticket.approvalStatus} />
+                      {showActions && ticket.needsApproval && (
+                        <Badge
+                          variant="outline"
+                          className="text-[10px] border-status-pending text-status-pending"
+                        >
+                          Butuh Persetujuan
+                        </Badge>
+                      )}
+                    </div>
+                    <h3 className="text-lg font-medium text-foreground">{ticket.namaLengkap}</h3>
+                    <p className="text-sm text-muted-foreground">{ticket.email}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-2xl font-bold text-foreground">{formatRupiah(ticket.totalBiaya)}</p>
+                    <p className="text-xs text-muted-foreground mt-1">Dibuat {formatDateTime(ticket.createdAt)}</p>
+                  </div>
+                </div>
 
-                          , formatShortId(ticket.id)
-                        )
-                        , React.createElement(ApprovalStatusChip, { status: ticket.approvalStatus, __self: this, __source: {fileName: _jsxFileName, lineNumber: 92}} )
-                        , showActions && ticket.needsApproval && (
-                          React.createElement(Badge, { variant: "outline", className: "text-[10px] border-status-pending text-status-pending"  , __self: this, __source: {fileName: _jsxFileName, lineNumber: 94}}, "Butuh Persetujuan"
+                <div className="flex flex-col gap-4 mb-5 lg:flex-row lg:items-start">
+                  <div className="grid flex-1 grid-cols-2 md:grid-cols-4 gap-4">
+                    <div>
+                      <p className="text-xs text-muted-foreground mb-1">Kategori</p>
+                      <p className="text-sm font-medium">{FEE_PRICING[ticket.feeCategory]?.label || '-'}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground mb-1">Negara</p>
+                      <p className="text-sm font-medium">{ticket.countryOCR || '-'}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground mb-1">Tipe</p>
+                      <p className="text-sm font-medium">{BOOKING_TYPE_LABELS[ticket.bookingType]}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground mb-1">No. HP</p>
+                      <p className="text-sm font-medium">{ticket.noHP}</p>
+                    </div>
+                  </div>
+                </div>
 
-                          )
-                        )
-                      )
-                      , React.createElement('h3', { className: "text-lg font-medium text-foreground"  , __self: this, __source: {fileName: _jsxFileName, lineNumber: 99}}, ticket.namaLengkap)
-                      , React.createElement('p', { className: "text-sm text-muted-foreground" , __self: this, __source: {fileName: _jsxFileName, lineNumber: 100}}, ticket.email)
-                    )
-                    , React.createElement('div', { className: "text-right", __self: this, __source: {fileName: _jsxFileName, lineNumber: 102}}
-                      , React.createElement('p', { className: "text-2xl font-bold text-foreground"  , __self: this, __source: {fileName: _jsxFileName, lineNumber: 103}}, formatRupiah(ticket.totalBiaya))
-                      , React.createElement('p', { className: "text-xs text-muted-foreground mt-1"  , __self: this, __source: {fileName: _jsxFileName, lineNumber: 104}}, "Dibuat "
-                         , formatDateTime(ticket.createdAt)
-                      )
-                    )
-                  )
+                <div className="flex items-center gap-3 pt-4 border-t border-border">
+                  {showActions && (
+                    <>
+                      <Button
+                        onClick={() => handleApprove(ticket.id)}
+                        className="gap-2 bg-status-approved hover:bg-status-approved/90 text-white"
+                      >
+                        <CheckCircle className="w-4 h-4" />
+                        Setujui
+                      </Button>
+                      <Button
+                        variant="outline"
+                        onClick={() => handleReject(ticket.id)}
+                        className="gap-2 border-status-rejected text-status-rejected hover:bg-status-rejected-bg"
+                      >
+                        <XCircle className="w-4 h-4" />
+                        Tolak
+                      </Button>
+                    </>
+                  )}
 
-                  , React.createElement('div', { className: "flex flex-col gap-4 mb-5 lg:flex-row lg:items-start"     , __self: this, __source: {fileName: _jsxFileName, lineNumber: 110}}
-                    , React.createElement('div', { className: "grid flex-1 grid-cols-2 md:grid-cols-4 gap-4"    , __self: this, __source: {fileName: _jsxFileName, lineNumber: 111}}
-                      , React.createElement('div', {__self: this, __source: {fileName: _jsxFileName, lineNumber: 112}}
-                        , React.createElement('p', { className: "text-xs text-muted-foreground mb-1"  , __self: this, __source: {fileName: _jsxFileName, lineNumber: 113}}, "Kategori")
-                        , React.createElement('p', { className: "text-sm font-medium" , __self: this, __source: {fileName: _jsxFileName, lineNumber: 114}}, FEE_PRICING[ticket.feeCategory].label)
-                      )
-                      , React.createElement('div', {__self: this, __source: {fileName: _jsxFileName, lineNumber: 116}}
-                        , React.createElement('p', { className: "text-xs text-muted-foreground mb-1"  , __self: this, __source: {fileName: _jsxFileName, lineNumber: 117}}, "Domisili")
-                        , React.createElement('p', { className: "text-sm font-medium" , __self: this, __source: {fileName: _jsxFileName, lineNumber: 118}}, DOMISILI_LABELS[ticket.domisiliOCR])
-                      )
-                      , React.createElement('div', {__self: this, __source: {fileName: _jsxFileName, lineNumber: 120}}
-                        , React.createElement('p', { className: "text-xs text-muted-foreground mb-1"  , __self: this, __source: {fileName: _jsxFileName, lineNumber: 121}}, "Tipe")
-                        , React.createElement('p', { className: "text-sm font-medium" , __self: this, __source: {fileName: _jsxFileName, lineNumber: 122}}, BOOKING_TYPE_LABELS[ticket.bookingType])
-                      )
-                      , React.createElement('div', {__self: this, __source: {fileName: _jsxFileName, lineNumber: 124}}
-                        , React.createElement('p', { className: "text-xs text-muted-foreground mb-1"  , __self: this, __source: {fileName: _jsxFileName, lineNumber: 125}}, "No. HP" )
-                        , React.createElement('p', { className: "text-sm font-medium" , __self: this, __source: {fileName: _jsxFileName, lineNumber: 126}}, ticket.noHP)
-                      )
-                    )
-                  )
+                  {!showActions && ticket.approvalStatus === 'ditolak' && (
+                    <div className="max-w-[420px] rounded-lg border border-status-rejected/20 bg-status-rejected-bg px-4 py-3">
+                      <p className="text-xs font-medium text-status-rejected mb-1">Alasan Ditolak</p>
+                      <p className="text-sm text-status-rejected">
+                        {ticket.rejectionReason || 'Tidak ada catatan.'}
+                      </p>
+                    </div>
+                  )}
 
-                  /* Actions */
-                  , React.createElement('div', { className: "flex items-center gap-3 pt-4 border-t border-border"     , __self: this, __source: {fileName: _jsxFileName, lineNumber: 132}}
-                    , showActions && (
-                      React.createElement(React.Fragment, null
-                        , React.createElement(Button, {
-                          onClick: () => handleApprove(ticket.id),
-                          className: "gap-2 bg-status-approved hover:bg-status-approved/90 text-white"   , __self: this, __source: {fileName: _jsxFileName, lineNumber: 135}}
-
-                          , React.createElement(CheckCircle, { className: "w-4 h-4" , __self: this, __source: {fileName: _jsxFileName, lineNumber: 139}} ), "Setujui"
-
-                        )
-                        , React.createElement(Button, {
-                          variant: "outline",
-                          onClick: () => handleReject(ticket.id),
-                          className: "gap-2 border-status-rejected text-status-rejected hover:bg-status-rejected-bg"   , __self: this, __source: {fileName: _jsxFileName, lineNumber: 142}}
-
-                          , React.createElement(XCircle, { className: "w-4 h-4" , __self: this, __source: {fileName: _jsxFileName, lineNumber: 147}} ), "Tolak"
-
-                        )
-                      )
-                    )
-                    , !showActions && ticket.approvalStatus === 'ditolak' && (
-                      React.createElement('div', { className: "max-w-[420px] rounded-lg border border-status-rejected/20 bg-status-rejected-bg px-4 py-3"      , __self: this, __source: {fileName: _jsxFileName, lineNumber: 153}}
-                        , React.createElement('p', { className: "text-xs font-medium text-status-rejected mb-1"   , __self: this, __source: {fileName: _jsxFileName, lineNumber: 154}}, "Alasan Ditolak" )
-                        , React.createElement('p', { className: "text-sm text-status-rejected" , __self: this, __source: {fileName: _jsxFileName, lineNumber: 155}}
-                          , ticket.rejectionReason || 'Tidak ada catatan.'
-                        )
-                      )
-                    )
-                    , React.createElement('div', { className: "flex-1", __self: this, __source: {fileName: _jsxFileName, lineNumber: 160}} )
-                    , React.createElement(Link, { to: `/tickets/${ticket.id}`, __self: this, __source: {fileName: _jsxFileName, lineNumber: 161}}
-                      , React.createElement(Button, { variant: "ghost", className: "gap-2", __self: this, __source: {fileName: _jsxFileName, lineNumber: 162}}
-                        , React.createElement(Eye, { className: "w-4 h-4" , __self: this, __source: {fileName: _jsxFileName, lineNumber: 163}} ), "Lihat Detail"
-
-                      )
-                    )
-                  )
-              )
-            )
-          )
-        ))
-      )
+                  <div className="flex-1" />
+                  <Link to={getDetailLink(ticket)}>
+                    <Button variant="ghost" className="gap-2">
+                      <Eye className="w-4 h-4" />
+                      Lihat Detail
+                    </Button>
+                  </Link>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
     );
   };
 
   return (
-    React.createElement(AdminLayout, {__self: this, __source: {fileName: _jsxFileName, lineNumber: 177}}
-      , React.createElement(AdminHeader, {
-        title: "Antrian Persetujuan" ,
-        subtitle: "Tiket yang membutuhkan persetujuan Admin Tiket"    ,
-        showSearch: false,
-        showDateFilter: false, __self: this, __source: {fileName: _jsxFileName, lineNumber: 178}}
-      )
+    <AdminLayout>
+      <AdminHeader
+        title="Antrian Persetujuan"
+        subtitle="Tiket yang membutuhkan persetujuan Admin Tiket"
+        showSearch={false}
+        showDateFilter={false}
+      />
 
-      , React.createElement('div', { className: "flex-1 overflow-auto p-6"  , __self: this, __source: {fileName: _jsxFileName, lineNumber: 185}}
-        , React.createElement(Tabs, { defaultValue: "menunggu", className: "w-full", __self: this, __source: {fileName: _jsxFileName, lineNumber: 186}}
-          , React.createElement(TabsList, { className: "grid w-full grid-cols-3 mb-4"   , __self: this, __source: {fileName: _jsxFileName, lineNumber: 187}}
-            , React.createElement(TabsTrigger, { value: "menunggu", className: "gap-2", __self: this, __source: {fileName: _jsxFileName, lineNumber: 188}}
-              , React.createElement(Clock, { className: "w-4 h-4" , __self: this, __source: {fileName: _jsxFileName, lineNumber: 189}} ), "Menunggu ("
-               , ticketsByStatus.menunggu.length, ")"
-            )
-            , React.createElement(TabsTrigger, { value: "disetujui", className: "gap-2", __self: this, __source: {fileName: _jsxFileName, lineNumber: 192}}
-              , React.createElement(CheckCircle, { className: "w-4 h-4" , __self: this, __source: {fileName: _jsxFileName, lineNumber: 193}} ), "Diterima ("
-               , ticketsByStatus.disetujui.length, ")"
-            )
-            , React.createElement(TabsTrigger, { value: "ditolak", className: "gap-2", __self: this, __source: {fileName: _jsxFileName, lineNumber: 196}}
-              , React.createElement(XCircle, { className: "w-4 h-4" , __self: this, __source: {fileName: _jsxFileName, lineNumber: 197}} ), "Ditolak ("
-               , ticketsByStatus.ditolak.length, ")"
-            )
-          )
+      <div className="flex-1 overflow-auto p-6">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="grid w-full grid-cols-3 mb-4">
+            <TabsTrigger value="menunggu" className="gap-2">
+              <Clock className="w-4 h-4" />
+              Menunggu ({ticketsByStatus.menunggu.length})
+            </TabsTrigger>
+            <TabsTrigger value="disetujui" className="gap-2">
+              <CheckCircle className="w-4 h-4" />
+              Diterima ({ticketsByStatus.disetujui.length})
+            </TabsTrigger>
+            <TabsTrigger value="ditolak" className="gap-2">
+              <XCircle className="w-4 h-4" />
+              Ditolak ({ticketsByStatus.ditolak.length})
+            </TabsTrigger>
+          </TabsList>
 
-          , React.createElement(TabsContent, { value: "menunggu", __self: this, __source: {fileName: _jsxFileName, lineNumber: 202}}
-            , renderTicketList(ticketsByStatus.menunggu, true)
-          )
-          , React.createElement(TabsContent, { value: "disetujui", __self: this, __source: {fileName: _jsxFileName, lineNumber: 205}}
-            , renderTicketList(ticketsByStatus.disetujui, false)
-          )
-          , React.createElement(TabsContent, { value: "ditolak", __self: this, __source: {fileName: _jsxFileName, lineNumber: 208}}
-            , renderTicketList(ticketsByStatus.ditolak, false)
-          )
-        )
-      )
+          <TabsContent value="menunggu">{renderTicketList(ticketsByStatus.menunggu, true)}</TabsContent>
+          <TabsContent value="disetujui">{renderTicketList(ticketsByStatus.disetujui, false)}</TabsContent>
+          <TabsContent value="ditolak">{renderTicketList(ticketsByStatus.ditolak, false)}</TabsContent>
+        </Tabs>
+      </div>
 
-      , React.createElement(Dialog, { open: showRejectDialog, onOpenChange: setShowRejectDialog, __self: this, __source: {fileName: _jsxFileName, lineNumber: 214}}
-        , React.createElement(DialogContent, { className: "bg-card border-border" , __self: this, __source: {fileName: _jsxFileName, lineNumber: 215}}
-          , React.createElement(DialogHeader, {__self: this, __source: {fileName: _jsxFileName, lineNumber: 216}}
-            , React.createElement(DialogTitle, { className: "flex items-center gap-2"  , __self: this, __source: {fileName: _jsxFileName, lineNumber: 217}}
-              , React.createElement(XCircle, { className: "w-5 h-5 text-status-rejected"  , __self: this, __source: {fileName: _jsxFileName, lineNumber: 218}} ), "Tolak Tiket"
-
-            )
-            , React.createElement(DialogDescription, {__self: this, __source: {fileName: _jsxFileName, lineNumber: 221}}, "Berikan alasan penolakan untuk tiket ini."     )
-          )
-          , React.createElement('div', { className: "py-4", __self: this, __source: {fileName: _jsxFileName, lineNumber: 223}}
-            , React.createElement('label', { className: "text-sm font-medium mb-2 block"   , __self: this, __source: {fileName: _jsxFileName, lineNumber: 224}}, "Alasan Penolakan" )
-            , React.createElement(Textarea, {
-              placeholder: "Tambahkan alasan penolakan..."  ,
-              value: rejectNotes,
-              onChange: (e) => setRejectNotes(e.target.value),
-              className: "min-h-[100px]", __self: this, __source: {fileName: _jsxFileName, lineNumber: 225}}
-            )
-          )
-          , React.createElement(DialogFooter, {__self: this, __source: {fileName: _jsxFileName, lineNumber: 232}}
-            , React.createElement(Button, { variant: "outline", onClick: () => setShowRejectDialog(false), __self: this, __source: {fileName: _jsxFileName, lineNumber: 233}}, "Batal"
-
-            )
-            , React.createElement(Button, {
-              onClick: confirmReject,
-              className: "bg-status-rejected hover:bg-status-rejected/90 text-white"  , __self: this, __source: {fileName: _jsxFileName, lineNumber: 236}}
-, "Tolak"
-
-            )
-          )
-        )
-      )
-
-    )
+      <Dialog open={showRejectDialog} onOpenChange={setShowRejectDialog}>
+        <DialogContent className="bg-card border-border">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <XCircle className="w-5 h-5 text-status-rejected" />
+              Tolak Tiket
+            </DialogTitle>
+            <DialogDescription>Berikan alasan penolakan untuk tiket ini.</DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            <label className="text-sm font-medium mb-2 block">Alasan Penolakan</label>
+            <Textarea
+              placeholder="Tambahkan alasan penolakan..."
+              value={rejectNotes}
+              onChange={(event) => setRejectNotes(event.target.value)}
+              className="min-h-[100px]"
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowRejectDialog(false)}>
+              Batal
+            </Button>
+            <Button
+              onClick={confirmReject}
+              className="bg-status-rejected hover:bg-status-rejected/90 text-white"
+            >
+              Tolak
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </AdminLayout>
   );
 }

@@ -6,9 +6,11 @@ import { RefundStatusChip } from "@/components/StatusChip";
 import {
   dummyRefunds,
   formatRupiah,
+  formatNominal,
   formatDateTime,
   formatShortId,
   REFUND_TYPE_LABELS,
+  getTicketById,
 } from "@/data/dummyData";
 import {
   Search,
@@ -40,16 +42,46 @@ export default function RefundCenterPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedRefund, setSelectedRefund] = useState(null);
   const [showDetailDialog, setShowDetailDialog] = useState(false);
+  const [showReasonDialog, setShowReasonDialog] = useState(false);
+  const [showActionDialog, setShowActionDialog] = useState(false);
+  const [selectedReason, setSelectedReason] = useState(null);
+  const [pendingRefundId, setPendingRefundId] = useState(null);
+  const [actionDialogNotes, setActionDialogNotes] = useState("");
   const [actionNotes, setActionNotes] = useState("");
   const [referenceNumber, setReferenceNumber] = useState("");
   const [activeTab, setActiveTab] = useState("menunggu");
+
+  const getOverviewOperatorName = (ticket) => {
+    if (!ticket) return "Lainnya";
+    if (ticket.bookingType === "group") return "Kapal";
+    if (ticket.feeCategory === "mooring") return "Kapal";
+    if (ticket.feeCategory === "sport_fishing") return "Dive Center";
+    if (ticket.operatorType === "qris") return "Homestay";
+    if (ticket.operatorType === "doku") return "Resort";
+    if (ticket.operatorType === "loket") return "Mandiri";
+    if (ticket.operatorType === "transfer") return "Lainnya";
+    return "Lainnya";
+  };
+  const getOperatorNameForRefund = (refund) => {
+    const ticket = getTicketById(refund.ticketId);
+    return getOverviewOperatorName(ticket);
+  };
+  const normalizeReasonText = (text) => String(text || "-").slice(0, 255);
+  const openReasonDialog = (title, text) => {
+    setSelectedReason({
+      title,
+      text: normalizeReasonText(text),
+    });
+    setShowReasonDialog(true);
+  };
 
   // Filter refunds
   const filteredRefunds = dummyRefunds.filter((refund) => {
     const matchesSearch =
       refund.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
       refund.ticketId.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      refund.ticketName.toLowerCase().includes(searchQuery.toLowerCase());
+      refund.ticketName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      getOperatorNameForRefund(refund).toLowerCase().includes(searchQuery.toLowerCase());
     return matchesSearch;
   });
 
@@ -161,13 +193,30 @@ export default function RefundCenterPage() {
   const handlePrint = () => {
     window.print();
   };
+  const openActionDialog = (refundId) => {
+    setPendingRefundId(refundId);
+    setActionDialogNotes("");
+    setShowActionDialog(true);
+  };
+  const closeActionDialog = () => {
+    setShowActionDialog(false);
+    setPendingRefundId(null);
+    setActionDialogNotes("");
+  };
+  const confirmActionDialog = () => {
+    if (!pendingRefundId) return;
+    const notes = actionDialogNotes.trim();
+    console.log(`Aksi: tolak pengembalian ${pendingRefundId}`, notes);
+    closeActionDialog();
+  };
   const handleApprove = (refundId) => {
     console.log(`Aksi: terima pengembalian ${refundId}`);
   };
   const handleReject = (refundId) => {
-    console.log(`Aksi: tolak pengembalian ${refundId}`);
+    openActionDialog(refundId);
   };
-  const renderTable = (refunds, showActions) => {
+  const renderTable = (refunds, options = {}) => {
+    const { showActions = false, showRejectedReason = false } = options;
     return (
       <Card className="card-ocean overflow-hidden">
         <div className="overflow-x-auto">
@@ -176,9 +225,13 @@ export default function RefundCenterPage() {
               <tr>
                 <th>ID Pengembalian</th>
                 <th>ID Tiket</th>
-                <th>Nama</th>
+                <th>Nama Pengajuan</th>
+                <th>Nama Operator</th>
                 <th>Status</th>
-                <th>Diajukan</th>
+                {showRejectedReason && <th>Alasan Ditolak</th>}
+                <th>Tanggal Pengajuan</th>
+                <th>Alasan</th>
+                <th className="text-right">Jumlah Pengajuan Rp</th>
                 {showActions && (
                   <th className="text-center">
                     <div className="flex items-center justify-center">Aksi</div>
@@ -206,11 +259,41 @@ export default function RefundCenterPage() {
                     </Link>
                   </td>
                   <td className="text-sm">{refund.ticketName}</td>
+                  <td className="text-sm">{getOperatorNameForRefund(refund)}</td>
                   <td>
                     <RefundStatusChip status={refund.status} />
                   </td>
+                  {showRejectedReason && (
+                    <td>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="h-7 text-xs"
+                        onClick={() =>
+                          openReasonDialog("Alasan Ditolak", refund.notes || "-")
+                        }
+                      >
+                        Lihat
+                      </Button>
+                    </td>
+                  )}
                   <td className="text-sm text-muted-foreground">
                     {formatDateTime(refund.requestedAt)}
+                  </td>
+                  <td>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="h-7 text-xs"
+                      onClick={() => openReasonDialog("Alasan", refund.reason)}
+                    >
+                      Lihat
+                    </Button>
+                  </td>
+                  <td className="text-right text-sm font-semibold">
+                    {formatNominal(refund.refundAmount)}
                   </td>
                   {showActions && (
                     <td className="text-center">
@@ -276,7 +359,7 @@ export default function RefundCenterPage() {
                   {stats.menunggu}
                 </p>
                 <p className="text-xs text-muted-foreground break-words">
-                  Menunggu
+                  Tiket Pengajuan
                 </p>
               </div>
             </div>
@@ -327,17 +410,17 @@ export default function RefundCenterPage() {
             </div>
           </Card>
         </div>
-        <div className="flex flex-wrap items-center gap-3 mb-4 no-print">
-          <div className="relative flex-1 min-w-[220px] max-w-md">
+        <div className="mb-4 no-print flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+          <div className="relative w-full min-w-[220px] lg:max-w-md">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
-              placeholder="Cari ID Pengembalian, ID Tiket, atau nama..."
+              placeholder="Cari ID Pengembalian, ID Tiket, nama, atau operator..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-9 bg-card"
             />
           </div>
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="flex flex-wrap items-center justify-end gap-2 lg:ml-auto">
             <Button
               variant="outline"
               size="sm"
@@ -371,7 +454,7 @@ export default function RefundCenterPage() {
           <TabsList className="grid w-full grid-cols-3 mb-4 no-print">
             <TabsTrigger value="menunggu" className="gap-2">
               <Clock className="w-4 h-4" />
-              Menunggu ({refundsByStatus.menunggu.length})
+              Tiket Pengajuan ({refundsByStatus.menunggu.length})
             </TabsTrigger>
             <TabsTrigger value="diterima" className="gap-2">
               <CheckCircle className="w-4 h-4" />
@@ -383,16 +466,76 @@ export default function RefundCenterPage() {
             </TabsTrigger>
           </TabsList>
           <TabsContent value="menunggu">
-            {renderTable(refundsByStatus.menunggu, true)}
+            {renderTable(refundsByStatus.menunggu, { showActions: true })}
           </TabsContent>
           <TabsContent value="diterima">
-            {renderTable(refundsByStatus.diterima, false)}
+            {renderTable(refundsByStatus.diterima)}
           </TabsContent>
           <TabsContent value="ditolak">
-            {renderTable(refundsByStatus.ditolak, false)}
+            {renderTable(refundsByStatus.ditolak, { showRejectedReason: true })}
           </TabsContent>
         </Tabs>
       </div>
+      <Dialog open={showReasonDialog} onOpenChange={setShowReasonDialog}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>{selectedReason?.title || "Alasan"}</DialogTitle>
+            <DialogDescription>
+              Maksimal 255 karakter (free text).
+            </DialogDescription>
+          </DialogHeader>
+          <div className="rounded-md border border-border bg-muted/30 p-3 text-sm whitespace-pre-wrap break-words">
+            {selectedReason?.text || "-"}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowReasonDialog(false)}>
+              Tutup
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      <Dialog
+        open={showActionDialog}
+        onOpenChange={(open) => {
+          if (!open) {
+            closeActionDialog();
+            return;
+          }
+          setShowActionDialog(true);
+        }}
+      >
+        <DialogContent className="bg-card border-border">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <XCircle className="w-5 h-5 text-status-rejected" />
+              Tolak Pengajuan Refund
+            </DialogTitle>
+            <DialogDescription>
+              {`Berikan alasan penolakan untuk pengajuan ${formatShortId(pendingRefundId || "")}.`}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            <label className="text-sm font-medium mb-2 block">Alasan Penolakan</label>
+            <Textarea
+              placeholder="Tambahkan alasan penolakan..."
+              value={actionDialogNotes}
+              onChange={(event) => setActionDialogNotes(event.target.value)}
+              className="min-h-[100px]"
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={closeActionDialog}>
+              Batal
+            </Button>
+            <Button
+              onClick={confirmActionDialog}
+              className="bg-status-rejected hover:bg-status-rejected/90 text-white"
+            >
+              Tolak
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
       <Dialog open={showDetailDialog} onOpenChange={setShowDetailDialog}>
         <DialogContent className="bg-card border-border max-w-2xl">
           {selectedRefund && (

@@ -28,7 +28,7 @@ const mainNavItems = [
   { to: '/refunds', icon: RotateCcw, label: 'Pengembalian Dana' },
   { to: '/approval', icon: ClipboardCheck, label: 'Antrian Persetujuan' },
   { to: '/reports', icon: BarChart3, label: 'Laporan Keuangan' },
-  { to: '/gate', icon: DoorOpen, label: 'Tiket Langsung (Onsite Ticket)' },
+  { to: '/gate', icon: DoorOpen, label: 'Tiket Langsung' },
 ];
 
 const settingsItems = [
