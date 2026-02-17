@@ -24,61 +24,172 @@ import {
   Printer,
   FileText,
 } from "lucide-react";
-import { dummyInvoices, formatDateTime, formatRupiah } from "@/data/dummyData";
+import { dummyInvoices, formatDate, formatRupiah, getTicketById } from "@/data/dummyData";
 import { buildInvoicesFromLines } from "@/features/invoices/invoiceUtils";
 import { exportExcel } from "@/lib/exporters";
 import { getUserRole, isAdministrator } from "@/lib/rbac";
-import { PaymentStatusChip } from "@/components/StatusChip";
+
+const OPERATOR_LABELS = {
+  homestay: "Homestay",
+  resort: "Resort",
+  kapal: "Kapal",
+  dive_center: "Dive Center",
+  mandiri: "Mandiri",
+  lainnya: "Lainnya",
+};
+
+const getOverviewOperatorCategory = (ticket) => {
+  if (!ticket) return "lainnya";
+  if (ticket.bookingType === "group") return "kapal";
+  if (ticket.feeCategory === "mooring") return "kapal";
+  if (ticket.feeCategory === "sport_fishing") return "dive_center";
+  if (ticket.operatorType === "qris") return "homestay";
+  if (ticket.operatorType === "doku") return "resort";
+  if (ticket.operatorType === "loket") return "mandiri";
+  if (ticket.operatorType === "transfer") return "lainnya";
+  return "lainnya";
+};
+
+const getDominantOperatorCategory = (categories) => {
+  if (!categories.length) return "lainnya";
+  const countMap = categories.reduce((acc, key) => {
+    acc[key] = (acc[key] || 0) + 1;
+    return acc;
+  }, {});
+  return Object.entries(countMap).sort((a, b) => b[1] - a[1])[0][0] || "lainnya";
+};
+
+const formatCurrencyNumber = (value) => new Intl.NumberFormat("id-ID").format(value || 0);
+
+const isDateInFilter = (dateInput, filter) => {
+  if (!dateInput || filter === "all") return true;
+  const date = new Date(dateInput);
+  if (Number.isNaN(date.getTime())) return false;
+  const now = new Date();
+
+  if (filter === "today") {
+    return date.toDateString() === now.toDateString();
+  }
+  if (filter === "week") {
+    const weekAgo = new Date(now);
+    weekAgo.setDate(now.getDate() - 7);
+    return date >= weekAgo && date <= now;
+  }
+  if (filter === "month") {
+    return date.getFullYear() === now.getFullYear() && date.getMonth() === now.getMonth();
+  }
+  if (filter === "year") {
+    return date.getFullYear() === now.getFullYear();
+  }
+  return true;
+};
+
+const isTicketCountInFilter = (count, filter) => {
+  if (filter === "all") return true;
+  if (filter === "1") return count === 1;
+  if (filter === "2_5") return count >= 2 && count <= 5;
+  if (filter === "6_plus") return count >= 6;
+  return true;
+};
+
+const isTotalInFilter = (total, filter) => {
+  if (filter === "all") return true;
+  if (filter === "under_500k") return total < 500000;
+  if (filter === "500k_2m") return total >= 500000 && total <= 2000000;
+  if (filter === "2m_10m") return total > 2000000 && total <= 10000000;
+  if (filter === "above_10m") return total > 10000000;
+  return true;
+};
+
 export default function InvoiceListPage() {
   const role = getUserRole();
   const canExport = isAdministrator(role);
   const [showFilters, setShowFilters] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const [invoiceNoFilter, setInvoiceNoFilter] = useState("");
   const [typeFilter, setTypeFilter] = useState("all");
-  const [paymentFilter, setPaymentFilter] = useState("all");
-  const [methodFilter, setMethodFilter] = useState("all");
-  const [refundFilter, setRefundFilter] = useState("all");
+  const [dateFilter, setDateFilter] = useState("all");
+  const [operatorFilter, setOperatorFilter] = useState("all");
+  const [ticketCountFilter, setTicketCountFilter] = useState("all");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [totalFilter, setTotalFilter] = useState("all");
   const invoices = useMemo(() => buildInvoicesFromLines(dummyInvoices), []);
+  const enrichedInvoices = useMemo(
+    () =>
+      invoices.map((inv) => {
+        const operatorCategories = 
+          inv.tickets
+            .map((row) => getOverviewOperatorCategory(getTicketById(row.ticketId)))
+            .filter(Boolean);
+        const operatorType = getDominantOperatorCategory(operatorCategories);
+        const normalizedStatus =
+          inv.paymentStatus === "sudah_bayar" ? "sudah_bayar" : "belum_bayar";
+
+        return {
+          ...inv,
+          operatorType,
+          operatorLabel: OPERATOR_LABELS[operatorType] || OPERATOR_LABELS.lainnya,
+          normalizedStatus,
+        };
+      }),
+    [invoices],
+  );
+
   const filtered = useMemo(() => {
     const q = searchQuery.toLowerCase().trim();
-    return invoices.filter((inv) => {
+    const invoiceNoQuery = invoiceNoFilter.toLowerCase().trim();
+    return enrichedInvoices.filter((inv) => {
       const matchesSearch =
         !q ||
         inv.invoiceNo.toLowerCase().includes(q) ||
         inv.invoiceId.toLowerCase().includes(q) ||
         inv.billedTo.name.toLowerCase().includes(q) ||
         inv.billedTo.email.toLowerCase().includes(q);
-      const matchesType =
-        typeFilter === "all" || inv.invoiceType === typeFilter;
-      const matchesPayment =
-        paymentFilter === "all" || inv.paymentStatus === paymentFilter;
-      const matchesMethod =
-        methodFilter === "all" || inv.method === methodFilter;
-      const matchesRefund =
-        refundFilter === "all" ||
-        (refundFilter === "yes" ? inv.refundFlag : !inv.refundFlag);
+      const matchesInvoiceNo =
+        !invoiceNoQuery || inv.invoiceNo.toLowerCase().includes(invoiceNoQuery);
+      const matchesType = typeFilter === "all" || inv.invoiceType === typeFilter;
+      const matchesDate = isDateInFilter(inv.issuedAt, dateFilter);
+      const matchesOperator =
+        operatorFilter === "all" || inv.operatorType === operatorFilter;
+      const matchesTicketCount = isTicketCountInFilter(
+        inv.ticketCount,
+        ticketCountFilter,
+      );
+      const matchesStatus =
+        statusFilter === "all" || inv.normalizedStatus === statusFilter;
+      const matchesTotal = isTotalInFilter(inv.grandTotal, totalFilter);
+
       return (
         matchesSearch &&
+        matchesInvoiceNo &&
         matchesType &&
-        matchesPayment &&
-        matchesMethod &&
-        matchesRefund
+        matchesDate &&
+        matchesOperator &&
+        matchesTicketCount &&
+        matchesStatus &&
+        matchesTotal
       );
     });
   }, [
-    invoices,
+    enrichedInvoices,
     searchQuery,
+    invoiceNoFilter,
     typeFilter,
-    paymentFilter,
-    methodFilter,
-    refundFilter,
+    dateFilter,
+    operatorFilter,
+    ticketCountFilter,
+    statusFilter,
+    totalFilter,
   ]);
   const stats = useMemo(() => {
     const total = filtered.reduce((acc, i) => acc + i.grandTotal, 0);
+    const individualCount = filtered.filter(
+      (i) => i.invoiceType === "perorangan",
+    ).length;
     const groupCount = filtered.filter((i) => i.invoiceType === "group").length;
     return {
       total,
-      count: filtered.length,
+      individualCount,
       groupCount,
     };
   }, [filtered]);
@@ -114,7 +225,7 @@ export default function InvoiceListPage() {
     <AdminLayout>
       <AdminHeader
         title="Invoice"
-        // subtitle="Invoice dapat berisi banyak tiket (Group) atau 1 tiket (Perorangan)"
+        subtitle="Data invoice tarif jasa lingkungan masuk kawasan konservasi"
         showSearch={false}
       />
 
@@ -185,7 +296,19 @@ export default function InvoiceListPage() {
         {showFilters && (
           <Card className="card-ocean animate-fade-in">
             <CardContent className="p-4">
-              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-8 gap-4">
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground mb-1.5 block">
+                    No. Invoice
+                  </label>
+                  <Input
+                    value={invoiceNoFilter}
+                    onChange={(e) => setInvoiceNoFilter(e.target.value)}
+                    placeholder="INV-2024-001"
+                    className="bg-background"
+                  />
+                </div>
+
                 <div>
                   <label className="text-xs font-medium text-muted-foreground mb-1.5 block">
                     Tipe Invoice
@@ -204,63 +327,95 @@ export default function InvoiceListPage() {
 
                 <div>
                   <label className="text-xs font-medium text-muted-foreground mb-1.5 block">
-                    Payment Status
+                    Tanggal
+                  </label>
+                  <Select value={dateFilter} onValueChange={setDateFilter}>
+                    <SelectTrigger className="bg-background">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="bg-popover border-border">
+                      <SelectItem value="all">Semua</SelectItem>
+                      <SelectItem value="today">Hari Ini</SelectItem>
+                      <SelectItem value="week">7 Hari Terakhir</SelectItem>
+                      <SelectItem value="month">Bulan Ini</SelectItem>
+                      <SelectItem value="year">Tahun Ini</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground mb-1.5 block">
+                    Operator
                   </label>
                   <Select
-                    value={paymentFilter}
-                    onValueChange={setPaymentFilter}
+                    value={operatorFilter}
+                    onValueChange={setOperatorFilter}
                   >
                     <SelectTrigger className="bg-background">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent className="bg-popover border-border">
                       <SelectItem value="all">Semua</SelectItem>
-                      <SelectItem value="belum_bayar">Belum Bayar</SelectItem>
-                      <SelectItem value="sudah_bayar">Sudah Bayar</SelectItem>
-                      <SelectItem value="refund_diproses">
-                        Refund Diproses
-                      </SelectItem>
-                      <SelectItem value="refund_selesai">
-                        Refund Selesai
-                      </SelectItem>
-                      <SelectItem value="campuran">Campuran</SelectItem>
+                      <SelectItem value="homestay">Homestay</SelectItem>
+                      <SelectItem value="resort">Resort</SelectItem>
+                      <SelectItem value="kapal">Kapal</SelectItem>
+                      <SelectItem value="dive_center">Dive Center</SelectItem>
+                      <SelectItem value="mandiri">Mandiri</SelectItem>
+                      <SelectItem value="lainnya">Lainnya</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
 
                 <div>
                   <label className="text-xs font-medium text-muted-foreground mb-1.5 block">
-                    Metode
+                    Jumlah Tiket
                   </label>
-                  <Select value={methodFilter} onValueChange={setMethodFilter}>
+                  <Select
+                    value={ticketCountFilter}
+                    onValueChange={setTicketCountFilter}
+                  >
                     <SelectTrigger className="bg-background">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent className="bg-popover border-border">
                       <SelectItem value="all">Semua</SelectItem>
-                      <SelectItem value="bank_transfer">
-                        Bank Transfer
-                      </SelectItem>
-                      <SelectItem value="credit_card">Credit Card</SelectItem>
-                      <SelectItem value="qris">QRIS</SelectItem>
-                      <SelectItem value="e_wallet">E-Wallet</SelectItem>
-                      <SelectItem value="campuran">Campuran</SelectItem>
+                      <SelectItem value="1">1 tiket</SelectItem>
+                      <SelectItem value="2_5">2 - 5 tiket</SelectItem>
+                      <SelectItem value="6_plus">6+ tiket</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
 
                 <div>
                   <label className="text-xs font-medium text-muted-foreground mb-1.5 block">
-                    Refund
+                    Status
                   </label>
-                  <Select value={refundFilter} onValueChange={setRefundFilter}>
+                  <Select value={statusFilter} onValueChange={setStatusFilter}>
                     <SelectTrigger className="bg-background">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent className="bg-popover border-border">
                       <SelectItem value="all">Semua</SelectItem>
-                      <SelectItem value="no">Tidak</SelectItem>
-                      <SelectItem value="yes">Ya</SelectItem>
+                      <SelectItem value="sudah_bayar">Sudah dibayar</SelectItem>
+                      <SelectItem value="belum_bayar">Belum dibayar</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground mb-1.5 block">
+                    Total
+                  </label>
+                  <Select value={totalFilter} onValueChange={setTotalFilter}>
+                    <SelectTrigger className="bg-background">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="bg-popover border-border">
+                      <SelectItem value="all">Semua</SelectItem>
+                      <SelectItem value="under_500k">&lt; 500.000</SelectItem>
+                      <SelectItem value="500k_2m">500.000 - 2.000.000</SelectItem>
+                      <SelectItem value="2m_10m">2.000.001 - 10.000.000</SelectItem>
+                      <SelectItem value="above_10m">&gt; 10.000.000</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -271,10 +426,13 @@ export default function InvoiceListPage() {
                     size="sm"
                     className="text-xs"
                     onClick={() => {
+                      setInvoiceNoFilter("");
                       setTypeFilter("all");
-                      setPaymentFilter("all");
-                      setMethodFilter("all");
-                      setRefundFilter("all");
+                      setDateFilter("all");
+                      setOperatorFilter("all");
+                      setTicketCountFilter("all");
+                      setStatusFilter("all");
+                      setTotalFilter("all");
                     }}
                   >
                     Reset
@@ -294,7 +452,9 @@ export default function InvoiceListPage() {
         <Card className="card-ocean">
           <CardContent className="p-4">
             <div className="flex flex-wrap items-center gap-3 text-sm">
-              <Badge variant="secondary">Invoice: {stats.count}</Badge>
+              <Badge variant="secondary">
+                Invoice Individu: {stats.individualCount}
+              </Badge>
               <Badge variant="secondary">
                 Invoice Grup: {stats.groupCount}
               </Badge>
@@ -315,10 +475,11 @@ export default function InvoiceListPage() {
                   <th>No. Invoice</th>
                   <th>Tipe</th>
                   <th>Tanggal</th>
-                  <th>Pelanggan</th>
-                  <th className="text-right">Jumlah Tiket</th>
-                  <th>Pembayaran</th>
-                  <th className="text-right">Total</th>
+                  <th>Pemesan</th>
+                  <th>Operator</th>
+                  <th className="text-right">Jumlah tiket</th>
+                  <th>Status</th>
+                  <th className="text-right">Total Rp</th>
                   <th className="text-center">Aksi</th>
                 </tr>
               </thead>
@@ -330,11 +491,11 @@ export default function InvoiceListPage() {
                     </td>
                     <td>
                       <Badge variant="secondary">
-                        {inv.invoiceType === "group" ? "Grup" : "Perorangan"}
+                        {inv.invoiceType === "group" ? "Grup" : "Individu"}
                       </Badge>
                     </td>
                     <td className="whitespace-nowrap text-sm">
-                      {formatDateTime(inv.issuedAt)}
+                      {formatDate(inv.issuedAt)}
                     </td>
                     <td>
                       <div>
@@ -346,18 +507,25 @@ export default function InvoiceListPage() {
                         </p>
                       </div>
                     </td>
+                    <td className="text-sm">{inv.operatorLabel}</td>
                     <td className="text-right text-sm font-medium">
                       {inv.ticketCount}
                     </td>
                     <td>
-                      {inv.paymentStatus === "campuran" ? (
-                        <Badge variant="outline">Campuran</Badge>
-                      ) : (
-                        <PaymentStatusChip status={inv.paymentStatus} />
-                      )}
+                      <span
+                        className={
+                          inv.normalizedStatus === "sudah_bayar"
+                            ? "inline-flex items-center rounded-full bg-status-approved-bg px-2.5 py-0.5 text-xs font-medium text-status-approved"
+                            : "inline-flex items-center rounded-full bg-status-pending-bg px-2.5 py-0.5 text-xs font-medium text-status-pending"
+                        }
+                      >
+                        {inv.normalizedStatus === "sudah_bayar"
+                          ? "Sudah dibayar"
+                          : "Belum dibayar"}
+                      </span>
                     </td>
                     <td className="text-right text-sm font-semibold">
-                      {formatRupiah(inv.grandTotal)}
+                      {formatCurrencyNumber(inv.grandTotal)}
                     </td>
                     <td className="text-center">
                       <div className="flex items-center justify-center gap-1">
@@ -393,7 +561,7 @@ export default function InvoiceListPage() {
                 {!filtered.length && (
                   <tr>
                     <td
-                      colSpan={8}
+                      colSpan={9}
                       className="text-center py-10 text-sm text-muted-foreground"
                     >
                       Tidak ada invoice yang cocok dengan filter.

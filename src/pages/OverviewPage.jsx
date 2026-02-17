@@ -4,297 +4,94 @@ import { AdminHeader } from "@/components/AdminHeader";
 import { KPICard } from "@/components/KPICard";
 import { PaymentStatusChip, GateStatusChip } from "@/components/StatusChip";
 import {
-  dummyTickets,
-  dummyRefunds,
-  financeReportSummary,
   formatRupiah,
+  formatNominal,
   formatShortId,
   FEE_PRICING,
   BOOKING_TYPE_LABELS,
-  GENDER_LABELS,
-  OPERATOR_TYPE_LABELS,
+  OVERVIEW_DEFAULT_TREND_DATE_FROM,
+  OVERVIEW_DEFAULT_TREND_DATE_TO,
+  OVERVIEW_BOOKING_YEAR_OPTIONS,
+  OVERVIEW_DEFAULT_BOOKING_YEAR,
+  OVERVIEW_DEFAULT_SUMMARY_SELECTION,
+  OVERVIEW_DEFAULT_SUMMARY_ORDER,
+  OVERVIEW_SUMMARY_OPTIONS,
+  getOverviewDashboardData,
 } from "@/data/dummyData";
 import {
   ClipboardCheck,
   CreditCard,
   Wallet,
-  DoorOpen,
-  DoorClosed,
   TrendingUp,
   TrendingDown,
+  UserCheck,
+  UserX,
   RotateCcw,
   ArrowRight,
   Users,
-  GripVertical,
-  Check,
-  X,
+  FileText,
+  Printer,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import {
-  AreaChart,
-  Area,
-  ComposedChart,
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  Legend,
-  Line,
-  Cell,
-  PieChart,
-  Pie,
-} from "recharts";
+import { Checkbox } from "@/components/ui/checkbox";
+import { TrendTransactionCard } from "@/components/overview/TrendTransactionCard";
+import { DistributionTransactionCard } from "@/components/overview/DistributionTransactionCard";
+import { TopCountryMapCard } from "@/components/overview/TopCountryMapCard";
+import { GenderChartCard } from "@/components/overview/GenderChartCard";
+import { OperatorChartCard } from "@/components/overview/OperatorChartCard";
+import { BookingWaffleCard } from "@/components/overview/BookingWaffleCard";
 
-// Calculate KPIs from dummy data
-const kpis = {
-  pendingApproval: dummyTickets.filter((t) => t.approvalStatus === "menunggu")
-    .length,
-  unpaid: dummyTickets.filter((t) => t.paymentStatus === "belum_bayar").length,
-  paid: dummyTickets.filter((t) => t.paymentStatus === "sudah_bayar").length,
-  gateMasuk: dummyTickets.filter((t) => t.gateStatus === "masuk").length,
-  gateKeluar: dummyTickets.filter((t) => t.gateStatus === "keluar").length,
-  revenueUnrealized: financeReportSummary.totalUnrealized,
-  revenueRealized: financeReportSummary.totalRealized,
-  refundRequested: dummyRefunds.filter((r) => r.status === "requested").length,
-  refundCompleted: dummyRefunds.filter((r) => r.status === "completed").length,
-};
-
-// Chart data
-const baseTrendData = financeReportSummary.dailyTrend.map((d) => ({
-  date: new Date(d.date).toLocaleDateString("id-ID", {
-    day: "numeric",
-    month: "short",
-  }),
-  dateRaw: new Date(d.date),
-  total: d.total / 1000000,
-  realized: d.realized / 1000000,
-}));
-const PIE_COLORS = [
-  "hsl(213 70% 35%)",
-  "hsl(213 65% 45%)",
-  "hsl(213 60% 55%)",
-  "hsl(213 60% 65%)",
-  "hsl(213 70% 75%)",
-];
-const CHART_COLORS = {
-  total: "hsl(var(--primary))",
-  realized: "hsl(213 70% 52%)",
-  previous: "hsl(210 8% 70%)",
-};
-const trendFilterOptions = [
-  {
-    label: "Hari Ini",
-    value: "today",
-    days: 1,
-  },
-  {
-    label: "Minggu Ini",
-    value: "week",
-    days: 7,
-  },
-  {
-    label: "Bulan Ini",
-    value: "month",
-    days: 30,
-  },
-  {
-    label: "Tahun Ini",
-    value: "year",
-    days: 365,
-  },
-  {
-    label: "Kustom",
-    value: "custom",
-    days: 30,
-  },
-];
-const defaultSummarySelection = [
-  "payment_success",
-  "payment_pending",
-  "payment_failed",
-  "visitor_active",
-  "visitor_due",
-  "failed_payment_amount",
-  "refund_requested",
-  "refund_success",
-  "approval_wait",
-  "visitor_registered",
-  "revenue_in",
-  "revenue_pending",
-  "revenue_total",
-  "approval_approved",
-];
-const defaultSummaryOrder = [
-  "payment_success",
-  "payment_pending",
-  "payment_failed",
-  "visitor_active",
-  "visitor_due",
-  "failed_payment_amount",
-  "refund_requested",
-  "refund_success",
-  "approval_wait",
-  "visitor_registered",
-  "revenue_in",
-  "revenue_pending",
-  "revenue_total",
-  "approval_approved",
-];
 export default function OverviewPage() {
-  const isAdmin = true;
   const [summarySelection, setSummarySelection] = useState(
-    defaultSummarySelection,
+    OVERVIEW_DEFAULT_SUMMARY_SELECTION,
   );
   const [showSummaryConfig, setShowSummaryConfig] = useState(false);
-  const [trendFilter, setTrendFilter] = useState("today");
-  const recentTickets = [...dummyTickets]
-    .sort(
-      (a, b) =>
-        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
-    )
-    .slice(0, 5);
-  const pendingApprovalTickets = dummyTickets.filter(
-    (t) => t.approvalStatus === "menunggu",
+  const [trendDateFrom, setTrendDateFrom] = useState(
+    OVERVIEW_DEFAULT_TREND_DATE_FROM,
   );
-  const maxTrendDate = baseTrendData.length
-    ? new Date(Math.max(...baseTrendData.map((d) => d.dateRaw.getTime())))
-    : new Date();
-  const activeTrendFilter =
-    trendFilterOptions.find((option) => option.value === trendFilter) ||
-    trendFilterOptions[0];
-  const trendStart = new Date(maxTrendDate);
-  trendStart.setDate(trendStart.getDate() - (activeTrendFilter.days - 1));
-  const trendData = baseTrendData
-    .filter((item) => item.dateRaw >= trendStart)
-    .map((item) => ({
-      ...item,
-      lastYearTotal: Number((item.total * 0.85).toFixed(2)),
-      lastYearRealized: Number((item.realized * 0.85).toFixed(2)),
-    }));
-  const countryCounts = dummyTickets.reduce((acc, ticket) => {
-    const key = ticket.countryOCR || "Tidak diketahui";
-    acc[key] = (acc[key] || 0) + 1;
-    return acc;
-  }, {});
-  const topCountries = Object.entries(countryCounts)
-    .map(([name, count]) => ({
-      name,
-      count,
-    }))
-    .sort((a, b) => b.count - a.count)
-    .slice(0, 5);
-  const countryTrendData = topCountries.map((item) => ({
-    name: item.name,
-    current: item.count,
-    lastYear: Math.max(0, Math.round(item.count * 0.85)),
-  }));
-  const genderCounts = dummyTickets.reduce((acc, ticket) => {
-    const key = ticket.genderOCR || "U";
-    acc[key] = (acc[key] || 0) + 1;
-    return acc;
-  }, {});
-  const genderData = Object.keys(GENDER_LABELS).map((key) => ({
-    name: GENDER_LABELS[key],
-    value: genderCounts[key] || 0,
-  }));
-  const genderLastYearData = genderData.map((item) => ({
-    ...item,
-    value: Math.max(0, Math.round(item.value * 0.85)),
-  }));
-  const operatorCounts = dummyTickets.reduce((acc, ticket) => {
-    const key = ticket.operatorType || "loket";
-    acc[key] = (acc[key] || 0) + 1;
-    return acc;
-  }, {});
-  const operatorTrendData = Object.keys(OPERATOR_TYPE_LABELS).map((key) => ({
-    name: OPERATOR_TYPE_LABELS[key],
-    current: operatorCounts[key] || 0,
-    lastYear: Math.max(0, Math.round((operatorCounts[key] || 0) * 0.85)),
-  }));
-  const bookingCounts = dummyTickets.reduce((acc, ticket) => {
-    const key = ticket.bookingType || "perorangan";
-    acc[key] = (acc[key] || 0) + 1;
-    return acc;
-  }, {});
-  const bookingTrendData = Object.keys(BOOKING_TYPE_LABELS).map((key) => ({
-    name: BOOKING_TYPE_LABELS[key],
-    current: bookingCounts[key] || 0,
-    lastYear: Math.max(0, Math.round((bookingCounts[key] || 0) * 0.85)),
-  }));
-  const categoryData = financeReportSummary.breakdown.byCategory
-    .map((item) => ({
-      name: item.category.replace("Wisatawan ", "").replace("Domestik ", ""),
-      value: item.amount,
-    }))
-    .filter((item) => item.value > 0);
-  const summaryOptions = [
-    {
-      id: "payment_success",
-      label: "Pembayaran Sukses",
-    },
-    {
-      id: "payment_pending",
-      label: "Pembayaran Pending",
-    },
-    {
-      id: "payment_failed",
-      label: "Pembayaran Gagal",
-    },
-    {
-      id: "visitor_active",
-      label: "Pengunjung aktif",
-    },
-    {
-      id: "visitor_due",
-      label: "Pengunjung jatuh tempo",
-    },
-    {
-      id: "visitor_registered",
-      label: "Pengunjung Terdaftar",
-    },
-    {
-      id: "revenue_in",
-      label: "Pendapatan masuk Rp.",
-      adminOnly: true,
-    },
-    {
-      id: "revenue_pending",
-      label: "Pendapatan pending Rp.",
-      adminOnly: true,
-    },
-    {
-      id: "revenue_total",
-      label: "Pendapatan total",
-      adminOnly: true,
-    },
-    {
-      id: "failed_payment_amount",
-      label: "Gagal bayar Rp.",
-      adminOnly: true,
-    },
-    {
-      id: "refund_requested",
-      label: "Pengembalian diajukan",
-    },
-    {
-      id: "refund_success",
-      label: "Pengembalian Sukses",
-    },
-    {
-      id: "approval_wait",
-      label: "Menunggu persetujuan",
-    },
-    {
-      id: "approval_approved",
-      label: "Persetujuan Disetujui",
-    },
-  ];
-  const [summaryOrder, setSummaryOrder] = useState(defaultSummaryOrder);
+  const [trendDateTo, setTrendDateTo] = useState(
+    OVERVIEW_DEFAULT_TREND_DATE_TO,
+  );
+  const [bookingYearFilter, setBookingYearFilter] = useState(
+    OVERVIEW_DEFAULT_BOOKING_YEAR,
+  );
+  const {
+    kpis,
+    recentTickets,
+    pendingApprovalTickets,
+    activeTrendFilter,
+    trendData,
+    trendYAxisMax,
+    topCountries,
+    topCountrySeriesData,
+    getTopCountryColor,
+    genderStackedData,
+    operatorTrendData,
+    bookingWaffleData,
+    bookingTotalPeople,
+    bookingGroupPct,
+    bookingIndividualPct,
+    categoryData,
+  } = getOverviewDashboardData({
+    trendDateFrom,
+    trendDateTo,
+    bookingYear: bookingYearFilter,
+  });
+  const handleTrendDateFromChange = (value) => {
+    setTrendDateFrom(value);
+    if (trendDateTo && value && trendDateTo < value) {
+      setTrendDateTo(value);
+    }
+  };
+  const handleTrendDateToChange = (value) => {
+    setTrendDateTo(value);
+    if (trendDateFrom && value && value < trendDateFrom) {
+      setTrendDateFrom(value);
+    }
+  };
+  const summaryOptions = OVERVIEW_SUMMARY_OPTIONS;
   const isSelected = (id) => summarySelection.includes(id);
   const showSummary = (id) => {
     setSummarySelection((prev) => (prev.includes(id) ? prev : [...prev, id]));
@@ -302,31 +99,8 @@ export default function OverviewPage() {
   const hideSummary = (id) => {
     setSummarySelection((prev) => prev.filter((item) => item !== id));
   };
-  const handleDragStart = (event, id) => {
-    event.dataTransfer.setData("text/plain", id);
-    event.dataTransfer.effectAllowed = "move";
-  };
-  const handleDragOver = (event) => {
-    event.preventDefault();
-    event.dataTransfer.dropEffect = "move";
-  };
-  const handleDrop = (event, targetId) => {
-    event.preventDefault();
-    const draggedId = event.dataTransfer.getData("text/plain");
-    if (!draggedId || draggedId === targetId) return;
-    setSummaryOrder((prev) => {
-      const next = [...prev];
-      const from = next.indexOf(draggedId);
-      const to = next.indexOf(targetId);
-      if (from === -1 || to === -1) return prev;
-      next.splice(from, 1);
-      next.splice(to, 0, draggedId);
-      return next;
-    });
-  };
   const resetSummaryDefaults = () => {
-    setSummarySelection([...defaultSummarySelection]);
-    setSummaryOrder([...defaultSummaryOrder]);
+    setSummarySelection([...OVERVIEW_DEFAULT_SUMMARY_SELECTION]);
   };
   const summaryKpis = [
     // Row 1
@@ -346,13 +120,13 @@ export default function OverviewPage() {
       title: "Pembayaran Pending",
       value: kpis.unpaid,
       icon: CreditCard,
-      variant: "danger",
+      variant: "warning",
       subtitle: "Tiket menunggu pembayaran",
     },
     {
       id: "payment_failed",
       title: "Pembayaran Gagal",
-      value: dummyTickets.filter((t) => t.paymentStatus === "gagal").length,
+      value: kpis.paymentFailed,
       icon: CreditCard,
       variant: "danger",
       subtitle: "Transaksi gagal",
@@ -361,30 +135,21 @@ export default function OverviewPage() {
       id: "visitor_active",
       title: "Pengunjung Aktif",
       value: kpis.gateMasuk,
-      icon: DoorOpen,
-      variant: "primary",
+      icon: UserCheck,
+      variant: "success",
       subtitle: "Saat ini di area",
     },
     {
       id: "visitor_due",
       title: "Pengunjung Jatuh Tempo",
       value: kpis.gateKeluar,
-      icon: DoorClosed,
-      variant: "default",
+      icon: UserX,
+      variant: "danger",
     },
     // Row 2
     {
-      id: "failed_payment_amount",
-      title: "Gagal Bayar Rp.",
-      value: formatRupiah(0),
-      icon: TrendingDown,
-      variant: "danger",
-      subtitle: "Nominal gagal bayar",
-      adminOnly: true,
-    },
-    {
       id: "refund_requested",
-      title: "Pengembalian diajukan",
+      title: "Pengajuan Pengembalian",
       value: kpis.refundRequested,
       icon: RotateCcw,
       variant: "warning",
@@ -396,185 +161,173 @@ export default function OverviewPage() {
       value: kpis.refundCompleted,
       icon: RotateCcw,
       variant: "default",
-      subtitle: formatRupiah(750000),
+      subtitle: formatNominal(750000),
     },
     {
       id: "approval_wait",
-      title: "Menunggu persetujuan",
+      title: "Konfirmasi Persetujuan",
       value: kpis.pendingApproval,
       icon: ClipboardCheck,
       variant: "warning",
       subtitle: "Menunggu tinjauan",
     },
     {
+      id: "approval_approved",
+      title: "Persetujuan Berhasil",
+      value: kpis.approvalApproved,
+      icon: ClipboardCheck,
+      variant: "success",
+      subtitle: "Sudah disetujui",
+    },
+    {
       id: "visitor_registered",
       title: "Pengunjung Terdaftar",
-      value: dummyTickets.length,
+      value: kpis.totalTickets,
       icon: Users,
       variant: "default",
+      subtitle: `Saat ini di area: ${kpis.gateMasuk}`,
     },
     // Row 3
     {
+      id: "failed_payment_amount",
+      title: "Gagal Bayar Rp",
+      value: formatNominal(0),
+      icon: TrendingDown,
+      variant: "danger",
+      subtitle: "Nominal gagal bayar",
+    },
+    {
       id: "revenue_in",
-      title: "Pendapatan Masuk Rp.",
-      value: formatRupiah(kpis.revenueRealized),
+      title: "Pendapatan Masuk Rp",
+      value: formatNominal(kpis.revenueRealized),
       icon: TrendingUp,
       variant: "success",
       trend: {
         value: 8,
         label: "vs bulan lalu",
       },
-      adminOnly: true,
     },
     {
       id: "revenue_pending",
-      title: "Pendapatan Pending Rp.",
-      value: formatRupiah(kpis.revenueUnrealized),
+      title: "Pendapatan Pending Rp",
+      value: formatNominal(kpis.revenueUnrealized),
       icon: TrendingDown,
       variant: "warning",
-      subtitle: "Belum masuk gerbang",
-      adminOnly: true,
+      subtitle: "Konfirmasi 1x24 jam",
     },
     {
       id: "revenue_total",
-      title: "Pendapatan Total",
-      value: formatRupiah(kpis.revenueRealized + kpis.revenueUnrealized),
+      title: "Potensi Pendapatan Rp",
+      value: formatNominal(kpis.revenueRealized + kpis.revenueUnrealized),
       icon: TrendingUp,
       variant: "brand",
       subtitle: "Akumulasi pendapatan",
-      adminOnly: true,
-    },
-    {
-      id: "approval_approved",
-      title: "Persetujuan Disetujui",
-      value: dummyTickets.filter((t) => t.approvalStatus === "disetujui")
-        .length,
-      icon: ClipboardCheck,
-      variant: "success",
-      subtitle: "Sudah disetujui",
     },
   ];
   const summaryKpiMap = summaryKpis.reduce((acc, kpi) => {
     acc[kpi.id] = kpi;
     return acc;
   }, {});
-  const orderedKpis = summaryOrder
+  const orderedKpis = OVERVIEW_DEFAULT_SUMMARY_ORDER
     .map((id) => summaryKpiMap[id])
     .filter(Boolean);
-  const editableKpis = orderedKpis.filter((kpi) =>
-    kpi.adminOnly ? isAdmin : true,
-  );
-  const visibleKpis = editableKpis.filter((kpi) => isSelected(kpi.id));
+  const visibleKpis = orderedKpis.filter((kpi) => isSelected(kpi.id));
   const kpiRows = [];
   for (let i = 0; i < visibleKpis.length; i += 5) {
     kpiRows.push(visibleKpis.slice(i, i + 5));
   }
+  const handleExportPdf = () => {
+    window.print();
+  };
+  const handlePrint = () => {
+    window.print();
+  };
   return (
     <AdminLayout>
       <AdminHeader
         title="Ringkasan Dashboard"
         subtitle="Pantau aktivitas dan performa sistem tiket"
+        showSearch={false}
+        forceSuperAdmin
+        actions={
+          <>
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-9 gap-2"
+              onClick={handleExportPdf}
+            >
+              <FileText className="w-4 h-4" />
+              Export PDF
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-9 gap-2"
+              onClick={handlePrint}
+            >
+              <Printer className="w-4 h-4" />
+              Cetak
+            </Button>
+            <Button
+              size="sm"
+              className={
+                showSummaryConfig
+                  ? "h-9 bg-status-revision-bg text-status-revision hover:bg-status-revision-bg/80 border border-status-revision/30"
+                  : "h-9 bg-primary text-primary-foreground hover:bg-primary/90"
+              }
+              onClick={() => setShowSummaryConfig((prev) => !prev)}
+            >
+              {showSummaryConfig ? "Tutup Tampilan" : "Tampilan"}
+            </Button>
+          </>
+        }
       />
       <div className="flex-1 overflow-auto p-6">
-        <Card className="card-ocean mb-6">
-          <CardHeader className="">
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <CardTitle className="text-base font-semibold">
-                Pengaturan Ringkasan
-              </CardTitle>
-              <div className="flex flex-wrap items-center gap-2">
+        {showSummaryConfig && (
+          <Card className="card-ocean mb-6">
+            <CardHeader className="pb-2">
+              <div className="flex items-center justify-between gap-3">
+                <CardTitle className="text-base font-semibold">
+                  Tampilan Ringkasan
+                </CardTitle>
                 <Button
+                  type="button"
+                  variant="ghost"
                   size="sm"
-                  className={
-                    showSummaryConfig
-                      ? "h-8 text-xs bg-status-revision-bg text-status-revision hover:bg-status-revision-bg/80 border border-status-revision/30"
-                      : "h-8 text-xs bg-primary text-primary-foreground hover:bg-primary/90"
-                  }
-                  onClick={() => setShowSummaryConfig((prev) => !prev)}
+                  className="text-xs"
+                  onClick={resetSummaryDefaults}
                 >
-                  {showSummaryConfig ? "Tutup Ringkasan" : "Edit Ringkasan"}
+                  Reset Default
                 </Button>
-                {showSummaryConfig && (
-                  <Button
-                    size="sm"
-                    className="h-8 text-xs bg-status-pending-bg text-status-pending hover:bg-status-pending-bg/80 border border-status-pending/30"
-                    onClick={resetSummaryDefaults}
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                {summaryOptions.map((option) => (
+                  <label
+                    key={option.id}
+                    htmlFor={`summary-toggle-${option.id}`}
+                    className="flex items-center gap-3 rounded-md border border-border/70 bg-card px-3 py-2 text-sm cursor-pointer hover:bg-muted/40"
                   >
-                    Edit Default
-                  </Button>
-                )}
-                <Button variant="outline" size="sm" className="h-8 text-xs">
-                  Export PDF
-                </Button>
-                <Button variant="outline" size="sm" className="h-8 text-xs">
-                  Cetak
-                </Button>
-              </div>
-            </div>
-          </CardHeader>
-          {showSummaryConfig && (
-            <CardContent className="pt-0">
-              <p className="mb-3 text-xs text-muted-foreground">
-                Geser kartu untuk ubah urutan.
-              </p>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {editableKpis.map((kpi, index) => {
-                  const active = isSelected(kpi.id);
-                  return (
-                    <div
-                      key={kpi.id}
-                      draggable
-                      onDragStart={(event) => handleDragStart(event, kpi.id)}
-                      onDragOver={handleDragOver}
-                      onDrop={(event) => handleDrop(event, kpi.id)}
-                      className={`relative pt-[40px] rounded-2xl border border-border bg-card p-4 transition cursor-grab active:cursor-grabbing kpi-config-wiggle ${active ? "shadow-sm" : "opacity-60 grayscale"}`}
-                      style={{
-                        animationDelay: `${index * 0.08}s`,
+                    <Checkbox
+                      id={`summary-toggle-${option.id}`}
+                      checked={isSelected(option.id)}
+                      onCheckedChange={(checked) => {
+                        if (checked === true) {
+                          showSummary(option.id);
+                          return;
+                        }
+                        hideSummary(option.id);
                       }}
-                    >
-                      <div className="absolute left-3 top-3 flex items-center gap-2 text-muted-foreground">
-                        <GripVertical className="w-4 h-4" />
-                      </div>
-                      <div className="absolute right-2 top-2 flex items-center gap-1">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className={`h-7 w-7 ${active ? "text-status-approved" : "text-muted-foreground"}`}
-                          title="Tampilkan"
-                          onClick={() => showSummary(kpi.id)}
-                        >
-                          <Check className="w-4 h-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className={`h-7 w-7 ${!active ? "text-status-rejected" : "text-muted-foreground"}`}
-                          title="Sembunyikan"
-                          onClick={() => hideSummary(kpi.id)}
-                        >
-                          <X className="w-4 h-4" />
-                        </Button>
-                      </div>
-                      <KPICard
-                        title={kpi.title}
-                        value={kpi.value}
-                        icon={kpi.icon}
-                        variant={kpi.variant}
-                        subtitle={kpi.subtitle}
-                        trend={kpi.trend}
-                        className="pointer-events-none"
-                      />
-                    </div>
-                  );
-                })}
+                    />
+                    <span className="text-foreground">{option.label}</span>
+                  </label>
+                ))}
               </div>
-              <p className="mt-3 text-xs text-muted-foreground">
-                Drag & drop kartu untuk mengatur urutan. Centang untuk tampil,
-                silang untuk sembunyikan.
-              </p>
             </CardContent>
-          )}
-        </Card>
+          </Card>
+        )}
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-6 xl:hidden">
           {visibleKpis.map((kpi) => (
             <KPICard
@@ -613,454 +366,38 @@ export default function OverviewPage() {
           ))}
         </div>
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-          <Card className="lg:col-span-2 card-ocean">
-            <CardHeader className="pb-2">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-base font-semibold">
-                  Tren Transaksi
-                </CardTitle>
-                <div className="flex items-center gap-2">
-                  <select
-                    value={trendFilter}
-                    onChange={(event) => setTrendFilter(event.target.value)}
-                    className="h-8 rounded-md border border-border bg-background px-2 text-xs text-foreground"
-                  >
-                    {trendFilterOptions.map((option) => (
-                      <option key={option.value} value={option.value}>
-                        {option.label}
-                      </option>
-                    ))}
-                  </select>
-                  <span className="text-xs text-muted-foreground">
-                    dengan tahun lalu
-                  </span>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="h-[260px]">
-                <ResponsiveContainer width="100%" height="100%">
-                  <ComposedChart data={trendData}>
-                    <defs>
-                      <linearGradient
-                        id="colorTotal"
-                        x1="0"
-                        y1="0"
-                        x2="0"
-                        y2="1"
-                      >
-                        <stop
-                          offset="5%"
-                          stopColor={CHART_COLORS.total}
-                          stopOpacity={0.35}
-                        />
-                        <stop
-                          offset="95%"
-                          stopColor={CHART_COLORS.total}
-                          stopOpacity={0}
-                        />
-                      </linearGradient>
-                      <linearGradient
-                        id="colorRealized"
-                        x1="0"
-                        y1="0"
-                        x2="0"
-                        y2="1"
-                      >
-                        <stop
-                          offset="5%"
-                          stopColor={CHART_COLORS.realized}
-                          stopOpacity={0.35}
-                        />
-                        <stop
-                          offset="95%"
-                          stopColor={CHART_COLORS.realized}
-                          stopOpacity={0}
-                        />
-                      </linearGradient>
-                    </defs>
-                    <CartesianGrid
-                      strokeDasharray="3 3"
-                      stroke="hsl(var(--border))"
-                    />
-                    <XAxis
-                      dataKey="date"
-                      tick={{
-                        fontSize: 11,
-                        fill: "hsl(var(--muted-foreground))",
-                      }}
-                      axisLine={{
-                        stroke: "hsl(var(--border))",
-                      }}
-                    />
-                    <YAxis
-                      tick={{
-                        fontSize: 11,
-                        fill: "hsl(var(--muted-foreground))",
-                      }}
-                      axisLine={{
-                        stroke: "hsl(var(--border))",
-                      }}
-                      tickFormatter={(v) => `${v}jt`}
-                    />
-                    <Tooltip
-                      contentStyle={{
-                        backgroundColor: "hsl(var(--card))",
-                        border: "1px solid hsl(var(--border))",
-                        borderRadius: "8px",
-                        fontSize: "12px",
-                      }}
-                      formatter={(value) => [`Rp ${value}jt`, ""]}
-                    />
-                    <Legend
-                      iconType="line"
-                      wrapperStyle={{
-                        fontSize: "11px",
-                      }}
-                    />
-                    <Area
-                      type="monotone"
-                      dataKey="total"
-                      stroke={CHART_COLORS.total}
-                      strokeWidth={2}
-                      fill="url(#colorTotal)"
-                      name="Total"
-                    />
-                    <Line
-                      type="monotone"
-                      dataKey="lastYearTotal"
-                      stroke="#b9bec7"
-                      strokeWidth={2}
-                      dot={false}
-                      strokeDasharray="4 4"
-                      name="Total tahun lalu"
-                    />
-                  </ComposedChart>
-                </ResponsiveContainer>
-              </div>
-            </CardContent>
-          </Card>
-          <Card className="card-ocean">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-base font-semibold">
-                Distribusi Transaksi
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="h-[180px]">
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={categoryData}
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={50}
-                      outerRadius={75}
-                      paddingAngle={2}
-                      dataKey="value"
-                    >
-                      {categoryData.map((entry, index) => (
-                        <Cell
-                          key={`cell-${index}`}
-                          fill={PIE_COLORS[index % PIE_COLORS.length]}
-                        />
-                      ))}
-                    </Pie>
-                    <Tooltip
-                      contentStyle={{
-                        backgroundColor: "hsl(var(--card))",
-                        border: "1px solid hsl(var(--border))",
-                        borderRadius: "8px",
-                        fontSize: "12px",
-                      }}
-                      formatter={(value) => [formatRupiah(value), ""]}
-                    />
-                  </PieChart>
-                </ResponsiveContainer>
-              </div>
-              <div className="space-y-2 mt-2">
-                {categoryData.slice(0, 5).map((item, index) => (
-                  <div
-                    key={item.name}
-                    className="flex items-center justify-between text-xs"
-                  >
-                    <div className="flex items-center gap-2">
-                      <div
-                        className="w-2.5 h-2.5 rounded-full"
-                        style={{
-                          backgroundColor: PIE_COLORS[index],
-                        }}
-                      />
-                      <span className="text-muted-foreground truncate max-w-[160px]">
-                        {item.name}
-                      </span>
-                    </div>
-                    <span className="font-medium">
-                      {formatRupiah(item.value)}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+          <TrendTransactionCard
+            trendDateFrom={trendDateFrom}
+            trendDateTo={trendDateTo}
+            onTrendDateFromChange={handleTrendDateFromChange}
+            onTrendDateToChange={handleTrendDateToChange}
+            trendData={trendData}
+            trendYAxisMax={trendYAxisMax}
+          />
+          <DistributionTransactionCard categoryData={categoryData} />
         </div>
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-          <Card className="card-ocean">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-base font-semibold">
-                Top 5 Asal Negara
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="h-[220px]">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={countryTrendData}>
-                    <CartesianGrid
-                      strokeDasharray="3 3"
-                      stroke="hsl(var(--border))"
-                    />
-                    <XAxis
-                      dataKey="name"
-                      tick={{
-                        fontSize: 10,
-                        fill: "hsl(var(--muted-foreground))",
-                      }}
-                      interval={0}
-                      angle={-15}
-                      textAnchor="end"
-                      height={50}
-                    />
-                    <YAxis
-                      tick={{
-                        fontSize: 10,
-                        fill: "hsl(var(--muted-foreground))",
-                      }}
-                      allowDecimals={false}
-                    />
-                    <Tooltip
-                      contentStyle={{
-                        backgroundColor: "hsl(var(--card))",
-                        border: "1px solid hsl(var(--border))",
-                        borderRadius: "8px",
-                        fontSize: "12px",
-                      }}
-                    />
-                    <Legend
-                      iconType="circle"
-                      wrapperStyle={{
-                        fontSize: "11px",
-                      }}
-                    />
-                    <Bar
-                      dataKey="current"
-                      name="Tahun ini"
-                      fill="hsl(213 70% 45%)"
-                      radius={[6, 6, 0, 0]}
-                    />
-                    <Bar
-                      dataKey="lastYear"
-                      name="Tahun lalu"
-                      fill="hsl(213 30% 70%)"
-                      radius={[6, 6, 0, 0]}
-                    />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-            </CardContent>
-          </Card>
-          <Card className="card-ocean">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-base font-semibold">
-                Jenis Kelamin
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center gap-4 text-xs text-muted-foreground mb-2">
-                <span className="inline-flex items-center gap-2">
-                  <span className="h-2 w-2 rounded-full bg-primary" />
-                  Tahun ini
-                </span>
-                <span className="inline-flex items-center gap-2">
-                  <span className="h-2 w-2 rounded-full bg-slate-300" />
-                  Tahun lalu
-                </span>
-              </div>
-              <div className="h-[220px]">
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={genderData}
-                      dataKey="value"
-                      nameKey="name"
-                      cx="30%"
-                      cy="50%"
-                      innerRadius={35}
-                      outerRadius={60}
-                      paddingAngle={2}
-                    >
-                      {genderData.map((entry, index) => (
-                        <Cell
-                          key={`gender-current-${index}`}
-                          fill={PIE_COLORS[index % PIE_COLORS.length]}
-                        />
-                      ))}
-                    </Pie>
-                    <Pie
-                      data={genderLastYearData}
-                      dataKey="value"
-                      nameKey="name"
-                      cx="75%"
-                      cy="50%"
-                      innerRadius={35}
-                      outerRadius={60}
-                      paddingAngle={2}
-                    >
-                      {genderLastYearData.map((entry, index) => (
-                        <Cell
-                          key={`gender-last-${index}`}
-                          fill={PIE_COLORS[index % PIE_COLORS.length]}
-                          opacity={0.5}
-                        />
-                      ))}
-                    </Pie>
-                    <Tooltip
-                      contentStyle={{
-                        backgroundColor: "hsl(var(--card))",
-                        border: "1px solid hsl(var(--border))",
-                        borderRadius: "8px",
-                        fontSize: "12px",
-                      }}
-                    />
-                    <Legend
-                      iconType="circle"
-                      wrapperStyle={{
-                        fontSize: "11px",
-                      }}
-                    />
-                  </PieChart>
-                </ResponsiveContainer>
-              </div>
-            </CardContent>
-          </Card>
-          <Card className="card-ocean">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-base font-semibold">
-                Jenis Operator
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="h-[220px]">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={operatorTrendData}>
-                    <CartesianGrid
-                      strokeDasharray="3 3"
-                      stroke="hsl(var(--border))"
-                    />
-                    <XAxis
-                      dataKey="name"
-                      tick={{
-                        fontSize: 10,
-                        fill: "hsl(var(--muted-foreground))",
-                      }}
-                    />
-                    <YAxis
-                      tick={{
-                        fontSize: 10,
-                        fill: "hsl(var(--muted-foreground))",
-                      }}
-                      allowDecimals={false}
-                    />
-                    <Tooltip
-                      contentStyle={{
-                        backgroundColor: "hsl(var(--card))",
-                        border: "1px solid hsl(var(--border))",
-                        borderRadius: "8px",
-                        fontSize: "12px",
-                      }}
-                    />
-                    <Legend
-                      iconType="circle"
-                      wrapperStyle={{
-                        fontSize: "11px",
-                      }}
-                    />
-                    <Bar
-                      dataKey="current"
-                      name="Tahun ini"
-                      fill="hsl(213 70% 45%)"
-                      radius={[6, 6, 0, 0]}
-                    />
-                    <Bar
-                      dataKey="lastYear"
-                      name="Tahun lalu"
-                      fill="hsl(213 30% 70%)"
-                      radius={[6, 6, 0, 0]}
-                    />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-            </CardContent>
-          </Card>
+          <TopCountryMapCard
+            topCountries={topCountries}
+            topCountrySeriesData={topCountrySeriesData}
+            getTopCountryColor={getTopCountryColor}
+          />
+          <GenderChartCard
+            activeTrendFilterLabel={activeTrendFilter.label}
+            genderStackedData={genderStackedData}
+          />
+          <OperatorChartCard operatorTrendData={operatorTrendData} />
         </div>
-        <Card className="card-ocean mb-6">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base font-semibold">
-              Perbandingan Pengunjung (Grup vs Individu)
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="h-[220px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={bookingTrendData}>
-                  <CartesianGrid
-                    strokeDasharray="3 3"
-                    stroke="hsl(var(--border))"
-                  />
-                  <XAxis
-                    dataKey="name"
-                    tick={{
-                      fontSize: 11,
-                      fill: "hsl(var(--muted-foreground))",
-                    }}
-                  />
-                  <YAxis
-                    tick={{
-                      fontSize: 11,
-                      fill: "hsl(var(--muted-foreground))",
-                    }}
-                    allowDecimals={false}
-                  />
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: "hsl(var(--card))",
-                      border: "1px solid hsl(var(--border))",
-                      borderRadius: "8px",
-                      fontSize: "12px",
-                    }}
-                  />
-                  <Legend
-                    iconType="circle"
-                    wrapperStyle={{
-                      fontSize: "11px",
-                    }}
-                  />
-                  <Bar
-                    dataKey="current"
-                    name="Tahun ini"
-                    fill="hsl(213 70% 45%)"
-                    radius={[6, 6, 0, 0]}
-                  />
-                  <Bar
-                    dataKey="lastYear"
-                    name="Tahun lalu"
-                    fill="hsl(213 30% 70%)"
-                    radius={[6, 6, 0, 0]}
-                  />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          </CardContent>
-        </Card>
+        <BookingWaffleCard
+          activeTrendFilterLabel={activeTrendFilter.label}
+          bookingYearFilter={bookingYearFilter}
+          onBookingYearChange={setBookingYearFilter}
+          bookingYearOptions={OVERVIEW_BOOKING_YEAR_OPTIONS}
+          bookingWaffleData={bookingWaffleData}
+          bookingTotalPeople={bookingTotalPeople}
+          bookingGroupPct={bookingGroupPct}
+          bookingIndividualPct={bookingIndividualPct}
+        />
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <Card className="card-ocean">
             <CardHeader className="pb-3">
@@ -1091,13 +428,13 @@ export default function OverviewPage() {
                         <span className="font-mono text-sm font-medium text-primary">
                           {formatShortId(ticket.id)}
                         </span>
-                        <span className="text-xs text-muted-foreground">�</span>
+                        <span className="text-xs text-muted-foreground">-</span>
                         <span className="text-sm text-foreground truncate">
                           {ticket.namaLengkap}
                         </span>
                       </div>
                       <p className="text-xs text-muted-foreground mt-0.5">
-                        {FEE_PRICING[ticket.feeCategory].label} �{" "}
+                        {FEE_PRICING[ticket.feeCategory].label} -{" "}
                         {BOOKING_TYPE_LABELS[ticket.bookingType]}
                       </p>
                     </div>

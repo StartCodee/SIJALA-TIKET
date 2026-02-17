@@ -7,6 +7,7 @@ import {
   ClipboardCheck,
   CreditCard,
   Tag,
+  DoorOpen,
   BarChart3,
   RotateCcw,
   Users,
@@ -42,6 +43,7 @@ const navItems = [
   { to: '/approval', icon: ClipboardCheck, label: 'Antrian Persetujuan' },
   { to: '/tarif', icon: Tag, label: 'Tarif Layanan' },
   { to: '/reports', icon: BarChart3, label: 'Laporan Keuangan' },
+  { to: '/gate', icon: DoorOpen, label: 'Tiket Langsung' },
 ];
 
 const adminItems = [

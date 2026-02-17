@@ -1,20 +1,17 @@
 import { useEffect, useState } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useLocation } from "react-router-dom";
 import { AdminLayout } from "@/components/AdminLayout";
 import { AdminHeader } from "@/components/AdminHeader";
 import {
-  ApprovalStatusChip,
-  PaymentStatusChip,
-  GateStatusChip,
-  RealisasiStatusChip,
   RefundStatusChip,
 } from "@/components/StatusChip";
 import {
   getTicketById,
+  getInvoiceIdForTicket,
   saveTicketOverride,
   dummyRefunds,
+  dummyAdminUsers,
   formatRupiah,
-  formatDateTime,
   formatShortId,
   FEE_PRICING,
   DOMISILI_LABELS,
@@ -58,24 +55,90 @@ import {
 } from "@/components/ui/select";
 export default function TicketDetailPage() {
   const { ticketId } = useParams();
+  const location = useLocation();
   const [ticket, setTicket] = useState(() =>
     ticketId ? getTicketById(ticketId) : null,
   );
   const ticketRefunds = dummyRefunds.filter((r) => r.ticketId === ticketId);
   const [showEditDialog, setShowEditDialog] = useState(false);
+  const adminApproverOptions = dummyAdminUsers.filter(
+    (admin) => admin.role === "admin_utama" || admin.role === "admin_tiket",
+  );
+  const OPERATOR_CATEGORY_OPTIONS = [
+    { value: "kapal", label: "Kapal" },
+    { value: "resort", label: "Resort" },
+    { value: "homestay", label: "Homestay" },
+    { value: "dive_center", label: "Dive Center" },
+    { value: "mandiri", label: "Mandiri" },
+    { value: "lainnya", label: "Lainnya" },
+  ];
+  const getOperatorCategoryFromTicket = (ticketData) => {
+    if (ticketData?.operatorCategory) return ticketData.operatorCategory;
+    if (ticketData?.bookingType === "group" || ticketData?.feeCategory === "mooring") return "kapal";
+    if (ticketData?.feeCategory === "sport_fishing") return "dive_center";
+    if (ticketData?.operatorType === "doku") return "resort";
+    if (ticketData?.operatorType === "qris") return "homestay";
+    if (ticketData?.operatorType === "loket") return "mandiri";
+    return "lainnya";
+  };
+  const getOperatorTypeFromCategory = (category) => {
+    const categoryToOperatorType = {
+      resort: "doku",
+      homestay: "qris",
+      mandiri: "loket",
+      kapal: "transfer",
+      dive_center: "transfer",
+      lainnya: "transfer",
+    };
+    return categoryToOperatorType[category] || "transfer";
+  };
+  const getDefaultOperatorName = (operatorCategory) => {
+    const operatorNameByCategory = {
+      kapal: "Kapal Raja Ampat Explorer",
+      resort: "Resort Waigeo Paradise",
+      homestay: "Homestay Misool Indah",
+      dive_center: "Dive Center Blue Lagoon",
+      mandiri: "Mandiri Loket Utama",
+      lainnya: "Operator Lainnya Raja Ampat",
+    };
+    return operatorNameByCategory[operatorCategory] || "Operator Lainnya Raja Ampat";
+  };
+  const getDefaultGateOfficerName = (ticketData) => {
+    if (ticketData?.operatorType === "doku") {
+      return "DOKU";
+    }
+    if (
+      ticketData?.lastActionBy &&
+      ticketData.lastActionBy !== "Pemindai Gerbang" &&
+      ticketData.lastActionBy !== "Sistem"
+    ) {
+      return ticketData.lastActionBy;
+    }
+    const petugasByOperator = {
+      loket: "Bambang Susilo",
+      qris: "Dewi Anggraini",
+      transfer: "Rudi Hartono",
+      doku: "DOKU",
+    };
+    return petugasByOperator[ticketData?.operatorType] || "Bambang Susilo";
+  };
   const [editForm, setEditForm] = useState({
     namaLengkap: "",
     email: "",
     noHP: "",
-    domisiliOCR: "pbd",
+    countryOCR: "Indonesia",
     bookingType: "perorangan",
     feeCategory: "wisatawan_domestik_pbd",
     hargaPerOrang: 0,
     totalBiaya: 0,
-    approvalStatus: "menunggu",
+    invoiceAvailable: "tidak",
+    paymentProofAvailable: "tidak",
+    operatorCategory: "mandiri",
+    operatorName: "",
+    refundApprovalStatus: "tidak_disetujui",
     paymentStatus: "belum_bayar",
-    gateStatus: "belum_masuk",
-    realisasiStatus: "belum_terealisasi",
+    gateValue: "",
+    approvedBy: "",
   });
   useEffect(() => {
     if (!ticketId) return;
@@ -83,37 +146,90 @@ export default function TicketDetailPage() {
   }, [ticketId]);
   const openEditDialog = () => {
     if (!ticket) return;
+    const invoiceExists = Boolean(getInvoiceIdForTicket(ticket.id));
+    const paidTicketStatuses = [
+      "sudah_bayar",
+      "refund_diajukan",
+      "refund_diproses",
+      "refund_selesai",
+    ];
+    const isTicketPaid = paidTicketStatuses.includes(ticket.paymentStatus);
+    const latestTicketRefund = [...ticketRefunds].sort(
+      (a, b) => new Date(b.requestedAt).getTime() - new Date(a.requestedAt).getTime(),
+    )[0];
+    const operatorCategory = getOperatorCategoryFromTicket(ticket);
+    const selectedOperatorType = getOperatorTypeFromCategory(operatorCategory);
     setEditForm({
       namaLengkap: ticket.namaLengkap || "",
       email: ticket.email || "",
       noHP: ticket.noHP || "",
-      domisiliOCR: ticket.domisiliOCR || "pbd",
+      countryOCR:
+        ticket.countryOCR ||
+        (ticket.domisiliOCR === "mancanegara" ? "Mancanegara" : "Indonesia"),
       bookingType: ticket.bookingType || "perorangan",
       feeCategory: ticket.feeCategory || "wisatawan_domestik_pbd",
       hargaPerOrang: ticket.hargaPerOrang || 0,
       totalBiaya: ticket.totalBiaya || 0,
-      approvalStatus: ticket.approvalStatus || "menunggu",
-      paymentStatus: ticket.paymentStatus || "belum_bayar",
-      gateStatus: ticket.gateStatus || "belum_masuk",
-      realisasiStatus: ticket.realisasiStatus || "belum_terealisasi",
+      invoiceAvailable:
+        (typeof ticket.invoiceAvailable === "boolean"
+          ? ticket.invoiceAvailable
+          : invoiceExists)
+          ? "ada"
+          : "tidak",
+      paymentProofAvailable:
+        (typeof ticket.paymentProofAvailable === "boolean"
+          ? ticket.paymentProofAvailable
+          : Boolean(ticket.paidAt))
+          ? "ada"
+          : "tidak",
+      operatorCategory,
+      operatorName: ticket.operatorName || getDefaultOperatorName(operatorCategory),
+      refundApprovalStatus:
+        ticket.refundApprovalStatus ||
+        (latestTicketRefund?.status === "completed"
+          ? "disetujui"
+          : "tidak_disetujui"),
+      paymentStatus: isTicketPaid ? "sudah_bayar" : "belum_bayar",
+      gateValue:
+        selectedOperatorType === "doku"
+          ? "DOKU"
+          : ticket.gateOfficerName || getDefaultGateOfficerName(ticket),
+      approvedBy: ticket.approvedBy || "",
     });
     setShowEditDialog(true);
   };
   const handleSaveEdit = () => {
     if (!ticket) return;
+    const isPaid = editForm.paymentStatus === "sudah_bayar";
+    const hasPaymentProof = editForm.paymentProofAvailable === "ada";
+    const paidAtValue = isPaid || hasPaymentProof ? ticket.paidAt || new Date().toISOString() : "";
+    const selectedOperatorType = getOperatorTypeFromCategory(editForm.operatorCategory);
+    const gateOfficerName =
+      selectedOperatorType === "doku" ? "DOKU" : editForm.gateValue.trim();
     saveTicketOverride(ticket.id, {
       namaLengkap: editForm.namaLengkap,
       email: editForm.email,
       noHP: editForm.noHP,
-      domisiliOCR: editForm.domisiliOCR,
+      countryOCR: editForm.countryOCR,
       bookingType: editForm.bookingType,
       feeCategory: editForm.feeCategory,
       hargaPerOrang: Number(editForm.hargaPerOrang || 0),
       totalBiaya: Number(editForm.totalBiaya || 0),
-      approvalStatus: editForm.approvalStatus,
-      paymentStatus: editForm.paymentStatus,
-      gateStatus: editForm.gateStatus,
-      realisasiStatus: editForm.realisasiStatus,
+      invoiceAvailable: editForm.invoiceAvailable === "ada",
+      paymentProofAvailable: hasPaymentProof,
+      operatorType: selectedOperatorType,
+      operatorCategory: editForm.operatorCategory,
+      operatorName: editForm.operatorName || getDefaultOperatorName(editForm.operatorCategory),
+      refundApprovalStatus: editForm.refundApprovalStatus,
+      paymentStatus: isPaid ? "sudah_bayar" : "belum_bayar",
+      paidAt: paidAtValue,
+      qrActive: isPaid,
+      gateOfficerName,
+      lastActionBy:
+        selectedOperatorType === "doku"
+          ? ticket.lastActionBy
+          : gateOfficerName || ticket.lastActionBy,
+      approvedBy: editForm.approvedBy,
     });
     setTicket(getTicketById(ticket.id));
     setShowEditDialog(false);
@@ -144,11 +260,113 @@ export default function TicketDetailPage() {
   const isGroupInvoice = ticket.bookingType === "group";
   const pesertaTotal =
     (ticket.jumlahDomestik || 0) + (ticket.jumlahMancanegara || 0);
+  const invoiceId = getInvoiceIdForTicket(ticket.id);
+  const hasInvoice =
+    typeof ticket.invoiceAvailable === "boolean"
+      ? ticket.invoiceAvailable
+      : Boolean(invoiceId);
+  const hasEnteredTicket = ["masuk", "keluar"].includes(ticket.gateStatus);
+  const paidStatuses = [
+    "sudah_bayar",
+    "refund_diajukan",
+    "refund_diproses",
+    "refund_selesai",
+  ];
+  const isPaid = hasEnteredTicket || paidStatuses.includes(ticket.paymentStatus);
+  const hasPaymentProof =
+    typeof ticket.paymentProofAvailable === "boolean"
+      ? ticket.paymentProofAvailable
+      : hasEnteredTicket || Boolean(ticket.paidAt);
+  const latestRefund = [...ticketRefunds].sort(
+    (a, b) => new Date(b.requestedAt).getTime() - new Date(a.requestedAt).getTime(),
+  )[0];
+  const manualRefundApproval = ticket.refundApprovalStatus;
+  const isRefundApproved =
+    manualRefundApproval === "disetujui" ||
+    (manualRefundApproval !== "tidak_disetujui" &&
+      (hasEnteredTicket ||
+        ticket.approvalStatus === "disetujui" ||
+        latestRefund?.status === "completed"));
+  const hasRefundProof = Boolean(
+    latestRefund?.proofUrl ||
+      latestRefund?.referenceNumber ||
+      latestRefund?.completedAt ||
+      latestRefund?.processedAt,
+  );
+  const getRefundApprovedByLabel = (refund) => {
+    const approver = dummyAdminUsers.find(
+      (admin) =>
+        admin.name === refund.processedBy &&
+        (admin.role === "admin_utama" || admin.role === "admin_tiket"),
+    );
+    if (approver) {
+      const roleLabel = approver.role === "admin_utama" ? "Admin Utama" : "Admin Tiket";
+      return `${approver.name} (${roleLabel})`;
+    }
+    if (refund.status === "requested") {
+      return "Menunggu Persetujuan";
+    }
+    return "-";
+  };
+  const bookingTypeLabel = ticket.bookingType === "group" ? "Grup" : "Individu";
+  const isOnlinePayment = ticket.operatorType === "doku";
+  const petugasTiketName = ticket.gateOfficerName || getDefaultGateOfficerName(ticket);
+  const gerbangValue = isOnlinePayment ? "DOKU" : petugasTiketName;
+  const getRequiredDocumentKeys = (feeCategory) => {
+    if (feeCategory === "mooring") {
+      return ["foto_diri", "dokumen_identitas", "foto_kapal"];
+    }
+    if (feeCategory === "sport_fishing") {
+      return ["foto_diri", "dokumen_identitas", "foto_kapal"];
+    }
+    if (String(feeCategory).startsWith("peneliti_")) {
+      return [
+        "foto_diri",
+        "dokumen_identitas",
+        "surat_izin_penelitian",
+        "surat_permohonan_penelitian",
+      ];
+    }
+    return ["foto_diri", "dokumen_identitas"];
+  };
+  const documentMetaByKey = {
+    foto_diri: {
+      label: "Foto Diri",
+      url: ticket.selfieUrl || "/placeholder.svg",
+    },
+    dokumen_identitas: {
+      label: "KTP/SIM/PASPOR/KITAS/KITAP",
+      url: ticket.identityDocumentUrl || ticket.ktmUrl || "/placeholder.svg",
+    },
+    surat_izin_penelitian: {
+      label: "Surat Ijin Penelitian (Institusi Indonesia)",
+      url: ticket.researchPermitUrl || "/placeholder.svg",
+    },
+    surat_permohonan_penelitian: {
+      label: "Surat Permohonan Resmi Penelitian",
+      url: ticket.researchRequestLetterUrl || "/placeholder.svg",
+    },
+    foto_kapal: {
+      label: "Foto Kapal",
+      url: ticket.boatPhotoUrl || "/placeholder.svg",
+    },
+  };
+  const supportingDocuments = getRequiredDocumentKeys(ticket.feeCategory)
+    .map((key) => ({
+      key,
+      ...(documentMetaByKey[key] || {}),
+    }))
+    .filter((doc) => doc.label);
 
-  // Revisi #1: tampilan tiket jadi perorangan
   const displayTotalBiaya = isGroupInvoice
     ? ticket.hargaPerOrang
     : ticket.totalBiaya;
+  const searchParams = new URLSearchParams(location.search);
+  const fromInvoiceId = searchParams.get("invoiceId");
+  const backHref =
+    searchParams.get("from") === "invoice" && fromInvoiceId
+      ? `/invoices/${encodeURIComponent(fromInvoiceId)}`
+      : "/tickets";
   return (
     <AdminLayout>
       <AdminHeader
@@ -161,7 +379,7 @@ export default function TicketDetailPage() {
       <div className="flex-1 overflow-auto p-6">
         {/* Back Button & Actions */}
         <div className="flex items-center justify-between mb-6">
-          <Link to="/tickets">
+          <Link to={backHref}>
             <Button variant="ghost" className="gap-2">
               <ArrowLeft className="w-4 h-4" />
               Kembali
@@ -169,12 +387,19 @@ export default function TicketDetailPage() {
           </Link>
 
           <div className="flex items-center gap-2">
-            <Link to={`/invoices/${ticket.id}`}>
-              <Button variant="outline" className="gap-2">
+            {invoiceId ? (
+              <Link to={`/invoices/${invoiceId}`}>
+                <Button variant="outline" className="gap-2">
+                  <FileText className="w-4 h-4" />
+                  Invoice
+                </Button>
+              </Link>
+            ) : (
+              <Button variant="outline" className="gap-2" disabled>
                 <FileText className="w-4 h-4" />
                 Invoice
               </Button>
-            </Link>
+            )}
             <Button
               variant="outline"
               className="gap-2"
@@ -216,15 +441,7 @@ export default function TicketDetailPage() {
             {/* Summary Card */}
             <Card className="card-ocean">
               <CardHeader className="pb-3">
-                <CardTitle className="text-base font-semibold flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                  Ringkasan
-                  <div className="flex flex-wrap items-center gap-2">
-                    <ApprovalStatusChip status={ticket.approvalStatus} />
-                    <PaymentStatusChip status={ticket.paymentStatus} />
-                    <GateStatusChip status={ticket.gateStatus} />
-                    <RealisasiStatusChip status={ticket.realisasiStatus} />
-                  </div>
-                </CardTitle>
+                <CardTitle className="text-base font-semibold">Ringkasan</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -249,55 +466,61 @@ export default function TicketDetailPage() {
                     </p>
                   </div>
 
-                  {/* Revisi #1: selalu Perorangan */}
                   <div>
                     <p className="text-xs text-muted-foreground mb-1">
                       Tipe Pemesanan
                     </p>
-                    <p className="text-sm font-medium">Perorangan</p>
-                    {isGroupInvoice && (
-                      <Badge variant="secondary" className="mt-1">
-                        Invoice Grup
-                      </Badge>
-                    )}
+                    <p className="text-sm font-medium">{bookingTypeLabel}</p>
                   </div>
                 </div>
 
-                {ticket.approvedBy && (
-                  <div className="mt-4 pt-4 border-t border-border">
-                    <p className="text-xs text-muted-foreground mb-1">
-                      Disetujui Oleh
-                    </p>
-                    <p className="text-sm font-medium">
-                      {ticket.approvedBy} {formatDateTime(ticket.approvedAt)}
-                    </p>
-                  </div>
-                )}
+                <div className="mt-4 pt-4 border-t border-border">
+                  <p className="text-xs text-muted-foreground mb-1">Gerbang</p>
+                  <p className="text-sm font-medium">{gerbangValue}</p>
+                </div>
               </CardContent>
             </Card>
 
-            {/* Dokumen KTP */}
+            {/* Dokumen Pendukung */}
             <Card className="card-ocean">
               <CardHeader className="pb-3">
                 <CardTitle className="text-sm font-semibold">
-                  Dokumen KTP
+                  Dokumen Pendukung
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="w-full aspect-video max-h-[320px] bg-muted rounded-lg overflow-hidden relative group">
-                  <img
-                    src={ticket.ktmUrl}
-                    alt="Pratinjau KTP"
-                    className="w-full h-full object-contain"
-                  />
-                  <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                    <Button size="icon" variant="secondary" className="h-8 w-8">
-                      <ZoomIn className="w-4 h-4" />
-                    </Button>
-                    <Button size="icon" variant="secondary" className="h-8 w-8">
-                      <Download className="w-4 h-4" />
-                    </Button>
-                  </div>
+                <p className="text-xs text-muted-foreground mb-3">
+                  Dokumen wajib berdasarkan kategori:{" "}
+                  <span className="font-medium text-foreground">
+                    {FEE_PRICING[ticket.feeCategory]?.label || "-"}
+                  </span>
+                </p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {supportingDocuments.map((doc) => (
+                    <div key={doc.key} className="space-y-2">
+                      <p className="text-xs font-medium text-foreground">{doc.label}</p>
+                      <div className="w-full aspect-video bg-muted rounded-lg overflow-hidden relative group">
+                        <img
+                          src={doc.url || "/placeholder.svg"}
+                          alt={`Pratinjau ${doc.label}`}
+                          className="w-full h-full object-contain"
+                        />
+                        <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                          <Button size="icon" variant="secondary" className="h-8 w-8">
+                            <ZoomIn className="w-4 h-4" />
+                          </Button>
+                          <Button size="icon" variant="secondary" className="h-8 w-8">
+                            <Download className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                  {!supportingDocuments.length && (
+                    <div className="col-span-full p-4 rounded-lg border border-border bg-muted/40 text-sm text-muted-foreground">
+                      Dokumen pendukung belum tersedia untuk kategori ini.
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -430,18 +653,28 @@ export default function TicketDetailPage() {
               <CardContent>
                 <div className="space-y-3">
                   <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Status</span>
-                    <PaymentStatusChip status={ticket.paymentStatus} />
+                    <span className="text-muted-foreground">Invoice</span>
+                    <span className="font-medium">{hasInvoice ? "Ada" : "Tidak"}</span>
                   </div>
-                  {ticket.paidAt && (
-                    <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Dibayar</span>
-                      <span>{formatDateTime(ticket.paidAt)}</span>
-                    </div>
-                  )}
                   <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Realisasi</span>
-                    <RealisasiStatusChip status={ticket.realisasiStatus} />
+                    <span className="text-muted-foreground">Bukti Bayar</span>
+                    <span className="font-medium">{hasPaymentProof ? "Ada" : "Tidak"}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Status Pengembalian</span>
+                    <span className="font-medium">
+                      {isRefundApproved ? "Disetujui" : "Tidak Disetujui"}
+                    </span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Status Pembayaran</span>
+                    <span className="font-medium">
+                      {isPaid ? "Sudah Dibayar" : "Belum Dibayar"}
+                    </span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Bukti Pengembalian Dana</span>
+                    <span className="font-medium">{hasRefundProof ? "Sudah Ada" : "Belum Ada"}</span>
                   </div>
                 </div>
 
@@ -475,6 +708,12 @@ export default function TicketDetailPage() {
                             <p className="text-xs text-muted-foreground mt-1">
                               {refund.reason}
                             </p>
+                            <p className="text-xs text-muted-foreground mt-1">
+                              Disetujui oleh:{" "}
+                              <span className="font-medium text-foreground">
+                                {getRefundApprovedByLabel(refund)}
+                              </span>
+                            </p>
                           </div>
                         ))}
                       </div>
@@ -488,7 +727,7 @@ export default function TicketDetailPage() {
       </div>
 
       <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
-        <DialogContent className="bg-card border-border max-w-2xl">
+        <DialogContent className="bg-card border-border max-w-4xl w-[95vw] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Edit Tiket</DialogTitle>
             <DialogDescription>
@@ -524,7 +763,7 @@ export default function TicketDetailPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label>No. HP</Label>
+              <Label>Nomor Kontak</Label>
               <Input
                 value={editForm.noHP}
                 onChange={(e) =>
@@ -536,38 +775,36 @@ export default function TicketDetailPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label>Domisili</Label>
-              <Select
-                value={editForm.domisiliOCR}
-                onValueChange={(value) =>
+              <Label>Domisili (Negara Asal)</Label>
+              <Input
+                value={editForm.countryOCR}
+                placeholder="Contoh: Indonesia"
+                onChange={(e) =>
                   setEditForm((prev) => ({
                     ...prev,
-                    domisiliOCR: value,
+                    countryOCR: e.target.value,
                   }))
                 }
-              >
-                <SelectTrigger className="bg-background">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent className="bg-popover border-border">
-                  {Object.entries(DOMISILI_LABELS).map(([key, label]) => (
-                    <SelectItem key={key} value={key}>
-                      {label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              />
             </div>
             <div className="space-y-2">
-              <Label>Tipe Pemesanan</Label>
+              <Label>Tipe Pemesan</Label>
               <Select
                 value={editForm.bookingType}
-                onValueChange={(value) =>
+                onValueChange={(value) => {
+                  const pesertaCount = Math.max(
+                    1,
+                    (ticket.jumlahDomestik || 0) + (ticket.jumlahMancanegara || 0),
+                  );
                   setEditForm((prev) => ({
                     ...prev,
                     bookingType: value,
-                  }))
-                }
+                    totalBiaya:
+                      value === "group"
+                        ? Number(prev.hargaPerOrang || 0) * pesertaCount
+                        : Number(prev.hargaPerOrang || 0),
+                  }));
+                }}
               >
                 <SelectTrigger className="bg-background">
                   <SelectValue />
@@ -585,12 +822,20 @@ export default function TicketDetailPage() {
               <Label>Kategori</Label>
               <Select
                 value={editForm.feeCategory}
-                onValueChange={(value) =>
+                onValueChange={(value) => {
+                  const nextHarga = FEE_PRICING[value]?.price ?? Number(editForm.hargaPerOrang || 0);
+                  const pesertaCount = Math.max(
+                    1,
+                    (ticket.jumlahDomestik || 0) + (ticket.jumlahMancanegara || 0),
+                  );
                   setEditForm((prev) => ({
                     ...prev,
                     feeCategory: value,
-                  }))
-                }
+                    hargaPerOrang: nextHarga,
+                    totalBiaya:
+                      prev.bookingType === "group" ? nextHarga * pesertaCount : nextHarga,
+                  }));
+                }}
               >
                 <SelectTrigger className="bg-background">
                   <SelectValue />
@@ -631,13 +876,13 @@ export default function TicketDetailPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label>Status Persetujuan</Label>
+              <Label>Invoice</Label>
               <Select
-                value={editForm.approvalStatus}
+                value={editForm.invoiceAvailable}
                 onValueChange={(value) =>
                   setEditForm((prev) => ({
                     ...prev,
-                    approvalStatus: value,
+                    invoiceAvailable: value,
                   }))
                 }
               >
@@ -645,9 +890,89 @@ export default function TicketDetailPage() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent className="bg-popover border-border">
-                  <SelectItem value="menunggu">Menunggu</SelectItem>
+                  <SelectItem value="ada">Ada</SelectItem>
+                  <SelectItem value="tidak">Tidak</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>Bukti Bayar</Label>
+              <Select
+                value={editForm.paymentProofAvailable}
+                onValueChange={(value) =>
+                  setEditForm((prev) => ({
+                    ...prev,
+                    paymentProofAvailable: value,
+                  }))
+                }
+              >
+                <SelectTrigger className="bg-background">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="bg-popover border-border">
+                  <SelectItem value="ada">Ada</SelectItem>
+                  <SelectItem value="tidak">Tidak</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>Jenis Operator</Label>
+              <Select
+                value={editForm.operatorCategory}
+                onValueChange={(value) =>
+                  setEditForm((prev) => ({
+                    ...prev,
+                    operatorCategory: value,
+                    operatorName: getDefaultOperatorName(value),
+                    gateValue:
+                      getOperatorTypeFromCategory(value) === "doku"
+                        ? "DOKU"
+                        : prev.gateValue || getDefaultGateOfficerName(ticket),
+                  }))
+                }
+              >
+                <SelectTrigger className="bg-background">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="bg-popover border-border">
+                  {OPERATOR_CATEGORY_OPTIONS.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>Nama Operator</Label>
+              <Input
+                value={editForm.operatorName}
+                placeholder="Nama homestay/resort/operator"
+                onChange={(e) =>
+                  setEditForm((prev) => ({
+                    ...prev,
+                    operatorName: e.target.value,
+                  }))
+                }
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Status Pengembalian</Label>
+              <Select
+                value={editForm.refundApprovalStatus}
+                onValueChange={(value) =>
+                  setEditForm((prev) => ({
+                    ...prev,
+                    refundApprovalStatus: value,
+                  }))
+                }
+              >
+                <SelectTrigger className="bg-background">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="bg-popover border-border">
                   <SelectItem value="disetujui">Disetujui</SelectItem>
-                  <SelectItem value="ditolak">Ditolak</SelectItem>
+                  <SelectItem value="tidak_disetujui">Tidak Disetujui</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -666,24 +991,32 @@ export default function TicketDetailPage() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent className="bg-popover border-border">
-                  <SelectItem value="belum_bayar">Belum Bayar</SelectItem>
-                  <SelectItem value="sudah_bayar">Sudah Bayar</SelectItem>
-                  <SelectItem value="refund_diproses">
-                    Refund Diproses
-                  </SelectItem>
-                  <SelectItem value="refund_selesai">Refund Selesai</SelectItem>
-                  <SelectItem value="unsuccessful">Unsuccessful</SelectItem>
+                  <SelectItem value="sudah_bayar">Sudah Dibayar</SelectItem>
+                  <SelectItem value="belum_bayar">Belum Dibayar</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-2">
-              <Label>Status Gerbang</Label>
+              <Label>Gerbang</Label>
+              <Input
+                value={editForm.gateValue}
+                placeholder="DOKU atau nama petugas tiket"
+                onChange={(e) =>
+                  setEditForm((prev) => ({
+                    ...prev,
+                    gateValue: e.target.value,
+                  }))
+                }
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Disetujui oleh</Label>
               <Select
-                value={editForm.gateStatus}
+                value={editForm.approvedBy || "__none__"}
                 onValueChange={(value) =>
                   setEditForm((prev) => ({
                     ...prev,
-                    gateStatus: value,
+                    approvedBy: value === "__none__" ? "" : value,
                   }))
                 }
               >
@@ -691,33 +1024,12 @@ export default function TicketDetailPage() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent className="bg-popover border-border">
-                  <SelectItem value="belum_masuk">Belum Masuk</SelectItem>
-                  <SelectItem value="masuk">Masuk</SelectItem>
-                  <SelectItem value="keluar">Keluar</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label>Status Realisasi</Label>
-              <Select
-                value={editForm.realisasiStatus}
-                onValueChange={(value) =>
-                  setEditForm((prev) => ({
-                    ...prev,
-                    realisasiStatus: value,
-                  }))
-                }
-              >
-                <SelectTrigger className="bg-background">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent className="bg-popover border-border">
-                  <SelectItem value="belum_terealisasi">
-                    Belum Terealisasi
-                  </SelectItem>
-                  <SelectItem value="sudah_terealisasi">
-                    Sudah Terealisasi
-                  </SelectItem>
+                  <SelectItem value="__none__">Belum dipilih</SelectItem>
+                  {adminApproverOptions.map((admin) => (
+                    <SelectItem key={admin.id} value={admin.name}>
+                      {admin.name}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>

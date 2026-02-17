@@ -225,6 +225,14 @@
   .data-table tbody tr {
     @apply transition-colors hover:bg-muted/30;
   }
+
+  .data-table-compact th {
+    @apply px-2.5 py-2 text-xs;
+  }
+
+  .data-table-compact td {
+    @apply px-2.5 py-2.5;
+  }
   
   /* Ocean gradient button */
   .btn-ocean {

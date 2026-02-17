@@ -4,9 +4,11 @@ import { AdminHeader } from '@/components/AdminHeader';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Camera, Key, Mail, User } from 'lucide-react';
+import { Camera, Key, Mail, User, ZoomIn } from 'lucide-react';
+import ktpPreview from '@/assets/image/KTP.png';
 
 export default function ProfilePage() {
   return (
@@ -24,7 +26,7 @@ export default function ProfilePage() {
             , React.createElement(Card, { className: "card-ocean xl:col-span-1" , __self: this, __source: {fileName: _jsxFileName, lineNumber: 23}}
               , React.createElement(CardHeader, {__self: this, __source: {fileName: _jsxFileName, lineNumber: 24}}
                 , React.createElement(CardTitle, { className: "text-lg", __self: this, __source: {fileName: _jsxFileName, lineNumber: 25}}, "Foto Profil" )
-                , React.createElement(CardDescription, {__self: this, __source: {fileName: _jsxFileName, lineNumber: 26}}, "Perbarui foto agar akun mudah dikenali."     )
+                , React.createElement(CardDescription, {__self: this, __source: {fileName: _jsxFileName, lineNumber: 26}}, "Pastikan wajah jelas dan latar belakang netral"     )
               )
               , React.createElement(CardContent, { className: "space-y-4", __self: this, __source: {fileName: _jsxFileName, lineNumber: 28}}
                 , React.createElement('div', { className: "flex items-center gap-4"  , __self: this, __source: {fileName: _jsxFileName, lineNumber: 29}}
@@ -42,8 +44,45 @@ export default function ProfilePage() {
                     , React.createElement('p', { className: "mt-2 text-xs text-muted-foreground"  , __self: this, __source: {fileName: _jsxFileName, lineNumber: 41}}, "PNG/JPG, maksimal 2MB."  )
                   )
                 )
-                , React.createElement('div', { className: "rounded-lg border border-dashed border-border bg-muted/40 p-3 text-xs text-muted-foreground"       , __self: this, __source: {fileName: _jsxFileName, lineNumber: 44}}, "Pastikan wajah jelas dan latar belakang netral."
-
+                , React.createElement('div', { className: "space-y-4 border-t border-border/60 pt-4", __self: this, __source: {fileName: _jsxFileName, lineNumber: 44}}
+                  , React.createElement('div', { className: "space-y-2", __self: this, __source: {fileName: _jsxFileName, lineNumber: 55}}
+                    , React.createElement('p', { className: "text-sm font-medium text-foreground", __self: this, __source: {fileName: _jsxFileName, lineNumber: 56}}, "Foto KTP")
+                    , React.createElement('div', { className: "group relative rounded-md border border-border bg-background p-1 overflow-hidden", __self: this, __source: {fileName: _jsxFileName, lineNumber: 57}}
+                      , React.createElement('img', {
+                        src: ktpPreview,
+                        alt: "Foto KTP",
+                        className: "h-44 w-full rounded-md object-contain bg-muted/30 scale-125 transition-transform duration-200 group-hover:scale-[1.32]", __self: this, __source: {fileName: _jsxFileName, lineNumber: 58}}
+                      )
+                      , React.createElement('div', { className: "pointer-events-none absolute inset-1 rounded-md bg-black/20 opacity-0 transition-opacity duration-200 group-hover:opacity-100 group-focus-within:opacity-100", __self: this, __source: {fileName: _jsxFileName, lineNumber: 59}} )
+                      , React.createElement(Dialog, {__self: this, __source: {fileName: _jsxFileName, lineNumber: 60}}
+                        , React.createElement(DialogTrigger, { asChild: true, __self: this, __source: {fileName: _jsxFileName, lineNumber: 61}}
+                          , React.createElement(Button, {
+                            type: "button",
+                            variant: "secondary",
+                            size: "icon",
+                            className: "absolute right-3 top-3 z-10 h-8 w-8 rounded-full opacity-0 shadow-sm transition-opacity duration-200 group-hover:opacity-100 group-focus-within:opacity-100", __self: this, __source: {fileName: _jsxFileName, lineNumber: 62}}
+                            , React.createElement(ZoomIn, { className: "h-4 w-4", __self: this, __source: {fileName: _jsxFileName, lineNumber: 68}} )
+                            , React.createElement('span', { className: "sr-only", __self: this, __source: {fileName: _jsxFileName, lineNumber: 69}}, "Lihat detail foto KTP")
+                          )
+                        )
+                        , React.createElement(DialogContent, { className: "max-w-3xl p-3", __self: this, __source: {fileName: _jsxFileName, lineNumber: 72}}
+                          , React.createElement(DialogHeader, { className: "px-1 pt-1", __self: this, __source: {fileName: _jsxFileName, lineNumber: 73}}
+                            , React.createElement(DialogTitle, {__self: this, __source: {fileName: _jsxFileName, lineNumber: 74}})
+                          )
+                          , React.createElement('div', { className: "max-h-[80vh] overflow-auto rounded-md bg-muted/20 p-2", __self: this, __source: {fileName: _jsxFileName, lineNumber: 76}}
+                            , React.createElement('img', {
+                              src: ktpPreview,
+                              className: "w-full rounded-md object-contain", __self: this, __source: {fileName: _jsxFileName, lineNumber: 77}}
+                            )
+                          )
+                        )
+                      )
+                    )
+                  )
+                  , React.createElement('div', { className: "space-y-2", __self: this, __source: {fileName: _jsxFileName, lineNumber: 45}}
+                    , React.createElement('p', { className: "text-sm font-medium text-foreground", __self: this, __source: {fileName: _jsxFileName, lineNumber: 46}}, "Nomor KTP")
+                    , React.createElement('div', { className: "rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground", __self: this, __source: {fileName: _jsxFileName, lineNumber: 47}}, "320101900")
+                  )
                 )
               )
             )
@@ -52,7 +91,7 @@ export default function ProfilePage() {
               , React.createElement(Card, { className: "card-ocean", __self: this, __source: {fileName: _jsxFileName, lineNumber: 51}}
                 , React.createElement(CardHeader, {__self: this, __source: {fileName: _jsxFileName, lineNumber: 52}}
                   , React.createElement(CardTitle, { className: "text-lg", __self: this, __source: {fileName: _jsxFileName, lineNumber: 53}}, "Informasi Akun" )
-                  , React.createElement(CardDescription, {__self: this, __source: {fileName: _jsxFileName, lineNumber: 54}}, "Perbarui nama dan email yang digunakan."     )
+                  , React.createElement(CardDescription, {__self: this, __source: {fileName: _jsxFileName, lineNumber: 54}}, "Tulis nama lengkap dan email yang digunakan"     )
                 )
                 , React.createElement(CardContent, { className: "grid gap-4 md:grid-cols-2"  , __self: this, __source: {fileName: _jsxFileName, lineNumber: 56}}
                   , React.createElement('div', { className: "space-y-2", __self: this, __source: {fileName: _jsxFileName, lineNumber: 57}}
@@ -80,7 +119,7 @@ export default function ProfilePage() {
               , React.createElement(Card, { className: "card-ocean", __self: this, __source: {fileName: _jsxFileName, lineNumber: 79}}
                 , React.createElement(CardHeader, {__self: this, __source: {fileName: _jsxFileName, lineNumber: 80}}
                   , React.createElement(CardTitle, { className: "text-lg", __self: this, __source: {fileName: _jsxFileName, lineNumber: 81}}, "Keamanan")
-                  , React.createElement(CardDescription, {__self: this, __source: {fileName: _jsxFileName, lineNumber: 82}}, "Ganti password untuk menjaga keamanan akun."     )
+                  , React.createElement(CardDescription, {__self: this, __source: {fileName: _jsxFileName, lineNumber: 82}}, "Gunakan kombinasi huruf besar, kecil, angka, dan simbol untuk keamanan lebih baik"     )
                 )
                 , React.createElement(CardContent, { className: "grid gap-4 md:grid-cols-2"  , __self: this, __source: {fileName: _jsxFileName, lineNumber: 84}}
                   , React.createElement('div', { className: "space-y-2 md:col-span-2" , __self: this, __source: {fileName: _jsxFileName, lineNumber: 85}}
@@ -112,9 +151,6 @@ export default function ProfilePage() {
                       placeholder: "Ulangi password baru"  ,
                       className: "bg-background", __self: this, __source: {fileName: _jsxFileName, lineNumber: 108}}
                     )
-                  )
-                  , React.createElement('div', { className: "rounded-lg border border-border bg-muted/40 p-3 text-xs text-muted-foreground md:col-span-2"       , __self: this, __source: {fileName: _jsxFileName, lineNumber: 115}}, "Gunakan kombinasi huruf besar, kecil, angka, dan simbol untuk keamanan lebih baik."
-
                   )
                 )
               )

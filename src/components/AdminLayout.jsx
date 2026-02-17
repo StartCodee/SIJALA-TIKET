@@ -30,14 +30,14 @@ export function AdminLayout({ children, className }) {
         , React.createElement(AdminSidebar, { mobileOpen: mobileOpen, onMobileClose: closeMobile, __self: this, __source: {fileName: _jsxFileName, lineNumber: 29}} )
         , React.createElement('main', { className: cn('flex-1 flex min-h-0 min-w-0 flex-col overflow-hidden', className), __self: this, __source: {fileName: _jsxFileName, lineNumber: 30}}
           , children
-          , React.createElement('footer', { className: "mt-auto px-6 py-3 text-xs", __self: this, __source: {fileName: _jsxFileName, lineNumber: 33}}
+          , React.createElement('footer', { className: "mt-auto px-6 py-3 text-xs text-center", __self: this, __source: {fileName: _jsxFileName, lineNumber: 33}}
             , React.createElement('a', {
               href: "https://lokaspasia.com",
               target: "_blank",
               rel: "noreferrer",
-              className: "inline-flex items-center gap-1 text-[#0d1930] hover:underline"    ,
+              className: "inline-flex w-full items-center justify-center gap-1 text-[#0d1930] hover:underline"    ,
               __self: this, __source: {fileName: _jsxFileName, lineNumber: 34}}
-              , "© 2026 KKP Kep. Raja Ampat Tiket Ver. 1.0"
+              , "\u00A9 2026 BLUD UPTD Kep. Raja Ampat Tiket Ver.1.0 | Loka Spasial Nusantara"
             )
           )
         )
@@ -45,3 +45,4 @@ export function AdminLayout({ children, className }) {
     )
   );
 }
+

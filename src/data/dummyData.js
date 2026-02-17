@@ -473,6 +473,192 @@ export const dummyTickets = [
     createdAt: '2024-01-20T08:30:00',
     qrActive: false,
   },
+  {
+    id: 'RA-2024-014',
+    bookingType: 'perorangan',
+    feeCategory: 'wisatawan_domestik_pbd',
+    domisiliOCR: 'pbd',
+    countryOCR: 'Indonesia',
+    genderOCR: 'L',
+    operatorType: 'qris',
+    ocrConfidence: 94,
+    namaLengkap: 'Andi Saputra',
+    email: 'andi.saputra@gmail.com',
+    noHP: '081234567820',
+    ktmUrl: '/placeholder.svg',
+    hargaPerOrang: 150000,
+    totalBiaya: 150000,
+    approvalStatus: 'disetujui',
+    paymentStatus: 'sudah_bayar',
+    gateStatus: 'masuk',
+    realisasiStatus: 'sudah_terealisasi',
+    needsApproval: false,
+    lastActionBy: 'Pemindai Gerbang',
+    lastActionAt: '2024-01-19T09:45:00',
+    createdAt: '2024-01-19T09:30:00',
+    paidAt: '2024-01-19T09:40:00',
+    enteredAt: '2024-01-19T09:45:00',
+    qrActive: true,
+  },
+  {
+    id: 'RA-2024-015',
+    bookingType: 'perorangan',
+    feeCategory: 'wisatawan_domestik_luar_papua',
+    domisiliOCR: 'papua_luar_pbd',
+    countryOCR: 'Indonesia',
+    genderOCR: 'P',
+    operatorType: 'transfer',
+    ocrConfidence: 92,
+    namaLengkap: 'Nadia Prameswari',
+    email: 'nadia.prameswari@gmail.com',
+    noHP: '081234567821',
+    ktmUrl: '/placeholder.svg',
+    hargaPerOrang: 500000,
+    totalBiaya: 500000,
+    approvalStatus: 'disetujui',
+    paymentStatus: 'sudah_bayar',
+    gateStatus: 'belum_masuk',
+    realisasiStatus: 'belum_terealisasi',
+    needsApproval: false,
+    lastActionBy: 'Sistem',
+    lastActionAt: '2024-01-19T10:20:00',
+    createdAt: '2024-01-19T10:15:00',
+    paidAt: '2024-01-19T10:20:00',
+    qrActive: true,
+  },
+  {
+    id: 'RA-2024-016',
+    bookingType: 'perorangan',
+    feeCategory: 'wisatawan_mancanegara',
+    domisiliOCR: 'mancanegara',
+    countryOCR: 'Australia',
+    genderOCR: 'L',
+    operatorType: 'doku',
+    ocrConfidence: 96,
+    namaLengkap: 'Michael Green',
+    email: 'mgreen@mail.com',
+    noHP: '+61456789012',
+    ktmUrl: '/placeholder.svg',
+    hargaPerOrang: 1000000,
+    totalBiaya: 1000000,
+    approvalStatus: 'disetujui',
+    paymentStatus: 'sudah_bayar',
+    gateStatus: 'belum_masuk',
+    realisasiStatus: 'belum_terealisasi',
+    needsApproval: false,
+    lastActionBy: 'Sistem',
+    lastActionAt: '2024-01-19T12:35:00',
+    createdAt: '2024-01-19T12:20:00',
+    paidAt: '2024-01-19T12:35:00',
+    qrActive: true,
+  },
+  {
+    id: 'RA-2024-017',
+    bookingType: 'perorangan',
+    feeCategory: 'peneliti_domestik',
+    domisiliOCR: 'papua_luar_pbd',
+    countryOCR: 'Indonesia',
+    genderOCR: 'P',
+    operatorType: 'loket',
+    ocrConfidence: 91,
+    namaLengkap: 'Fitri Handayani',
+    email: 'fitri.handayani@kampus.ac.id',
+    noHP: '081234567822',
+    ktmUrl: '/placeholder.svg',
+    hargaPerOrang: 500000,
+    totalBiaya: 500000,
+    approvalStatus: 'disetujui',
+    paymentStatus: 'belum_bayar',
+    gateStatus: 'belum_masuk',
+    realisasiStatus: 'belum_terealisasi',
+    needsApproval: true,
+    approvedBy: 'Rudi Hartono',
+    approvedAt: '2024-01-19T15:20:00',
+    lastActionBy: 'Rudi Hartono',
+    lastActionAt: '2024-01-19T15:20:00',
+    createdAt: '2024-01-19T15:10:00',
+    qrActive: false,
+  },
+  {
+    id: 'RA-2023-018',
+    bookingType: 'perorangan',
+    feeCategory: 'wisatawan_domestik_pbd',
+    domisiliOCR: 'pbd',
+    countryOCR: 'Indonesia',
+    genderOCR: 'L',
+    operatorType: 'qris',
+    ocrConfidence: 93,
+    namaLengkap: 'Yusuf Kambu',
+    email: 'yusuf.kambu@gmail.com',
+    noHP: '081234567823',
+    ktmUrl: '/placeholder.svg',
+    hargaPerOrang: 150000,
+    totalBiaya: 150000,
+    approvalStatus: 'disetujui',
+    paymentStatus: 'sudah_bayar',
+    gateStatus: 'keluar',
+    realisasiStatus: 'sudah_terealisasi',
+    needsApproval: false,
+    lastActionBy: 'Pemindai Gerbang',
+    lastActionAt: '2023-01-19T17:10:00',
+    createdAt: '2023-01-19T11:40:00',
+    paidAt: '2023-01-19T12:00:00',
+    enteredAt: '2023-01-19T12:30:00',
+    exitedAt: '2023-01-19T17:10:00',
+    qrActive: false,
+  },
+  {
+    id: 'RA-2023-019',
+    bookingType: 'perorangan',
+    feeCategory: 'wisatawan_domestik_luar_papua',
+    domisiliOCR: 'papua_luar_pbd',
+    countryOCR: 'Indonesia',
+    genderOCR: 'P',
+    operatorType: 'transfer',
+    ocrConfidence: 90,
+    namaLengkap: 'Melati Rarasati',
+    email: 'melati.rarasati@gmail.com',
+    noHP: '081234567824',
+    ktmUrl: '/placeholder.svg',
+    hargaPerOrang: 500000,
+    totalBiaya: 500000,
+    approvalStatus: 'disetujui',
+    paymentStatus: 'sudah_bayar',
+    gateStatus: 'belum_masuk',
+    realisasiStatus: 'belum_terealisasi',
+    needsApproval: false,
+    lastActionBy: 'Sistem',
+    lastActionAt: '2023-01-19T13:20:00',
+    createdAt: '2023-01-19T13:05:00',
+    paidAt: '2023-01-19T13:20:00',
+    qrActive: true,
+  },
+  {
+    id: 'RA-2026-020',
+    bookingType: 'perorangan',
+    feeCategory: 'wisatawan_mancanegara',
+    domisiliOCR: 'mancanegara',
+    countryOCR: 'Indonesia',
+    genderOCR: 'L',
+    operatorType: 'doku',
+    ocrConfidence: 97,
+    namaLengkap: 'Daniel Harper',
+    email: 'daniel.harper@email.com',
+    noHP: '+61400111222',
+    ktmUrl: '/placeholder.svg',
+    hargaPerOrang: 1000000,
+    totalBiaya: 1000000,
+    approvalStatus: 'disetujui',
+    paymentStatus: 'sudah_bayar',
+    gateStatus: 'belum_masuk',
+    realisasiStatus: 'belum_terealisasi',
+    needsApproval: false,
+    lastActionBy: 'Dwi Prasetyo',
+    lastActionAt: '2026-02-10T10:40:00',
+    createdAt: '2026-02-10T10:15:00',
+    paidAt: '2026-02-10T10:30:00',
+    qrActive: true,
+  },
 ];
 
 // Dummy Refunds
@@ -693,7 +879,7 @@ export const dummyAuditLogs = [
 ];
 
 // Dummy Invoices
-export const dummyInvoices = [
+const baseDummyInvoices = [
   // ✅ GROUP INVOICE: 1 invoice bayar banyak tiket perorangan
   {
     id: 'INV-2024-001',
@@ -783,6 +969,36 @@ export const dummyInvoices = [
   },
 ];
 
+const PAID_TICKET_STATUSES = new Set([
+  'sudah_bayar',
+  'refund_diajukan',
+  'refund_diproses',
+  'refund_selesai',
+]);
+
+const OPERATOR_INVOICE_METHOD_MAP = {
+  loket: 'cash',
+  qris: 'qris',
+  transfer: 'bank_transfer',
+  doku: 'credit_card',
+};
+
+const autoGeneratedPaidInvoices = dummyTickets
+  .filter((ticket) => !baseDummyInvoices.some((inv) => inv.ticketId === ticket.id))
+  .filter((ticket) => ticket.approvalStatus !== 'ditolak')
+  .map((ticket, index) => ({
+    id: `INV-AUTO-${String(index + 1).padStart(3, '0')}`,
+    ticketId: ticket.id,
+    amount: Number(ticket.totalBiaya || ticket.hargaPerOrang || 0),
+    method: OPERATOR_INVOICE_METHOD_MAP[ticket.operatorType] || 'bank_transfer',
+    paidAt: PAID_TICKET_STATUSES.has(ticket.paymentStatus) ? ticket.paidAt || '' : '',
+    paymentStatus: PAID_TICKET_STATUSES.has(ticket.paymentStatus) ? ticket.paymentStatus : 'belum_bayar',
+    realisasiStatus: ticket.realisasiStatus || 'belum_terealisasi',
+    refundFlag: String(ticket.paymentStatus || '').startsWith('refund_'),
+  }));
+
+export const dummyInvoices = [...baseDummyInvoices, ...autoGeneratedPaidInvoices];
+
 // ===== Helpers untuk multi-ticket invoice (GROUPING by invoice.id) =====
 
 export const groupInvoiceLinesById = (lines) =>
@@ -818,7 +1034,6 @@ export const getTicketIdsByInvoiceId = (invoiceId) => {
 
 // Finance Report Summary
 export const financeReportSummary = {
-  period: 'Januari 2024',
   totalPaid: 21150000,
   totalRealized: 8650000,
   totalUnrealized: 12500000,
@@ -848,12 +1063,435 @@ export const financeReportSummary = {
     ],
   },
   dailyTrend: [
-    { date: '2024-01-12', total: 150000, realized: 150000, refunds: 0 },
-    { date: '2024-01-15', total: 1000000, realized: 1000000, refunds: 0 },
-    { date: '2024-01-16', total: 5000000, realized: 4500000, refunds: 250000 },
-    { date: '2024-01-18', total: 2000000, realized: 2000000, refunds: 0 },
-    { date: '2024-01-19', total: 13000000, realized: 1000000, refunds: 500000 },
+    { date: '2026-01-12', total: 150000, realized: 150000, refunds: 0 },
+    { date: '2026-01-15', total: 1000000, realized: 1000000, refunds: 0 },
+    { date: '2026-01-16', total: 5000000, realized: 4500000, refunds: 250000 },
+    { date: '2026-01-18', total: 2000000, realized: 2000000, refunds: 0 },
+    { date: '2026-01-19', total: 13000000, realized: 1000000, refunds: 500000 },
   ],
+};
+
+const OVERVIEW_DISTRIBUTION_CATEGORY_LABELS = {
+  'Wisatawan Domestik (Papua Barat Daya)': 'Papua Barat Daya',
+  'Wisatawan Domestik (Papua luar PBD)': 'Tanah Papua',
+  'Wisatawan Domestik': 'Domestik',
+  'Wisatawan Mancanegara': 'Mancanegara',
+  'Peneliti Domestik': 'Peneliti Domestik',
+  'Peneliti Mancanegara': 'Peneliti Mancanegara',
+  Mooring: 'Mooring',
+  'Sport Fishing': 'Sport Fishing',
+};
+
+const OVERVIEW_COUNTRY_NAME_ALIASES = {
+  'United States': 'United States of America',
+  USA: 'United States of America',
+  'Russian Federation': 'Russia',
+};
+
+const OVERVIEW_OPERATOR_CATEGORY_LABELS = {
+  homestay: 'Homestay',
+  resort: 'Resort',
+  kapal: 'Kapal',
+  dive_center: 'Dive Center',
+  mandiri: 'Mandiri',
+  lainnya: 'Lainnya',
+};
+
+const OVERVIEW_OPERATOR_CATEGORY_ORDER = [
+  'homestay',
+  'resort',
+  'kapal',
+  'dive_center',
+  'mandiri',
+  'lainnya',
+];
+
+const OVERVIEW_WAFFLE_TOTAL_CELLS = 100;
+const OVERVIEW_BOOKING_DUMMY_COUNTS_BY_YEAR = {
+  '2026': { group: 34, individual: 66 },
+  '2024': { group: 42, individual: 58 },
+  '2023': { group: 29, individual: 71 },
+};
+
+export const OVERVIEW_TREND_FILTER_OPTIONS = [
+  { label: 'Rentang Waktu', value: 'range', days: 30 },
+];
+
+const toInputDate = (dateValue) => {
+  const date = new Date(dateValue);
+  if (Number.isNaN(date.getTime())) return '';
+  const local = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
+  return local.toISOString().slice(0, 10);
+};
+
+const overviewTrendDefaultEndDate = financeReportSummary.dailyTrend.length
+  ? new Date(
+      Math.max(
+        ...financeReportSummary.dailyTrend.map((item) => new Date(item.date).getTime()),
+      ),
+    )
+  : new Date();
+
+const overviewTrendDefaultStartDate = new Date(overviewTrendDefaultEndDate);
+overviewTrendDefaultStartDate.setDate(overviewTrendDefaultStartDate.getDate() - 29);
+
+export const OVERVIEW_DEFAULT_TREND_DATE_FROM = toInputDate(overviewTrendDefaultStartDate);
+export const OVERVIEW_DEFAULT_TREND_DATE_TO = toInputDate(overviewTrendDefaultEndDate);
+
+export const OVERVIEW_BOOKING_YEAR_OPTIONS = Array.from(
+  new Set(dummyTickets.map((ticket) => new Date(ticket.createdAt).getFullYear())),
+)
+  .filter((year) => Number.isFinite(year))
+  .sort((a, b) => b - a)
+  .map((year) => String(year));
+
+export const OVERVIEW_DEFAULT_BOOKING_YEAR =
+  OVERVIEW_BOOKING_YEAR_OPTIONS[0] || String(new Date().getFullYear());
+
+export const OVERVIEW_DEFAULT_SUMMARY_SELECTION = [
+  'payment_success',
+  'payment_pending',
+  'payment_failed',
+  'visitor_active',
+  'visitor_due',
+  'refund_requested',
+  'refund_success',
+  'approval_wait',
+  'approval_approved',
+  'visitor_registered',
+  'revenue_in',
+  'revenue_pending',
+  'revenue_total',
+  'failed_payment_amount',
+];
+
+export const OVERVIEW_DEFAULT_SUMMARY_ORDER = [
+  'payment_success',
+  'payment_pending',
+  'payment_failed',
+  'visitor_active',
+  'visitor_due',
+  'refund_requested',
+  'refund_success',
+  'approval_wait',
+  'approval_approved',
+  'visitor_registered',
+  'revenue_in',
+  'revenue_pending',
+  'revenue_total',
+  'failed_payment_amount',
+];
+
+export const OVERVIEW_SUMMARY_OPTIONS = [
+  { id: 'payment_success', label: 'Pembayaran Sukses' },
+  { id: 'payment_pending', label: 'Pembayaran Pending' },
+  { id: 'payment_failed', label: 'Pembayaran Gagal' },
+  { id: 'visitor_active', label: 'Pengunjung Aktif' },
+  { id: 'visitor_due', label: 'Pengunjung Jatuh Tempo' },
+  { id: 'refund_requested', label: 'Pengajuan Pengembalian' },
+  { id: 'refund_success', label: 'Pengembalian Sukses' },
+  { id: 'approval_wait', label: 'Konfirmasi Persetujuan' },
+  { id: 'approval_approved', label: 'Persetujuan Berhasil' },
+  { id: 'visitor_registered', label: 'Pengunjung Terdaftar' },
+  { id: 'failed_payment_amount', label: 'Gagal Bayar' },
+  { id: 'revenue_in', label: 'Pendapatan Masuk' },
+  { id: 'revenue_pending', label: 'Pendapatan Pending' },
+  { id: 'revenue_total', label: 'Potensi Pendapatan' },
+];
+
+const toDate = (value) => new Date(value);
+
+const isBetweenDate = (date, start, end) => date >= start && date <= end;
+
+const getTicketVisitorCount = (ticket) => {
+  if (ticket.bookingType === 'group') {
+    const totalGroup =
+      Number(ticket.jumlahDomestik || 0) + Number(ticket.jumlahMancanegara || 0);
+    return totalGroup > 0 ? totalGroup : 1;
+  }
+  return 1;
+};
+
+const getOverviewOperatorCategory = (ticket) => {
+  if (ticket.feeCategory === 'mooring') return 'kapal';
+  if (ticket.feeCategory === 'sport_fishing') return 'dive_center';
+  if (ticket.operatorType === 'qris') return 'homestay';
+  if (ticket.operatorType === 'doku') return 'resort';
+  if (ticket.operatorType === 'loket') return 'mandiri';
+  if (ticket.operatorType === 'transfer') return 'lainnya';
+  return 'lainnya';
+};
+
+const buildWaffleCells = (counts) => {
+  const total = counts.group + counts.individual;
+  if (!total) {
+    return Array.from({ length: OVERVIEW_WAFFLE_TOTAL_CELLS }, (_, index) => ({
+      id: `empty-${index}`,
+      type: 'empty',
+    }));
+  }
+  const groupCells = Math.round((counts.group / total) * OVERVIEW_WAFFLE_TOTAL_CELLS);
+  const clampedGroupCells = Math.max(0, Math.min(OVERVIEW_WAFFLE_TOTAL_CELLS, groupCells));
+  return Array.from({ length: OVERVIEW_WAFFLE_TOTAL_CELLS }, (_, index) => ({
+    id: `cell-${index}`,
+    type: index < clampedGroupCells ? 'group' : 'individual',
+  }));
+};
+
+export const getOverviewDashboardData = ({
+  trendFilter = 'range',
+  trendDateFrom = OVERVIEW_DEFAULT_TREND_DATE_FROM,
+  trendDateTo = OVERVIEW_DEFAULT_TREND_DATE_TO,
+  bookingYear = OVERVIEW_DEFAULT_BOOKING_YEAR,
+} = {}) => {
+  const kpis = {
+    pendingApproval: dummyTickets.filter((t) => t.approvalStatus === 'menunggu').length,
+    approvalApproved: dummyTickets.filter((t) => t.approvalStatus === 'disetujui').length,
+    unpaid: dummyTickets.filter((t) => t.paymentStatus === 'belum_bayar').length,
+    paid: dummyTickets.filter((t) => t.paymentStatus === 'sudah_bayar').length,
+    paymentFailed: dummyTickets.filter((t) => t.paymentStatus === 'gagal').length,
+    totalTickets: dummyTickets.length,
+    gateMasuk: dummyTickets.filter((t) => t.gateStatus === 'masuk').length,
+    gateKeluar: dummyTickets.filter((t) => t.gateStatus === 'keluar').length,
+    revenueUnrealized: financeReportSummary.totalUnrealized,
+    revenueRealized: financeReportSummary.totalRealized,
+    refundRequested: dummyRefunds.filter((r) => r.status === 'requested').length,
+    refundCompleted: dummyRefunds.filter((r) => r.status === 'completed').length,
+  };
+
+  const recentTickets = [...dummyTickets]
+    .sort((a, b) => toDate(b.createdAt).getTime() - toDate(a.createdAt).getTime())
+    .slice(0, 5);
+
+  const pendingApprovalTickets = dummyTickets.filter(
+    (ticket) => ticket.approvalStatus === 'menunggu',
+  );
+
+  const baseTrendData = financeReportSummary.dailyTrend.map((item) => ({
+    date: toDate(item.date).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' }),
+    dateRaw: toDate(item.date),
+    total: item.total / 1000000,
+    realized: item.realized / 1000000,
+  }));
+
+  const maxTrendDate = baseTrendData.length
+    ? new Date(Math.max(...baseTrendData.map((item) => item.dateRaw.getTime())))
+    : new Date();
+
+  const fallbackTrendStart = new Date(maxTrendDate);
+  fallbackTrendStart.setDate(fallbackTrendStart.getDate() - 29);
+  fallbackTrendStart.setHours(0, 0, 0, 0);
+
+  const fallbackTrendEnd = new Date(maxTrendDate);
+  fallbackTrendEnd.setHours(23, 59, 59, 999);
+
+  const parsedTrendStart = trendDateFrom
+    ? new Date(`${trendDateFrom}T00:00:00`)
+    : fallbackTrendStart;
+  const parsedTrendEnd = trendDateTo
+    ? new Date(`${trendDateTo}T23:59:59`)
+    : fallbackTrendEnd;
+
+  const trendStart = Number.isNaN(parsedTrendStart.getTime())
+    ? fallbackTrendStart
+    : parsedTrendStart;
+  const trendEnd = Number.isNaN(parsedTrendEnd.getTime())
+    ? fallbackTrendEnd
+    : parsedTrendEnd;
+
+  if (trendEnd < trendStart) {
+    trendEnd.setTime(trendStart.getTime());
+    trendEnd.setHours(23, 59, 59, 999);
+  }
+
+  const formatTrendRangeLabel = (date) =>
+    date.toLocaleDateString('id-ID', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+    });
+
+  const activeTrendFilter = {
+    value: trendFilter || 'range',
+    label: `${formatTrendRangeLabel(trendStart)} - ${formatTrendRangeLabel(trendEnd)}`,
+  };
+
+  const previousTrendStart = new Date(trendStart);
+  previousTrendStart.setFullYear(previousTrendStart.getFullYear() - 1);
+  const previousTrendEnd = new Date(trendEnd);
+  previousTrendEnd.setFullYear(previousTrendEnd.getFullYear() - 1);
+
+  const ticketsInActivePeriod = dummyTickets.filter((ticket) =>
+    isBetweenDate(toDate(ticket.createdAt), trendStart, trendEnd),
+  );
+  const ticketsInPreviousPeriod = dummyTickets.filter((ticket) =>
+    isBetweenDate(toDate(ticket.createdAt), previousTrendStart, previousTrendEnd),
+  );
+  const hasActivePeriodTickets = ticketsInActivePeriod.length > 0;
+  const comparisonCurrentTickets = hasActivePeriodTickets ? ticketsInActivePeriod : dummyTickets;
+  const comparisonPreviousTickets = ticketsInPreviousPeriod;
+
+  const trendData = baseTrendData
+    .filter((item) => item.dateRaw >= trendStart && item.dateRaw <= trendEnd)
+    .reduce(
+      (acc, item) => {
+        const lastYearPoint = Number((item.total * 0.85).toFixed(2));
+        acc.currentCumulative += item.total;
+        acc.lastYearCumulative += lastYearPoint;
+        acc.rows.push({
+          ...item,
+          totalCumulative: Number(acc.currentCumulative.toFixed(2)),
+          lastYearCumulative: Number(acc.lastYearCumulative.toFixed(2)),
+        });
+        return acc;
+      },
+      { currentCumulative: 0, lastYearCumulative: 0, rows: [] },
+    ).rows;
+
+  const trendMaxValue = trendData.reduce(
+    (max, item) => Math.max(max, item.totalCumulative || 0, item.lastYearCumulative || 0),
+    0,
+  );
+  const trendYAxisMax = Math.max(1, Math.ceil((trendMaxValue * 1.15) / 2) * 2);
+
+  const countryCounts = comparisonCurrentTickets.reduce((acc, ticket) => {
+    const key = ticket.countryOCR || 'Tidak diketahui';
+    if (key === 'Tidak diketahui') return acc;
+    const normalizedName = OVERVIEW_COUNTRY_NAME_ALIASES[key] || key;
+    acc[normalizedName] = (acc[normalizedName] || 0) + 1;
+    return acc;
+  }, {});
+  const topCountries = Object.entries(countryCounts)
+    .map(([name, count]) => ({ name, count }))
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 10);
+  const topCountryCounts = topCountries.map((item) => item.count);
+  const minTopCountryCount = topCountryCounts.length ? Math.min(...topCountryCounts) : 0;
+  const maxTopCountryCount = topCountryCounts.length ? Math.max(...topCountryCounts) : 0;
+  const getTopCountryColor = (count) => {
+    if (!count) return 'hsl(210 20% 92%)';
+    if (maxTopCountryCount === minTopCountryCount) return 'hsl(213 72% 48%)';
+    const ratio = (count - minTopCountryCount) / (maxTopCountryCount - minTopCountryCount);
+    const lightness = 78 - ratio * 38;
+    return `hsl(213 72% ${lightness}%)`;
+  };
+  const topCountrySeriesData = topCountries.map((item) => ({
+    name: item.name,
+    value: item.count,
+    itemStyle: { areaColor: getTopCountryColor(item.count) },
+  }));
+
+  const toGenderCounts = (tickets) =>
+    tickets.reduce(
+      (acc, ticket) => {
+        if (ticket.genderOCR !== 'L' && ticket.genderOCR !== 'P') return acc;
+        acc[ticket.genderOCR] = (acc[ticket.genderOCR] || 0) + 1;
+        return acc;
+      },
+      { L: 0, P: 0 },
+    );
+  const genderCurrentCounts = toGenderCounts(comparisonCurrentTickets);
+  const genderPreviousRawCounts = toGenderCounts(comparisonPreviousTickets);
+  const hasPreviousGenderData =
+    (genderPreviousRawCounts.L || 0) > 0 || (genderPreviousRawCounts.P || 0) > 0;
+  const genderPreviousCounts = hasPreviousGenderData
+    ? genderPreviousRawCounts
+    : {
+        L: Math.max(0, Math.round((genderCurrentCounts.L || 0) * 0.85)),
+        P: Math.max(0, Math.round((genderCurrentCounts.P || 0) * 0.85)),
+      };
+  const currentYearLabel = String(trendEnd.getFullYear());
+  const previousYearLabel = String(trendEnd.getFullYear() - 1);
+  const genderStackedData = [
+    { year: previousYearLabel, L: genderPreviousCounts.L || 0, P: genderPreviousCounts.P || 0 },
+    { year: currentYearLabel, L: genderCurrentCounts.L || 0, P: genderCurrentCounts.P || 0 },
+  ];
+
+  const aggregateOperatorCounts = (tickets) =>
+    tickets.reduce((acc, ticket) => {
+      const category = getOverviewOperatorCategory(ticket);
+      const visitors = getTicketVisitorCount(ticket);
+      acc[category] = (acc[category] || 0) + visitors;
+      return acc;
+    }, {});
+  const operatorCurrentCounts = aggregateOperatorCounts(comparisonCurrentTickets);
+  const operatorPreviousRawCounts = aggregateOperatorCounts(comparisonPreviousTickets);
+  const hasPreviousOperatorData = Object.values(operatorPreviousRawCounts).some((value) => value > 0);
+  const operatorPreviousCounts = hasPreviousOperatorData
+    ? operatorPreviousRawCounts
+    : OVERVIEW_OPERATOR_CATEGORY_ORDER.reduce((acc, key) => {
+        acc[key] = Math.max(0, Math.round((operatorCurrentCounts[key] || 0) * 0.8));
+        return acc;
+      }, {});
+  const operatorTrendData = OVERVIEW_OPERATOR_CATEGORY_ORDER.map((key) => ({
+    name: OVERVIEW_OPERATOR_CATEGORY_LABELS[key],
+    current: operatorCurrentCounts[key] || 0,
+    lastYear: operatorPreviousCounts[key] || 0,
+  }));
+
+  const aggregateBookingPeople = (tickets) =>
+    tickets.reduce(
+      (acc, ticket) => {
+        const peopleCount = getTicketVisitorCount(ticket);
+        if (ticket.bookingType === 'group') {
+          acc.group += peopleCount;
+        } else {
+          acc.individual += peopleCount;
+        }
+        return acc;
+      },
+      { group: 0, individual: 0 },
+    );
+  const selectedBookingYear = Number.parseInt(bookingYear, 10) || trendEnd.getFullYear();
+  const bookingPeriodStart = new Date(trendStart);
+  bookingPeriodStart.setFullYear(selectedBookingYear);
+  const bookingPeriodEnd = new Date(trendEnd);
+  bookingPeriodEnd.setFullYear(selectedBookingYear);
+  const ticketsInBookingPeriod = dummyTickets.filter((ticket) =>
+    isBetweenDate(toDate(ticket.createdAt), bookingPeriodStart, bookingPeriodEnd),
+  );
+  const bookingPeopleFromPeriod = aggregateBookingPeople(ticketsInBookingPeriod);
+  const hasBookingPeople =
+    bookingPeopleFromPeriod.group + bookingPeopleFromPeriod.individual > 0;
+  const fallbackBookingPeople =
+    OVERVIEW_BOOKING_DUMMY_COUNTS_BY_YEAR[String(selectedBookingYear)] ||
+    OVERVIEW_BOOKING_DUMMY_COUNTS_BY_YEAR[OVERVIEW_DEFAULT_BOOKING_YEAR] ||
+    { group: 30, individual: 70 };
+  const bookingPeople = hasBookingPeople ? bookingPeopleFromPeriod : fallbackBookingPeople;
+  const bookingWaffleData = {
+    year: String(selectedBookingYear),
+    counts: bookingPeople,
+    cells: buildWaffleCells(bookingPeople),
+  };
+  const bookingTotalPeople = bookingWaffleData.counts.group + bookingWaffleData.counts.individual;
+  const bookingGroupPct = bookingTotalPeople
+    ? Math.round((bookingWaffleData.counts.group / bookingTotalPeople) * 100)
+    : 0;
+  const bookingIndividualPct = bookingTotalPeople ? 100 - bookingGroupPct : 0;
+
+  const categoryData = financeReportSummary.breakdown.byCategory.map((item) => ({
+    name: OVERVIEW_DISTRIBUTION_CATEGORY_LABELS[item.category] || item.category,
+    value: item.amount,
+  }));
+
+  return {
+    kpis,
+    recentTickets,
+    pendingApprovalTickets,
+    activeTrendFilter,
+    trendData,
+    trendYAxisMax,
+    topCountries,
+    topCountrySeriesData,
+    getTopCountryColor,
+    genderStackedData,
+    operatorTrendData,
+    bookingWaffleData,
+    bookingTotalPeople,
+    bookingGroupPct,
+    bookingIndividualPct,
+    categoryData,
+  };
 };
 
 // Helper function to format currency
@@ -864,6 +1502,13 @@ export const formatRupiah = (amount) => {
     minimumFractionDigits: 0,
     maximumFractionDigits: 0,
   }).format(amount);
+};
+
+export const formatNominal = (amount) => {
+  return new Intl.NumberFormat('id-ID', {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(Number(amount) || 0);
 };
 
 // Helper function to format date
