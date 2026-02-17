@@ -1,9 +1,19 @@
 import tailwindcssAnimate from "tailwindcss-animate";
 
+/** @type {import('tailwindcss').Config} */
 export default {
   darkMode: ["class"],
-  content: ["./pages/**/*.{js,jsx}", "./components/**/*.{js,jsx}", "./app/**/*.{js,jsx}", "./src/**/*.{js,jsx}"],
+
+  // 🔑 INI KUNCI UTAMA (JS + TS DISATUKAN)
+  content: [
+    "./pages/**/*.{js,jsx,ts,tsx}",
+    "./components/**/*.{js,jsx,ts,tsx}",
+    "./app/**/*.{js,jsx,ts,tsx}",
+    "./src/**/*.{js,jsx,ts,tsx}",
+  ],
+
   prefix: "",
+
   theme: {
     container: {
       center: true,
@@ -12,16 +22,19 @@ export default {
         "2xl": "1400px",
       },
     },
+
     extend: {
       fontFamily: {
-        sans: ['"Plus Jakarta Sans"', 'system-ui', 'sans-serif'],
+        sans: ['"Plus Jakarta Sans"', "system-ui", "sans-serif"],
       },
+
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
+
         primary: {
           DEFAULT: "hsl(var(--primary))",
           foreground: "hsl(var(--primary-foreground))",
@@ -50,6 +63,7 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
           foreground: "hsl(var(--sidebar-foreground))",
@@ -60,7 +74,8 @@ export default {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
-        // Status colors
+
+        // status lama kamu
         status: {
           pending: "hsl(var(--status-pending))",
           "pending-bg": "hsl(var(--status-pending-bg))",
@@ -73,7 +88,17 @@ export default {
           info: "hsl(var(--status-info))",
           "info-bg": "hsl(var(--status-info-bg))",
         },
-        // Ocean theme specific
+
+        // designer (config baru)
+        designer: {
+          surface: "hsl(var(--designer-surface))",
+          "surface-hover": "hsl(var(--designer-surface-hover))",
+          panel: "hsl(var(--designer-panel))",
+          selected: "hsl(var(--designer-selected))",
+          "selected-border": "hsl(var(--designer-selected-border))",
+        },
+
+        // theme tambahan
         ocean: {
           50: "hsl(185 50% 96%)",
           100: "hsl(185 45% 92%)",
@@ -86,6 +111,7 @@ export default {
           800: "hsl(168 75% 18%)",
           900: "hsl(165 80% 12%)",
         },
+
         navy: {
           50: "hsl(210 40% 96%)",
           100: "hsl(210 40% 90%)",
@@ -99,17 +125,20 @@ export default {
           900: "hsl(210 65% 8%)",
         },
       },
+
       borderRadius: {
-        lg: "var(--radius)",
-        md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
+        md: "calc(var(--radius) - 2px)",
+        lg: "var(--radius)",
         xl: "calc(var(--radius) + 4px)",
         "2xl": "calc(var(--radius) + 8px)",
       },
+
       boxShadow: {
         card: "var(--shadow-card)",
         "card-hover": "var(--shadow-lg)",
       },
+
       keyframes: {
         "accordion-down": {
           from: { height: "0" },
@@ -124,17 +153,19 @@ export default {
           "100%": { backgroundPosition: "200% 0" },
         },
         pulse: {
-          "0%, 100%": { opacity: "1" },
+          "0%,100%": { opacity: "1" },
           "50%": { opacity: "0.5" },
         },
       },
+
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
         shimmer: "shimmer 2s linear infinite",
-        pulse: "pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite",
+        pulse: "pulse 2s cubic-bezier(0.4,0,0.6,1) infinite",
       },
     },
   },
+
   plugins: [tailwindcssAnimate],
 };

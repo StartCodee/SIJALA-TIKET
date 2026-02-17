@@ -1,11 +1,82 @@
-import { QrCode, Fish } from 'lucide-react';
+import { QrCode, Fish, X } from 'lucide-react';
+import { useEffect } from 'react';
+
+const looksLikeImageSrc = (value) => {
+  if (!value) return false;
+  return (
+    value.startsWith('data:image') ||
+    value.startsWith('http://') ||
+    value.startsWith('https://') ||
+    value.startsWith('/') ||
+    value.startsWith('./')
+  );
+};
 
 export function TicketPreview({
   design,
   scale = 1,
   onElementSelect,
+  onElementDoubleClick,
   selectedElementId,
+  editingElementId,
+  draftText,
+  onDraftTextChange,
+  onCommitText,
+  onCancelText,
+  onDeleteElement,
 }) {
+
+    useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key !== 'Escape') return;
+
+      e.preventDefault();
+
+      // ESC PERTAMA → keluar dari edit (textarea)
+      if (editingElementId) {
+        onCancelText?.();
+        return;
+      }
+
+      // ESC KEDUA → keluar dari select (border + X hilang)
+      if (selectedElementId) {
+        onElementSelect?.(null);
+        return;
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [editingElementId, selectedElementId, onCancelText, onElementSelect]);
+
+
+  const renderDeleteButton = (element, isSelected) => {
+    if (!isSelected || !onDeleteElement) return null;
+
+    return (
+      <button
+        type="button"
+        onClick={(e) => {
+          e.stopPropagation();
+          onDeleteElement(element.id);
+        }}
+        title="Sembunyikan"
+        className="absolute grid place-items-center rounded-full bg-foreground/90 text-background"
+        style={{
+          top: -8 * scale,
+          right: -8 * scale,
+          width: 20 * scale,
+          height: 20 * scale,
+          zIndex: 2147483647, // PALING ATAS
+          pointerEvents: 'auto',
+        }}
+      >
+        <X size={12 * scale} />
+      </button>
+    );
+  };
+
+
   const renderElement = (element) => {
     if (!element.visible) return null;
 
@@ -18,13 +89,54 @@ export function TicketPreview({
       transform: element.rotation ? `rotate(${element.rotation}deg)` : undefined,
       opacity: element.opacity ?? 1,
       cursor: onElementSelect ? 'pointer' : 'default',
+      zIndex: element.zIndex ?? 10,
     };
 
     const isSelected = selectedElementId === element.id;
-    const selectedStyle = isSelected ? {
-      outline: '2px solid hsl(var(--primary))',
-      outlineOffset: '2px',
-    } : {};
+    const isEditing = editingElementId === element.id;
+
+    const selectedStyle = isSelected
+      ? { outline: `2px solid hsl(199, 89%, 48%)`, outlineOffset: '2px', borderRadius: 2 }
+      : {};
+
+    if ((element.type === 'text' || element.type === 'badge') && isEditing) {
+      return (
+        <textarea
+          key={element.id}
+          autoFocus
+          value={draftText}
+          onChange={(e) => onDraftTextChange?.(e.target.value)}
+          onBlur={() => onCommitText?.()}
+          onKeyDown={(e) => {
+            console.log(e.key);
+            if (e.key === 'Escape') { e.preventDefault(); onCancelText?.(); }
+            if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') { e.preventDefault(); onCommitText?.(); }
+          }}
+          style={{
+            ...baseStyle,
+            fontSize: (element.fontSize || 14) * scale,
+            fontWeight: element.fontWeight || 'normal',
+            color: element.color || '#111827',
+            textAlign: element.align || 'left',
+            whiteSpace: 'pre-wrap',
+            wordBreak: 'break-word',
+            lineHeight: element.lineHeight ?? 1.2,
+            letterSpacing: typeof element.letterSpacing === 'number' ? `${element.letterSpacing}em` : undefined,
+            textShadow: element.textShadow,
+            resize: 'none',
+            padding: 0,
+            margin: 0,
+            border: 'none',
+            outline: `2px dashed hsl(199, 89%, 48%)`,
+            outlineOffset: '2px',
+            background: 'transparent',
+            zIndex: 9998,
+            caretColor: element.color || '#111827',
+          }}
+          onClick={(e) => e.stopPropagation()}
+        />
+      );
+    }
 
     switch (element.type) {
       case 'text':
@@ -36,39 +148,65 @@ export function TicketPreview({
               ...selectedStyle,
               fontSize: (element.fontSize || 14) * scale,
               fontWeight: element.fontWeight || 'normal',
-              color: element.color || '#ffffff',
+              color: element.color || '#111827',
               textAlign: element.align || 'left',
-              display: 'flex',
-              alignItems: 'center',
-              lineHeight: 1.2,
+              whiteSpace: 'pre-wrap',
+              wordBreak: 'break-word',
+              lineHeight: element.lineHeight ?? 1.2,
+              letterSpacing: typeof element.letterSpacing === 'number' ? `${element.letterSpacing}em` : undefined,
+              textShadow: element.textShadow,
             }}
             onClick={() => onElementSelect?.(element)}
+            onDoubleClick={(e) => {
+              e.stopPropagation();
+              onElementDoubleClick?.(element);
+            }}
           >
+            {renderDeleteButton(element, isSelected)}
             {element.content}
           </div>
         );
 
-      case 'logo':
+      case 'image':
+      case 'logo': {
+        const isLogo = element.type === 'logo';
         return (
           <div
             key={element.id}
             style={{
               ...baseStyle,
               ...selectedStyle,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              background: 'linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--ocean-mid)) 100%)',
-              borderRadius: '12px',
+              overflow: 'hidden',
+              borderRadius: (element.borderRadius ?? 0) * scale,
+              display: isLogo ? 'flex' : undefined,
+              alignItems: isLogo ? 'center' : undefined,
+              justifyContent: isLogo ? 'center' : undefined,
+              background: isLogo ? 'rgba(255,255,255,0.35)' : undefined,
             }}
             onClick={() => onElementSelect?.(element)}
           >
-            <Fish
-              size={30 * scale}
-              className="text-primary-foreground"
-            />
+            {renderDeleteButton(element, isSelected)}
+            {looksLikeImageSrc(element.content) ? (
+              <img
+                src={element.content}
+                alt=""
+                style={{
+                  width: '100%',
+                  height: '100%',
+                  objectFit: element.imageFit || (isLogo ? 'contain' : 'cover'),
+                  display: 'block',
+                }}
+                draggable={false}
+              />
+            ) : (
+              <div className="w-full h-full bg-muted" />
+            )}
+            {isLogo && !looksLikeImageSrc(element.content) && (
+              <Fish size={Math.min(element.width, element.height) * scale * 0.7} />
+            )}
           </div>
         );
+      }
 
       case 'qr':
         return (
@@ -81,15 +219,31 @@ export function TicketPreview({
               alignItems: 'center',
               justifyContent: 'center',
               backgroundColor: '#ffffff',
-              borderRadius: 8 * scale,
-              padding: 8 * scale,
+              borderRadius: 6 * scale,
+              padding: 6 * scale,
+              overflow: 'hidden',
             }}
             onClick={() => onElementSelect?.(element)}
           >
-            <QrCode
-              size={Math.min(element.width, element.height) * scale * 0.8}
-              className="text-gray-900"
-            />
+            {renderDeleteButton(element, isSelected)}
+            {looksLikeImageSrc(element.content) ? (
+              <img
+                src={element.content}
+                alt="QR"
+                style={{
+                  width: '100%',
+                  height: '100%',
+                  objectFit: 'contain',
+                  display: 'block',
+                }}
+                draggable={false}
+              />
+            ) : (
+              <QrCode
+                size={Math.min(element.width, element.height) * scale * 0.8}
+                className="text-foreground"
+              />
+            )}
           </div>
         );
 
@@ -103,17 +257,22 @@ export function TicketPreview({
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              backgroundColor: `${element.color}20` || 'rgba(20, 184, 166, 0.2)',
-              border: `1px solid ${element.color || '#14b8a6'}`,
+              backgroundColor: `${element.color || '#ea580c'}20`,
+              border: `1px solid ${element.color || '#ea580c'}`,
               borderRadius: 6 * scale,
               fontSize: (element.fontSize || 10) * scale,
               fontWeight: element.fontWeight || 'semibold',
-              color: element.color || '#14b8a6',
+              color: element.color || '#ea580c',
               textTransform: 'uppercase',
               letterSpacing: '0.05em',
             }}
             onClick={() => onElementSelect?.(element)}
+            onDoubleClick={(e) => {
+              e.stopPropagation();
+              onElementDoubleClick?.(element);
+            }}
           >
+            {renderDeleteButton(element, isSelected)}
             {element.content}
           </div>
         );
@@ -125,11 +284,13 @@ export function TicketPreview({
             style={{
               ...baseStyle,
               ...selectedStyle,
-              backgroundColor: element.color || '#14b8a6',
-              opacity: element.opacity ?? 0.3,
+              background: element.color || 'rgba(0,0,0,0.1)',
+              opacity: element.opacity ?? 1,
             }}
             onClick={() => onElementSelect?.(element)}
-          />
+          >
+            {renderDeleteButton(element, isSelected)}
+          </div>
         );
 
       default:
@@ -139,7 +300,6 @@ export function TicketPreview({
 
   const getBackgroundStyle = () => {
     const { background } = design;
-
     switch (background.type) {
       case 'solid':
         return { backgroundColor: background.value };
@@ -152,53 +312,67 @@ export function TicketPreview({
           backgroundPosition: 'center',
         };
       case 'pattern':
-        return {
-          backgroundColor: '#0d4f4f',
-          backgroundImage: background.value,
-        };
+        return { backgroundColor: '#ffffff', backgroundImage: background.value };
       default:
-        return { backgroundColor: '#0d4f4f' };
+        return { backgroundColor: '#ffffff' };
     }
   };
 
+  const isGradientBorder =
+    typeof design.borderColor === 'string' &&
+    (design.borderColor.includes('linear-gradient') ||
+      design.borderColor.includes('radial-gradient') ||
+      design.borderColor.includes('conic-gradient'));
+
+  const borderWidth = (design.borderWidth || 0) * scale;
+  const borderStyle = design.borderWidth
+    ? isGradientBorder
+      ? {
+          border: `${borderWidth}px solid transparent`,
+          borderImageSource: design.borderColor,
+          borderImageSlice: 1,
+        }
+      : {
+          border: `${borderWidth}px solid ${design.borderColor || '#e2e8f0'}`,
+        }
+    : {};
+
   return (
     <div
-      className="ticket-preview relative overflow-hidden transition-all duration-300"
-      style={{
-        width: design.width * scale,
-        height: design.height * scale,
-        borderRadius: design.borderRadius * scale,
-        border: design.borderWidth
-          ? `${design.borderWidth * scale}px solid ${design.borderColor || '#14b8a6'}`
-          : undefined,
-        ...getBackgroundStyle(),
-        opacity: design.background.opacity,
-      }}
+      className="ticket-preview-wrapper inline-block"
+      onClick={() => onElementSelect?.(null)}
     >
-      {/* Background overlay for images */}
-      {design.background.overlay && (
+      <div
+        className="ticket-preview relative overflow-hidden transition-all duration-300"
+        onClick={(e) => e.stopPropagation()}
+        style={{
+          width: design.width * scale,
+          height: design.height * scale,
+          borderRadius: design.borderRadius * scale,
+          backgroundColor: '#ffffff',
+          boxShadow: '0 8px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06)',
+          ...borderStyle,
+        }}
+      >
         <div
           className="absolute inset-0"
-          style={{ background: design.background.overlay }}
+          style={{
+            ...getBackgroundStyle(),
+            opacity: design.background.opacity ?? 1,
+            zIndex: 0,
+          }}
         />
-      )}
-
-      {/* Elements */}
-      {design.elements.map(renderElement)}
-
-      {/* Decorative wave pattern */}
-      <svg
-        className="absolute bottom-0 left-0 right-0 opacity-10 pointer-events-none"
-        style={{ height: 60 * scale }}
-        viewBox="0 0 400 60"
-        preserveAspectRatio="none"
-      >
-        <path
-          d="M0,30 Q50,10 100,30 T200,30 T300,30 T400,30 V60 H0 Z"
-          fill="currentColor"
-          className="text-primary"
-        />
-      </svg>
+        {design.background.overlay && (
+          <div
+            className="absolute inset-0"
+            style={{
+              background: design.background.overlay,
+              zIndex: 1,
+            }}
+          />
+        )}
+        {design.elements.map(renderElement)}
+      </div>
     </div>
   );
 }

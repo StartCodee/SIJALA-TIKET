@@ -311,3 +311,79 @@
 
 
 
+
+@layer components {
+  /* Designer buttons */
+  .btn-designer {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg text-sm font-medium transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none;
+  }
+
+  .btn-designer-primary {
+    @apply btn-designer bg-primary text-primary-foreground hover:opacity-90 px-4 py-2 shadow-sm;
+  }
+
+  .btn-designer-secondary {
+    @apply btn-designer bg-card text-foreground border border-border hover:bg-secondary px-3 py-2;
+  }
+
+  .btn-designer-ghost {
+    @apply btn-designer text-muted-foreground hover:text-foreground hover:bg-secondary px-2 py-1.5;
+  }
+
+  /* Designer input */
+  .input-designer {
+    @apply w-full rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition-all;
+  }
+
+  /* Color swatch */
+  .color-swatch {
+    @apply w-8 h-8 rounded-lg border border-border cursor-pointer transition-all hover:scale-105 active:scale-95;
+  }
+
+  .color-swatch-active {
+    @apply ring-2 ring-primary ring-offset-2 ring-offset-background;
+  }
+
+  /* Template card */
+  .template-card {
+    @apply rounded-xl border border-border bg-card overflow-hidden cursor-pointer transition-all duration-200 hover:shadow-md hover:border-primary/30;
+  }
+
+  .template-card-active {
+    @apply border-primary shadow-md ring-1 ring-primary/20;
+  }
+
+  /* Element list item */
+  .element-item {
+    @apply flex items-center gap-2.5 px-3 py-2.5 rounded-lg cursor-pointer transition-all duration-150 bg-card border border-border hover:shadow-sm;
+  }
+
+  .element-item-selected {
+    @apply bg-[hsl(var(--designer-selected))] border-[hsl(var(--designer-selected-border))] shadow-sm;
+  }
+
+  /* Panel section */
+  .panel-section {
+    @apply space-y-3 p-4 rounded-xl bg-card border border-border;
+  }
+}
+
+@layer utilities {
+  .animate-fade-in {
+    animation: fadeIn 0.2s ease-out;
+  }
+
+  .animate-scale-in {
+    animation: scaleIn 0.3s ease-out;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(4px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes scaleIn {
+    from { opacity: 0; transform: scale(0.97); }
+    to { opacity: 1; transform: scale(1); }
+  }
+}

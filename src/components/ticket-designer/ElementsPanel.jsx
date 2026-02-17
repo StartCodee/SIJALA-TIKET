@@ -1,241 +1,255 @@
+import { useRef } from 'react';
 import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
 import { Switch } from '@/components/ui/switch';
 import {
-  Type,
-  Image,
-  QrCode,
-  Circle,
-  Minus,
-  Eye,
-  EyeOff,
-  AlignLeft,
-  AlignCenter,
-  AlignRight,
-  GripVertical,
+  Type, Image as ImageIcon, QrCode, Circle, Minus,
+  Eye, EyeOff, AlignLeft, AlignCenter, AlignRight,
+  Upload, Trash2, Pencil,
 } from 'lucide-react';
+import { defaultTicketDesign, elementLabels } from '@/types/ticket';
 
 const elementIcons = {
-  text: Type,
-  image: Image,
-  qr: QrCode,
-  logo: Circle,
-  divider: Minus,
-  badge: Circle,
+  text: Type, image: ImageIcon, qr: QrCode, logo: Circle, divider: Minus, badge: Circle,
 };
 
 const fontWeights = [
-  { value: 'normal', label: 'Normal' },
-  { value: 'medium', label: 'Medium' },
-  { value: 'semibold', label: 'Semibold' },
-  { value: 'bold', label: 'Bold' },
+  { label: 'Normal', value: 'normal'},
+  { label: 'Medium', value: 'medium'},
+  { label: 'Semibold', value: 'semibold'},
+  { label: 'Bold', value: 'bold'},
 ];
 
+
 export function ElementsPanel({
-  elements,
-  selectedElementId,
-  onSelectElement,
-  onUpdateElement,
-  onToggleVisibility,
+  elements, selectedElementId, onSelectElement, onUpdateElement,
+  onToggleVisibility, onDeleteElement, onRequestInlineEdit,
 }) {
   const selectedElement = elements.find((el) => el.id === selectedElementId);
+  const fileRef = useRef(null);
+
+  const handleFileUpload = (file) => {
+    if (!selectedElement) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      onUpdateElement({ ...selectedElement, content: String(reader.result) });
+    };
+    reader.readAsDataURL(file);
+  };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Elements List */}
-      <div className="space-y-3">
-        <Label className="text-sm font-medium text-foreground">Elemen Tiket</Label>
-        <div className="space-y-1 max-h-[200px] overflow-y-auto pr-2">
+      <div className="space-y-2">
+        <Label className="text-sm font-semibold">Bagian Tiket</Label>
+        <div className="space-y-1 max-h-[260px] overflow-y-auto pr-1">
           {elements.map((element) => {
-            const Icon = elementIcons[element.type];
+            const Icon = elementIcons[element.type] || Circle;
             const isSelected = selectedElementId === element.id;
 
             return (
               <div
                 key={element.id}
-                className={`flex items-center gap-2 p-2 rounded-lg cursor-pointer transition-all ${
-                  isSelected
-                    ? 'bg-primary/20 border border-primary/50'
-                    : 'bg-secondary/50 hover:bg-secondary border border-transparent'
-                }`}
+                className={`element-item ${isSelected ? 'element-item-selected' : ''}`}
                 onClick={() => onSelectElement(element)}
               >
-                <GripVertical size={14} className="text-muted-foreground" />
                 <Icon size={14} className={isSelected ? 'text-primary' : 'text-muted-foreground'} />
-                <span className={`flex-1 text-sm truncate ${!element.visible ? 'text-muted-foreground line-through' : ''}`}>
-                  {element.content || element.type}
+                <span className={`flex-1 text-xs truncate ${!element.visible ? 'text-muted-foreground line-through' : 'text-foreground'}`}>
+                  {elementLabels[element.id] || element.id}
                 </span>
                 <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onToggleVisibility(element.id);
-                  }}
-                  className="p-1 hover:bg-background rounded transition-colors"
+                  onClick={(e) => { e.stopPropagation(); onToggleVisibility(element.id); }}
+                  className="p-1 rounded transition-colors hover:bg-secondary"
+                  title={element.visible ? 'Sembunyikan' : 'Tampilkan'}
                 >
-                  {element.visible ? (
-                    <Eye size={14} className="text-muted-foreground" />
-                  ) : (
-                    <EyeOff size={14} className="text-muted-foreground" />
-                  )}
+                  {element.visible
+                    ? <Eye size={13} className="text-muted-foreground" />
+                    : <EyeOff size={13} className="text-muted-foreground" />}
                 </button>
               </div>
             );
           })}
         </div>
+        <p className="text-[11px] text-muted-foreground leading-relaxed">
+          Klik elemen untuk edit. Double-click teks di tiket untuk edit langsung.
+        </p>
       </div>
 
-      {/* Selected Element Properties */}
+      {/* Selected Element Editor */}
       {selectedElement && (
-        <div className="space-y-4 pt-4 border-t border-border">
-          <Label className="text-sm font-medium text-foreground">
-            Properti: {selectedElement.type.charAt(0).toUpperCase() + selectedElement.type.slice(1)}
-          </Label>
-
-          {/* Content */}
-          {(selectedElement.type === 'text' || selectedElement.type === 'badge') && (
-            <div className="space-y-2">
-              <Label className="text-xs text-muted-foreground">Teks</Label>
-              <input
-                type="text"
-                value={selectedElement.content}
-                onChange={(e) => onUpdateElement({ ...selectedElement, content: e.target.value })}
-                className="input-designer text-sm"
-              />
-            </div>
-          )}
-
-          {/* Position */}
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-2">
-              <Label className="text-xs text-muted-foreground">Posisi X</Label>
-              <input
-                type="number"
-                value={selectedElement.x}
-                onChange={(e) => onUpdateElement({ ...selectedElement, x: Number(e.target.value) })}
-                className="input-designer text-sm"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label className="text-xs text-muted-foreground">Posisi Y</Label>
-              <input
-                type="number"
-                value={selectedElement.y}
-                onChange={(e) => onUpdateElement({ ...selectedElement, y: Number(e.target.value) })}
-                className="input-designer text-sm"
-              />
+        <div className="space-y-4 pt-3 border-t border-border animate-fade-in">
+          <div className="flex items-center justify-between">
+            <Label className="text-sm font-semibold truncate max-w-[180px]">
+              {elementLabels[selectedElement.id] || selectedElement.id}
+            </Label>
+            <div className="flex gap-1.5">
+              {(selectedElement.type === 'text' || selectedElement.type === 'badge') && (
+                <button className="btn-designer-ghost text-xs" onClick={onRequestInlineEdit} title="Edit langsung di tiket">
+                  <Pencil size={13} />
+                </button>
+              )}
+              <button className="btn-designer-ghost text-xs text-destructive hover:text-destructive" onClick={() => onDeleteElement(selectedElement.id)} title="Sembunyikan">
+                <Trash2 size={13} />
+              </button>
             </div>
           </div>
 
-          {/* Size */}
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-2">
-              <Label className="text-xs text-muted-foreground">Lebar</Label>
-              <input
-                type="number"
-                value={selectedElement.width}
-                onChange={(e) => onUpdateElement({ ...selectedElement, width: Number(e.target.value) })}
-                className="input-designer text-sm"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label className="text-xs text-muted-foreground">Tinggi</Label>
-              <input
-                type="number"
-                value={selectedElement.height}
-                onChange={(e) => onUpdateElement({ ...selectedElement, height: Number(e.target.value) })}
-                className="input-designer text-sm"
-              />
-            </div>
-          </div>
-
-          {/* Font Properties */}
+          {/* Text Content */}
           {(selectedElement.type === 'text' || selectedElement.type === 'badge') && (
-            <>
-              <div className="space-y-2">
+            <div className="space-y-3">
+              <div className="space-y-1.5">
+                <Label className="text-xs text-muted-foreground">Teks</Label>
+                <textarea
+                  value={selectedElement.content}
+                  onChange={(e) => onUpdateElement({ ...selectedElement, content: e.target.value })}
+                  className="input-designer text-xs min-h-[60px] resize-y"
+                />
+              </div>
+
+              {/* Font Size */}
+              <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
                   <Label className="text-xs text-muted-foreground">Ukuran Font</Label>
                   <span className="text-xs text-muted-foreground">{selectedElement.fontSize || 14}px</span>
                 </div>
                 <Slider
                   value={[selectedElement.fontSize || 14]}
-                  onValueChange={([value]) => onUpdateElement({ ...selectedElement, fontSize: value })}
-                  min={8}
-                  max={36}
-                  step={1}
+                  onValueChange={([v]) => onUpdateElement({ ...selectedElement, fontSize: v })}
+                  min={6} max={48} step={1}
                 />
               </div>
 
-              <div className="space-y-2">
-                <Label className="text-xs text-muted-foreground">Ketebalan Font</Label>
+              {/* Font Weight */}
+              <div className="space-y-1.5">
+                <Label className="text-xs text-muted-foreground">Ketebalan</Label>
                 <div className="grid grid-cols-4 gap-1">
-                  {fontWeights.map((weight) => (
-                    <button
-                      key={weight.value}
-                      onClick={() => onUpdateElement({ ...selectedElement, fontWeight: weight.value })}
-                      className={`px-2 py-1.5 text-xs rounded transition-all ${
-                        selectedElement.fontWeight === weight.value
-                          ? 'bg-primary text-primary-foreground'
-                          : 'bg-secondary hover:bg-secondary/80'
-                      }`}
+                  {fontWeights.map((fw) => (
+                    <button key={fw.value} type="button"
+                      className={`text-[10px] py-1.5 rounded-md transition-all ${selectedElement.fontWeight === fw.value ? 'bg-primary text-primary-foreground' : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'}`}
+                      onClick={() => onUpdateElement({ ...selectedElement, fontWeight: fw.value })}
                     >
-                      {weight.label}
+                      {fw.label}
                     </button>
                   ))}
                 </div>
               </div>
 
-              {selectedElement.type === 'text' && (
-                <div className="space-y-2">
-                  <Label className="text-xs text-muted-foreground">Perataan</Label>
-                  <div className="flex gap-1">
-                    {[
-                      { value: 'left', icon: AlignLeft },
-                      { value: 'center', icon: AlignCenter },
-                      { value: 'right', icon: AlignRight },
-                    ].map(({ value, icon: Icon }) => (
-                      <button
-                        key={value}
-                        onClick={() => onUpdateElement({ ...selectedElement, align: value })}
-                        className={`flex-1 p-2 rounded transition-all ${
-                          selectedElement.align === value
-                            ? 'bg-primary text-primary-foreground'
-                            : 'bg-secondary hover:bg-secondary/80'
-                        }`}
+              {/* Alignment */}
+              <div className="space-y-1.5">
+                <Label className="text-xs text-muted-foreground">Perataan</Label>
+                <div className="flex gap-1">
+                  {[
+                    { value: 'left', icon: AlignLeft },
+                    { value: 'center', icon: AlignCenter },
+                    { value: 'right', icon: AlignRight },
+                  ].map(({ value, icon: Icon }) => (
+                    <button key={value} type="button"
+                      className={`p-2 rounded-md transition-all ${selectedElement.align === value ? 'bg-primary text-primary-foreground' : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'}`}
+                      onClick={() => onUpdateElement({ ...selectedElement, align: value })}
+                    >
+                      <Icon size={14} />
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Text Color */}
+              <div className="space-y-1.5">
+                <Label className="text-xs text-muted-foreground">Warna Teks</Label>
+                <div className="flex items-center gap-2">
+                  <input type="color" value={selectedElement.color || '#111827'} onChange={(e) => onUpdateElement({ ...selectedElement, color: e.target.value })} className="w-8 h-7 rounded cursor-pointer border-0" />
+                  <input type="text" value={selectedElement.color || ''} onChange={(e) => onUpdateElement({ ...selectedElement, color: e.target.value })} placeholder="#111827" className="input-designer text-xs flex-1" />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Image / Logo / QR */}
+          {(selectedElement.type === 'image' || selectedElement.type === 'logo' || selectedElement.type === 'qr') && (
+            <div className="space-y-3">
+              <Label className="text-xs text-muted-foreground">Gambar</Label>
+              <div className="flex gap-2">
+                <button className="btn-designer-secondary text-xs" onClick={() => fileRef.current?.click()}>
+                  <Upload size={13} /> Upload
+                </button>
+                <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (!file) return;
+                  handleFileUpload(file);
+                  e.currentTarget.value = '';
+                }} />
+                <input type="text" value={selectedElement.content} onChange={(e) => onUpdateElement({ ...selectedElement, content: e.target.value })} placeholder="URL gambar..." className="input-designer text-xs flex-1" />
+              </div>
+
+              {selectedElement.content && (
+                <div className="rounded-lg border border-border overflow-hidden">
+                  <div className="h-20 bg-secondary flex items-center justify-center">
+                    {(selectedElement.content.startsWith('data:image') || selectedElement.content.startsWith('http') || selectedElement.content.startsWith('/')) ? (
+                      <img src={selectedElement.content} alt="preview" className="w-full h-full object-contain" draggable={false} />
+                    ) : (
+                      <span className="text-xs text-muted-foreground">Belum ada gambar</span>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Image Fit */}
+              {selectedElement.type === 'image' && (
+                <div className="space-y-1.5">
+                  <Label className="text-xs text-muted-foreground">Mode Gambar</Label>
+                  <div className="grid grid-cols-2 gap-1.5">
+                    {(['cover', 'contain']).map((fit) => (
+                      <button key={fit} type="button"
+                        className={`text-xs py-1.5 rounded-md transition-all ${selectedElement.imageFit === fit ? 'bg-primary text-primary-foreground' : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'}`}
+                        onClick={() => onUpdateElement({ ...selectedElement, imageFit: fit })}
                       >
-                        <Icon size={16} className="mx-auto" />
+                        {fit === 'cover' ? 'Penuh' : 'Pas'}
                       </button>
                     ))}
                   </div>
                 </div>
               )}
 
-              <div className="space-y-2">
-                <Label className="text-xs text-muted-foreground">Warna</Label>
-                <div className="flex items-center gap-2">
-                  <input
-                    type="color"
-                    value={selectedElement.color || '#ffffff'}
-                    onChange={(e) => onUpdateElement({ ...selectedElement, color: e.target.value })}
-                    className="w-10 h-8 rounded cursor-pointer border-0"
-                  />
-                  <input
-                    type="text"
-                    value={selectedElement.color || '#ffffff'}
-                    onChange={(e) => onUpdateElement({ ...selectedElement, color: e.target.value })}
-                    className="input-designer text-sm flex-1"
-                  />
+              {/* Opacity */}
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <Label className="text-xs text-muted-foreground">Opacity</Label>
+                  <span className="text-xs text-muted-foreground">{Math.round((selectedElement.opacity ?? 1) * 100)}%</span>
                 </div>
+                <Slider
+                  value={[(selectedElement.opacity ?? 1) * 100]}
+                  onValueChange={([v]) => onUpdateElement({ ...selectedElement, opacity: v / 100 })}
+                  min={10} max={100} step={5}
+                />
               </div>
-            </>
+            </div>
+          )}
+
+          {/* Divider Color */}
+          {selectedElement.type === 'divider' && (
+            <div className="space-y-3">
+              <div className="space-y-1.5">
+                <Label className="text-xs text-muted-foreground">Warna / Gradient</Label>
+                <input type="text" value={selectedElement.color || ''} onChange={(e) => onUpdateElement({ ...selectedElement, color: e.target.value })} placeholder="#ea580c atau linear-gradient(...)" className="input-designer text-xs" />
+              </div>
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <Label className="text-xs text-muted-foreground">Opacity</Label>
+                  <span className="text-xs text-muted-foreground">{Math.round((selectedElement.opacity ?? 1) * 100)}%</span>
+                </div>
+                <Slider
+                  value={[(selectedElement.opacity ?? 1) * 100]}
+                  onValueChange={([v]) => onUpdateElement({ ...selectedElement, opacity: v / 100 })}
+                  min={0} max={100} step={5}
+                />
+              </div>
+            </div>
           )}
 
           {/* Visibility Toggle */}
-          <div className="flex items-center justify-between pt-2">
-            <Label className="text-xs text-muted-foreground">Tampilkan Elemen</Label>
-            <Switch
-              checked={selectedElement.visible}
-              onCheckedChange={() => onToggleVisibility(selectedElement.id)}
-            />
+          <div className="flex items-center justify-between pt-1">
+            <Label className="text-xs text-muted-foreground">Tampilkan</Label>
+            <Switch checked={selectedElement.visible} onCheckedChange={() => onToggleVisibility(selectedElement.id)} />
           </div>
         </div>
       )}
