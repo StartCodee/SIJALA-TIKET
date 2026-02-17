@@ -349,9 +349,22 @@ export default function InvoiceDetailPage() {
 
   const supportingDocsByCategory = invoice.byCategory.map((item) => {
     const ticketsInCategory = invoice.tickets.filter((ticket) => ticket.feeCategory === item.feeCategory);
+    const ownerNames = Array.from(
+      new Set(
+        ticketsInCategory
+          .map((ticket) => ticket.namaLengkap)
+          .filter(Boolean),
+      ),
+    );
+    const ownerLabel =
+      ownerNames.length <= 2
+        ? ownerNames.join(', ')
+        : `${ownerNames[0]} +${ownerNames.length - 1} lainnya`;
+
     return {
       feeCategory: item.feeCategory,
       feeLabel: item.feeLabel,
+      ownerLabel: ownerLabel || item.feeLabel,
       docs: getRequiredDocumentLabels(item.feeCategory),
       tickets: ticketsInCategory,
       ticketCount: ticketsInCategory.length,
@@ -668,7 +681,7 @@ export default function InvoiceDetailPage() {
                 {supportingDocsByCategory.map((group) => (
                   <div key={group.feeCategory} className="rounded-lg border border-border p-3">
                     <p className="text-xs font-semibold text-foreground mb-2">
-                      {group.feeLabel} ({group.ticketCount} tiket)
+                      {group.ownerLabel}
                     </p>
                     <div className="flex items-center justify-between gap-3">
                       <p className="text-xs text-muted-foreground line-clamp-2">
@@ -698,7 +711,7 @@ export default function InvoiceDetailPage() {
             <DialogTitle>Dokumen Pendukung Invoice</DialogTitle>
             <DialogDescription>
               {selectedDocCategory
-                ? `${selectedDocCategory.feeLabel} - pilih tiket untuk melihat dokumen`
+                ? `${selectedDocCategory.ownerLabel} - pilih tiket untuk melihat dokumen`
                 : 'Pilih kategori dokumen'}
             </DialogDescription>
           </DialogHeader>

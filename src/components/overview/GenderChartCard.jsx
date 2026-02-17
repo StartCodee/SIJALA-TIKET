@@ -19,13 +19,13 @@ const GENDER_STACK_COLORS = {
 
 export function GenderChartCard({ activeTrendFilterLabel, genderStackedData }) {
   return (
-    <Card className="card-ocean">
+    <Card className="card-ocean lg:h-[520px] flex flex-col">
       <CardHeader className="pb-2">
         <CardTitle className="text-base font-semibold">Jenis Kelamin</CardTitle>
       </CardHeader>
-      <CardContent>
+      <CardContent className="flex flex-1 flex-col">
         <div className="mb-2 text-xs text-muted-foreground">Periode: {activeTrendFilterLabel}</div>
-        <div className="h-[240px]">
+        <div className="h-[320px]">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart
               data={genderStackedData}

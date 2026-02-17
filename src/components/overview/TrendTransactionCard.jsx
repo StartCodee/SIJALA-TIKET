@@ -18,30 +18,37 @@ const CHART_COLORS = {
 };
 
 export function TrendTransactionCard({
-  trendFilter,
-  onTrendFilterChange,
-  trendOptions,
+  trendDateFrom,
+  trendDateTo,
+  onTrendDateFromChange,
+  onTrendDateToChange,
   trendData,
   trendYAxisMax,
 }) {
   return (
     <Card className="lg:col-span-2 card-ocean flex flex-col">
       <CardHeader className="pb-2">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
           <CardTitle className="text-base font-semibold">Tren Transaksi</CardTitle>
-          <div className="flex items-center gap-2">
-            <select
-              value={trendFilter}
-              onChange={(event) => onTrendFilterChange(event.target.value)}
+          <div className="flex flex-wrap items-center gap-2">
+            <input
+              type="date"
+              value={trendDateFrom}
+              onChange={(event) => onTrendDateFromChange(event.target.value)}
+              max={trendDateTo || undefined}
               className="h-8 rounded-md border border-border bg-background px-2 text-xs text-foreground"
-            >
-              {trendOptions.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-            <span className="text-xs text-muted-foreground">vs tahun lalu</span>
+              aria-label="Tanggal awal tren transaksi"
+            />
+            <span className="text-xs text-muted-foreground">s/d</span>
+            <input
+              type="date"
+              value={trendDateTo}
+              onChange={(event) => onTrendDateToChange(event.target.value)}
+              min={trendDateFrom || undefined}
+              className="h-8 rounded-md border border-border bg-background px-2 text-xs text-foreground"
+              aria-label="Tanggal akhir tren transaksi"
+            />
+            <span className="text-xs text-muted-foreground whitespace-nowrap">vs tahun lalu</span>
           </div>
         </div>
       </CardHeader>

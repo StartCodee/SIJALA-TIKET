@@ -126,7 +126,7 @@ export function TopCountryMapCard({
 
   return (
     <>
-      <Card className="card-ocean">
+      <Card className="card-ocean lg:h-[520px] flex flex-col">
         <CardHeader className="pb-2">
           <div className="flex items-center justify-between gap-2">
             <CardTitle className="text-base font-semibold">Top 10 Negara Asal</CardTitle>
@@ -142,8 +142,8 @@ export function TopCountryMapCard({
             </Button>
           </div>
         </CardHeader>
-        <CardContent>
-          <div className="relative h-[280px] overflow-hidden rounded-lg border border-border/60 bg-slate-50/60">
+        <CardContent className="flex flex-1 flex-col">
+          <div className="relative h-[260px] overflow-hidden rounded-lg border border-border/60 bg-slate-50/60">
             <div className="absolute right-2 top-2 z-10 flex items-center gap-1 rounded-md border border-border bg-card/90 p-1 shadow-sm">
               <Button
                 type="button"
@@ -182,7 +182,7 @@ export function TopCountryMapCard({
               </div>
             )}
           </div>
-          <div className="mt-3 space-y-2">
+          <div className="mt-3 flex-1 space-y-2 overflow-y-auto pr-1">
             {topCountries.map((country, index) => (
               <div
                 key={`rank-country-${country.name}`}

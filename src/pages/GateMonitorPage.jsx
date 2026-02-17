@@ -7,7 +7,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Switch } from "@/components/ui/switch";
 import {
   Select,
   SelectContent,
@@ -112,8 +111,6 @@ export default function GateMonitorPage() {
     paymentMethod: "blud_cash",
     gateName: "Waisai",
     officerName: "Rudi Hartono",
-    ocrDisabled: false,
-    ocrApprovalRef: "",
   });
   const [recentTransactions, setRecentTransactions] = useState(() =>
     dummyTickets
@@ -188,8 +185,6 @@ export default function GateMonitorPage() {
       feeCategory: "wisatawan_domestik_pbd",
       paymentMethod: "blud_cash",
       country: "Indonesia",
-      ocrDisabled: false,
-      ocrApprovalRef: "",
     }));
   };
 
@@ -228,8 +223,6 @@ export default function GateMonitorPage() {
       identityNumber: "",
       bookingType: "perorangan",
       visitorCount: 1,
-      ocrDisabled: false,
-      ocrApprovalRef: "",
     }));
   };
 
@@ -457,36 +450,6 @@ export default function GateMonitorPage() {
                   </div>
                 </div>
 
-                <div className="rounded-lg border border-border p-4 space-y-3">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium">Nonaktifkan OCR</p>
-                      <p className="text-xs text-muted-foreground">
-                        Untuk tamu khusus dengan persetujuan administrator.
-                      </p>
-                    </div>
-                    <Switch
-                      checked={form.ocrDisabled}
-                      onCheckedChange={(checked) =>
-                        setForm((prev) => ({ ...prev, ocrDisabled: checked }))
-                      }
-                    />
-                  </div>
-                  {form.ocrDisabled && (
-                    <div className="space-y-2">
-                      <Label>Referensi Persetujuan Admin</Label>
-                      <Input
-                        value={form.ocrApprovalRef}
-                        onChange={(e) =>
-                          setForm((prev) => ({ ...prev, ocrApprovalRef: e.target.value }))
-                        }
-                        placeholder="Contoh: ADM-APPROVAL-2026-001"
-                        required
-                      />
-                    </div>
-                  )}
-                </div>
-
                 {needsApproval && (
                   <div className="rounded-md border border-status-pending/40 bg-status-pending/10 p-3 text-sm">
                     Kategori ini butuh antrian persetujuan. Status pembayaran akan tercatat sebagai
@@ -614,4 +577,3 @@ export default function GateMonitorPage() {
     </AdminLayout>
   );
 }
-

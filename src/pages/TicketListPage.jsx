@@ -236,7 +236,7 @@ export default function TicketListPage() {
         showSearch={false}
       />
 
-      <div className="flex-1 overflow-auto p-6">
+      <div className="flex-1 overflow-auto p-4 xl:p-5">
         {/* Search & Actions Bar */}
         <div className="flex flex-col gap-3 mb-4 lg:flex-row lg:items-center lg:justify-between">
           <div className="relative w-full min-w-[220px] lg:flex-1 lg:max-w-md">
@@ -434,57 +434,57 @@ export default function TicketListPage() {
         {/* Table */}
         <Card className="card-ocean overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="data-table">
+            <table className="data-table data-table-compact table-fixed">
               <thead>
-                <tr className="[&>th]:text-center">
+                <tr className="[&>th]:text-center [&>th]:whitespace-nowrap">
                   <th
-                    className="cursor-pointer hover:bg-muted/70 transition-colors"
+                    className="w-[17%] cursor-pointer hover:bg-muted/70 transition-colors"
                     onClick={() => handleSort("namaLengkap")}
                   >
-                    <div className="flex items-center justify-center gap-1">
+                    <div className="flex items-center justify-center gap-1 overflow-hidden">
                       Nama <SortIcon field="namaLengkap" />
                     </div>
                   </th>
                   <th
-                    className="cursor-pointer hover:bg-muted/70 transition-colors"
+                    className="w-[10%] cursor-pointer hover:bg-muted/70 transition-colors"
                     onClick={() => handleSort("activeStartAt")}
                   >
-                    <div className="flex items-center justify-center gap-1">
+                    <div className="flex items-center justify-center gap-1 overflow-hidden">
                       Tanggal <SortIcon field="activeStartAt" />
                     </div>
                   </th>
-                  <th>
+                  <th className="w-[6%]">
                     <div>Waktu</div>
                   </th>
                   <th
-                    className="cursor-pointer hover:bg-muted/70 transition-colors"
+                    className="w-[7%] cursor-pointer hover:bg-muted/70 transition-colors"
                     onClick={() => handleSort("id")}
                   >
-                    <div className="flex items-center justify-center gap-1">
+                    <div className="flex items-center justify-center gap-1 overflow-hidden">
                       ID tiket <SortIcon field="id" />
                     </div>
                   </th>
-                  <th>
+                  <th className="w-[6%]">
                     <div>Tipe</div>
                   </th>
-                  <th>
+                  <th className="w-[13%]">
                     <div>Lokasi Pembayaran</div>
                   </th>
                   <th
-                    className="cursor-pointer hover:bg-muted/70 transition-colors"
+                    className="w-[11%] cursor-pointer hover:bg-muted/70 transition-colors"
                     onClick={() => handleSort("targetPengunjung")}
                   >
-                    <div className="flex items-center justify-center gap-1">
+                    <div className="flex items-center justify-center gap-1 overflow-hidden">
                       Target Pengunjung <SortIcon field="targetPengunjung" />
                     </div>
                   </th>
-                  <th>
+                  <th className="w-[7%]">
                     <div>Status</div>
                   </th>
-                  <th className="text-center">
+                  <th className="w-[10%] text-center">
                     <div>Aksi</div>
                   </th>
-                  <th>
+                  <th className="w-[13%]">
                     <div>Gerbang</div>
                   </th>
                 </tr>
@@ -497,7 +497,9 @@ export default function TicketListPage() {
                   return (
                     <tr key={ticket.id} className="group">
                       <td className="whitespace-nowrap text-sm font-medium">
-                        {ticket.namaLengkap}
+                        <div className="truncate" title={ticket.namaLengkap}>
+                          {ticket.namaLengkap}
+                        </div>
                       </td>
                       <td className="whitespace-nowrap text-sm">
                         {formatDate(getCardActiveStart(ticket))}
@@ -514,50 +516,55 @@ export default function TicketListPage() {
                         </Link>
                       </td>
 
-                      <td>
+                      <td className="whitespace-nowrap">
                         <span className="text-sm">
                           {ticket.bookingType === "group" ? "Grup" : "Individu"}
                         </span>
                       </td>
 
-                      <td>
-                        <span
-                          className={
-                            getPaymentType(ticket) === "online"
-                              ? "inline-flex items-center rounded-full bg-status-approved-bg px-2.5 py-0.5 text-xs font-medium text-status-approved"
-                              : "inline-flex items-center rounded-full bg-status-pending-bg px-2.5 py-0.5 text-xs font-medium text-status-pending"
-                          }
-                        >
-                          {getPaymentType(ticket) === "online"
-                            ? "Online"
-                            : "Onsite"}
-                        </span>
+                      <td className="whitespace-nowrap text-center">
+                        <div className="flex justify-center">
+                          <span
+                            className={
+                              getPaymentType(ticket) === "online"
+                                ? "inline-flex items-center rounded-full bg-status-approved-bg px-2 py-0.5 text-xs font-medium text-status-approved"
+                                : "inline-flex items-center rounded-full bg-status-pending-bg px-2 py-0.5 text-xs font-medium text-status-pending"
+                            }
+                          >
+                            {getPaymentType(ticket) === "online"
+                              ? "Online"
+                              : "Onsite"}
+                          </span>
+                        </div>
                       </td>
 
-                      <td>
-                        <span className="text-sm">
+                      <td className="whitespace-nowrap">
+                        <span
+                          className="block truncate text-sm"
+                          title={getTargetPengunjungLabel(ticket)}
+                        >
                           {getTargetPengunjungLabel(ticket)}
                         </span>
                       </td>
 
                       <td className="whitespace-nowrap">
                         <span
-                          className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${tjlStatus.className}`}
+                          className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${tjlStatus.className}`}
                         >
                           {tjlStatus.label}
                         </span>
                       </td>
 
-                      <td>
-                        <div className="flex items-center justify-center gap-1.5">
+                      <td className="whitespace-nowrap">
+                        <div className="flex items-center justify-center gap-0.5">
                           <Link to={`/tickets/${ticket.id}`}>
                             <Button
                               variant="ghost"
                               size="icon"
-                              className="h-8 w-8"
+                              className="h-7 w-7"
                               title="Detail tiket"
                             >
-                              <Eye className="w-4 h-4" />
+                              <Eye className="w-3.5 h-3.5" />
                             </Button>
                           </Link>
 
@@ -566,21 +573,21 @@ export default function TicketListPage() {
                               <Button
                                 variant="ghost"
                                 size="icon"
-                                className="h-8 w-8"
+                                className="h-7 w-7"
                                 title="Invoice"
                               >
-                                <FileText className="w-4 h-4" />
+                                <FileText className="w-3.5 h-3.5" />
                               </Button>
                             </Link>
                           ) : (
                             <Button
                               variant="ghost"
                               size="icon"
-                              className="h-8 w-8 opacity-40"
+                              className="h-7 w-7 opacity-40"
                               title="Invoice belum tersedia"
                               disabled
                             >
-                              <FileText className="w-4 h-4" />
+                              <FileText className="w-3.5 h-3.5" />
                             </Button>
                           )}
 
@@ -589,10 +596,10 @@ export default function TicketListPage() {
                               <Button
                                 variant="ghost"
                                 size="icon"
-                                className="h-8 w-8"
+                                className="h-7 w-7"
                                 title="Bukti Pembayaran Turis"
                               >
-                                <FileCheck className="w-4 h-4" />
+                                <FileCheck className="w-3.5 h-3.5" />
                               </Button>
                             </Link>
                           ) : (
@@ -600,10 +607,10 @@ export default function TicketListPage() {
                               <Button
                                 variant="ghost"
                                 size="icon"
-                                className="h-8 w-8"
+                                className="h-7 w-7"
                                 title="Bukti Pembayaran BLUD UPTD KKP"
                               >
-                                <Landmark className="w-4 h-4" />
+                                <Landmark className="w-3.5 h-3.5" />
                               </Button>
                             </Link>
                           )}
@@ -612,16 +619,18 @@ export default function TicketListPage() {
                             <Button
                               variant="ghost"
                               size="icon"
-                              className="h-8 w-8"
+                              className="h-7 w-7"
                               title="Cetak Kartu TJL"
                             >
-                              <IdCard className="w-4 h-4" />
+                              <IdCard className="w-3.5 h-3.5" />
                             </Button>
                           </Link>
                         </div>
                       </td>
                       <td className="whitespace-nowrap">
-                        <div className="text-sm">{getGerbangDisplay(ticket)}</div>
+                        <div className="text-sm" title={getGerbangDisplay(ticket)}>
+                          {getGerbangDisplay(ticket)}
+                        </div>
                       </td>
                     </tr>
                   );

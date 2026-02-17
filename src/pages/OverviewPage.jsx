@@ -9,7 +9,8 @@ import {
   formatShortId,
   FEE_PRICING,
   BOOKING_TYPE_LABELS,
-  OVERVIEW_TREND_FILTER_OPTIONS,
+  OVERVIEW_DEFAULT_TREND_DATE_FROM,
+  OVERVIEW_DEFAULT_TREND_DATE_TO,
   OVERVIEW_BOOKING_YEAR_OPTIONS,
   OVERVIEW_DEFAULT_BOOKING_YEAR,
   OVERVIEW_DEFAULT_SUMMARY_SELECTION,
@@ -47,7 +48,12 @@ export default function OverviewPage() {
     OVERVIEW_DEFAULT_SUMMARY_SELECTION,
   );
   const [showSummaryConfig, setShowSummaryConfig] = useState(false);
-  const [trendFilter, setTrendFilter] = useState("today");
+  const [trendDateFrom, setTrendDateFrom] = useState(
+    OVERVIEW_DEFAULT_TREND_DATE_FROM,
+  );
+  const [trendDateTo, setTrendDateTo] = useState(
+    OVERVIEW_DEFAULT_TREND_DATE_TO,
+  );
   const [bookingYearFilter, setBookingYearFilter] = useState(
     OVERVIEW_DEFAULT_BOOKING_YEAR,
   );
@@ -69,9 +75,22 @@ export default function OverviewPage() {
     bookingIndividualPct,
     categoryData,
   } = getOverviewDashboardData({
-    trendFilter,
+    trendDateFrom,
+    trendDateTo,
     bookingYear: bookingYearFilter,
   });
+  const handleTrendDateFromChange = (value) => {
+    setTrendDateFrom(value);
+    if (trendDateTo && value && trendDateTo < value) {
+      setTrendDateTo(value);
+    }
+  };
+  const handleTrendDateToChange = (value) => {
+    setTrendDateTo(value);
+    if (trendDateFrom && value && value < trendDateFrom) {
+      setTrendDateFrom(value);
+    }
+  };
   const summaryOptions = OVERVIEW_SUMMARY_OPTIONS;
   const isSelected = (id) => summarySelection.includes(id);
   const showSummary = (id) => {
@@ -171,7 +190,7 @@ export default function OverviewPage() {
     // Row 3
     {
       id: "failed_payment_amount",
-      title: "Gagal Bayar",
+      title: "Gagal Bayar Rp",
       value: formatNominal(0),
       icon: TrendingDown,
       variant: "danger",
@@ -179,7 +198,7 @@ export default function OverviewPage() {
     },
     {
       id: "revenue_in",
-      title: "Pendapatan Masuk",
+      title: "Pendapatan Masuk Rp",
       value: formatNominal(kpis.revenueRealized),
       icon: TrendingUp,
       variant: "success",
@@ -190,7 +209,7 @@ export default function OverviewPage() {
     },
     {
       id: "revenue_pending",
-      title: "Pendapatan Pending",
+      title: "Pendapatan Pending Rp",
       value: formatNominal(kpis.revenueUnrealized),
       icon: TrendingDown,
       variant: "warning",
@@ -198,7 +217,7 @@ export default function OverviewPage() {
     },
     {
       id: "revenue_total",
-      title: "Potensi Pendapatan",
+      title: "Potensi Pendapatan Rp",
       value: formatNominal(kpis.revenueRealized + kpis.revenueUnrealized),
       icon: TrendingUp,
       variant: "brand",
@@ -348,15 +367,16 @@ export default function OverviewPage() {
         </div>
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
           <TrendTransactionCard
-            trendFilter={trendFilter}
-            onTrendFilterChange={setTrendFilter}
-            trendOptions={OVERVIEW_TREND_FILTER_OPTIONS}
+            trendDateFrom={trendDateFrom}
+            trendDateTo={trendDateTo}
+            onTrendDateFromChange={handleTrendDateFromChange}
+            onTrendDateToChange={handleTrendDateToChange}
             trendData={trendData}
             trendYAxisMax={trendYAxisMax}
           />
           <DistributionTransactionCard categoryData={categoryData} />
         </div>
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6 items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
           <TopCountryMapCard
             topCountries={topCountries}
             topCountrySeriesData={topCountrySeriesData}

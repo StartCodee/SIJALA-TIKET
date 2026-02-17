@@ -1107,14 +1107,36 @@ const OVERVIEW_OPERATOR_CATEGORY_ORDER = [
 ];
 
 const OVERVIEW_WAFFLE_TOTAL_CELLS = 100;
+const OVERVIEW_BOOKING_DUMMY_COUNTS_BY_YEAR = {
+  '2026': { group: 34, individual: 66 },
+  '2024': { group: 42, individual: 58 },
+  '2023': { group: 29, individual: 71 },
+};
 
 export const OVERVIEW_TREND_FILTER_OPTIONS = [
-  { label: 'Hari Ini', value: 'today', days: 1 },
-  { label: 'Minggu Ini', value: 'week', days: 7 },
-  { label: 'Bulan Ini', value: 'month', days: 30 },
-  { label: 'Tahun Ini', value: 'year', days: 365 },
-  { label: 'Kustom', value: 'custom', days: 30 },
+  { label: 'Rentang Waktu', value: 'range', days: 30 },
 ];
+
+const toInputDate = (dateValue) => {
+  const date = new Date(dateValue);
+  if (Number.isNaN(date.getTime())) return '';
+  const local = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
+  return local.toISOString().slice(0, 10);
+};
+
+const overviewTrendDefaultEndDate = financeReportSummary.dailyTrend.length
+  ? new Date(
+      Math.max(
+        ...financeReportSummary.dailyTrend.map((item) => new Date(item.date).getTime()),
+      ),
+    )
+  : new Date();
+
+const overviewTrendDefaultStartDate = new Date(overviewTrendDefaultEndDate);
+overviewTrendDefaultStartDate.setDate(overviewTrendDefaultStartDate.getDate() - 29);
+
+export const OVERVIEW_DEFAULT_TREND_DATE_FROM = toInputDate(overviewTrendDefaultStartDate);
+export const OVERVIEW_DEFAULT_TREND_DATE_TO = toInputDate(overviewTrendDefaultEndDate);
 
 export const OVERVIEW_BOOKING_YEAR_OPTIONS = Array.from(
   new Set(dummyTickets.map((ticket) => new Date(ticket.createdAt).getFullYear())),
@@ -1217,7 +1239,9 @@ const buildWaffleCells = (counts) => {
 };
 
 export const getOverviewDashboardData = ({
-  trendFilter = 'today',
+  trendFilter = 'range',
+  trendDateFrom = OVERVIEW_DEFAULT_TREND_DATE_FROM,
+  trendDateTo = OVERVIEW_DEFAULT_TREND_DATE_TO,
   bookingYear = OVERVIEW_DEFAULT_BOOKING_YEAR,
 } = {}) => {
   const kpis = {
@@ -1254,14 +1278,43 @@ export const getOverviewDashboardData = ({
     ? new Date(Math.max(...baseTrendData.map((item) => item.dateRaw.getTime())))
     : new Date();
 
-  const activeTrendFilter =
-    OVERVIEW_TREND_FILTER_OPTIONS.find((option) => option.value === trendFilter) ||
-    OVERVIEW_TREND_FILTER_OPTIONS[0];
+  const fallbackTrendStart = new Date(maxTrendDate);
+  fallbackTrendStart.setDate(fallbackTrendStart.getDate() - 29);
+  fallbackTrendStart.setHours(0, 0, 0, 0);
 
-  const trendStart = new Date(maxTrendDate);
-  trendStart.setDate(trendStart.getDate() - (activeTrendFilter.days - 1));
-  const trendEnd = new Date(maxTrendDate);
-  trendEnd.setHours(23, 59, 59, 999);
+  const fallbackTrendEnd = new Date(maxTrendDate);
+  fallbackTrendEnd.setHours(23, 59, 59, 999);
+
+  const parsedTrendStart = trendDateFrom
+    ? new Date(`${trendDateFrom}T00:00:00`)
+    : fallbackTrendStart;
+  const parsedTrendEnd = trendDateTo
+    ? new Date(`${trendDateTo}T23:59:59`)
+    : fallbackTrendEnd;
+
+  const trendStart = Number.isNaN(parsedTrendStart.getTime())
+    ? fallbackTrendStart
+    : parsedTrendStart;
+  const trendEnd = Number.isNaN(parsedTrendEnd.getTime())
+    ? fallbackTrendEnd
+    : parsedTrendEnd;
+
+  if (trendEnd < trendStart) {
+    trendEnd.setTime(trendStart.getTime());
+    trendEnd.setHours(23, 59, 59, 999);
+  }
+
+  const formatTrendRangeLabel = (date) =>
+    date.toLocaleDateString('id-ID', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+    });
+
+  const activeTrendFilter = {
+    value: trendFilter || 'range',
+    label: `${formatTrendRangeLabel(trendStart)} - ${formatTrendRangeLabel(trendEnd)}`,
+  };
 
   const previousTrendStart = new Date(trendStart);
   previousTrendStart.setFullYear(previousTrendStart.getFullYear() - 1);
@@ -1274,9 +1327,12 @@ export const getOverviewDashboardData = ({
   const ticketsInPreviousPeriod = dummyTickets.filter((ticket) =>
     isBetweenDate(toDate(ticket.createdAt), previousTrendStart, previousTrendEnd),
   );
+  const hasActivePeriodTickets = ticketsInActivePeriod.length > 0;
+  const comparisonCurrentTickets = hasActivePeriodTickets ? ticketsInActivePeriod : dummyTickets;
+  const comparisonPreviousTickets = ticketsInPreviousPeriod;
 
   const trendData = baseTrendData
-    .filter((item) => item.dateRaw >= trendStart)
+    .filter((item) => item.dateRaw >= trendStart && item.dateRaw <= trendEnd)
     .reduce(
       (acc, item) => {
         const lastYearPoint = Number((item.total * 0.85).toFixed(2));
@@ -1298,7 +1354,7 @@ export const getOverviewDashboardData = ({
   );
   const trendYAxisMax = Math.max(1, Math.ceil((trendMaxValue * 1.15) / 2) * 2);
 
-  const countryCounts = dummyTickets.reduce((acc, ticket) => {
+  const countryCounts = comparisonCurrentTickets.reduce((acc, ticket) => {
     const key = ticket.countryOCR || 'Tidak diketahui';
     if (key === 'Tidak diketahui') return acc;
     const normalizedName = OVERVIEW_COUNTRY_NAME_ALIASES[key] || key;
@@ -1334,8 +1390,8 @@ export const getOverviewDashboardData = ({
       },
       { L: 0, P: 0 },
     );
-  const genderCurrentCounts = toGenderCounts(ticketsInActivePeriod);
-  const genderPreviousRawCounts = toGenderCounts(ticketsInPreviousPeriod);
+  const genderCurrentCounts = toGenderCounts(comparisonCurrentTickets);
+  const genderPreviousRawCounts = toGenderCounts(comparisonPreviousTickets);
   const hasPreviousGenderData =
     (genderPreviousRawCounts.L || 0) > 0 || (genderPreviousRawCounts.P || 0) > 0;
   const genderPreviousCounts = hasPreviousGenderData
@@ -1358,12 +1414,19 @@ export const getOverviewDashboardData = ({
       acc[category] = (acc[category] || 0) + visitors;
       return acc;
     }, {});
-  const operatorCurrentCounts = aggregateOperatorCounts(ticketsInActivePeriod);
-  const operatorPreviousCounts = aggregateOperatorCounts(ticketsInPreviousPeriod);
+  const operatorCurrentCounts = aggregateOperatorCounts(comparisonCurrentTickets);
+  const operatorPreviousRawCounts = aggregateOperatorCounts(comparisonPreviousTickets);
+  const hasPreviousOperatorData = Object.values(operatorPreviousRawCounts).some((value) => value > 0);
+  const operatorPreviousCounts = hasPreviousOperatorData
+    ? operatorPreviousRawCounts
+    : OVERVIEW_OPERATOR_CATEGORY_ORDER.reduce((acc, key) => {
+        acc[key] = Math.max(0, Math.round((operatorCurrentCounts[key] || 0) * 0.8));
+        return acc;
+      }, {});
   const operatorTrendData = OVERVIEW_OPERATOR_CATEGORY_ORDER.map((key) => ({
     name: OVERVIEW_OPERATOR_CATEGORY_LABELS[key],
-    current: operatorCurrentCounts[key] > 0 ? operatorCurrentCounts[key] : null,
-    lastYear: operatorPreviousCounts[key] > 0 ? operatorPreviousCounts[key] : null,
+    current: operatorCurrentCounts[key] || 0,
+    lastYear: operatorPreviousCounts[key] || 0,
   }));
 
   const aggregateBookingPeople = (tickets) =>
@@ -1387,7 +1450,14 @@ export const getOverviewDashboardData = ({
   const ticketsInBookingPeriod = dummyTickets.filter((ticket) =>
     isBetweenDate(toDate(ticket.createdAt), bookingPeriodStart, bookingPeriodEnd),
   );
-  const bookingPeople = aggregateBookingPeople(ticketsInBookingPeriod);
+  const bookingPeopleFromPeriod = aggregateBookingPeople(ticketsInBookingPeriod);
+  const hasBookingPeople =
+    bookingPeopleFromPeriod.group + bookingPeopleFromPeriod.individual > 0;
+  const fallbackBookingPeople =
+    OVERVIEW_BOOKING_DUMMY_COUNTS_BY_YEAR[String(selectedBookingYear)] ||
+    OVERVIEW_BOOKING_DUMMY_COUNTS_BY_YEAR[OVERVIEW_DEFAULT_BOOKING_YEAR] ||
+    { group: 30, individual: 70 };
+  const bookingPeople = hasBookingPeople ? bookingPeopleFromPeriod : fallbackBookingPeople;
   const bookingWaffleData = {
     year: String(selectedBookingYear),
     counts: bookingPeople,
