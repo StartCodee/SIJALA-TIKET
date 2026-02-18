@@ -69,14 +69,14 @@ export function OperatorChartCard({ operatorTrendData }) {
                 dataKey="current"
                 name="Tahun ini"
                 fill="hsl(213 70% 45%)"
-                radius={[6, 6, 0, 0]}
+                radius={[3, 3, 0, 0]}
                 barSize={16}
               />
               <Bar
                 dataKey="lastYear"
                 name="Tahun lalu"
                 fill="hsl(213 30% 70%)"
-                radius={[6, 6, 0, 0]}
+                radius={[3, 3, 0, 0]}
                 barSize={16}
               />
             </BarChart>

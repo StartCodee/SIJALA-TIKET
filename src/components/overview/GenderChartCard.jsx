@@ -88,7 +88,7 @@ export function GenderChartCard({ activeTrendFilterLabel, genderStackedData }) {
                 name="P"
                 stackId="gender"
                 fill={GENDER_STACK_COLORS.P}
-                radius={[0, 6, 6, 0]}
+                radius={[0, 3, 3, 0]}
                 barSize={18}
               />
             </BarChart>
