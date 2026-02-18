@@ -247,7 +247,7 @@ export const dummyTickets = [
         dokumenIdentitasUrl: '/placeholder.svg',
       },
       {
-        nama: 'Nadia Lestari',
+        nama: 'Budi Santoso',
         dokumenIdentitasUrl: '/placeholder.svg',
       },
     ],
