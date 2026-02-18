@@ -2,9 +2,9 @@ import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 const WAFFLE_COLORS = {
-  group: "hsl(213 70% 45%)",
-  individual: "hsl(213 60% 60%)",
-  empty: "hsl(210 18% 86%)",
+  group: "hsl(213 72% 44%)",
+  individual: "hsl(210 14% 62%)",
+  empty: "hsl(210 16% 88%)",
 };
 
 export function BookingWaffleCard({

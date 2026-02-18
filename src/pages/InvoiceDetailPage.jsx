@@ -76,8 +76,10 @@ const PAYMENT_METHOD_LABELS = {
 const DOCUMENT_LABELS = {
   foto_diri: 'Foto diri',
   dokumen_identitas: 'KTP/SIM/PASPOR/KITAS/KITAP',
-  surat_izin_penelitian: 'Surat Ijin Penelitian (Institusi Indonesia)',
+  surat_izin_penelitian: 'Surat Izin Penelitian (Institusi Indonesia)',
   surat_permohonan_penelitian: 'Surat Permohonan Resmi Penelitian',
+  foto_identitas_penanggung_jawab: 'Foto Identitas (KTP/SIM/Paspor) Penanggung Jawab',
+  foto_identitas_peneliti: 'Foto Identitas (KTP/SIM/Paspor) Peneliti',
   foto_kapal: 'Foto kapal',
 };
 
@@ -87,10 +89,9 @@ const getRequiredDocumentKeys = (feeCategory) => {
   }
   if (String(feeCategory).startsWith('peneliti_')) {
     return [
-      'foto_diri',
-      'dokumen_identitas',
       'surat_izin_penelitian',
       'surat_permohonan_penelitian',
+      'foto_identitas_penanggung_jawab',
     ];
   }
   return ['foto_diri', 'dokumen_identitas'];
@@ -99,7 +100,7 @@ const getRequiredDocumentKeys = (feeCategory) => {
 const getRequiredDocumentLabels = (feeCategory) =>
   getRequiredDocumentKeys(feeCategory).map((key) => DOCUMENT_LABELS[key] || key);
 
-const getDocumentItemsForTicket = (ticket, feeCategory) => {
+const getDocumentItemsForTicket = (ticket, feeCategory, explicitDocumentKeys = null) => {
   const byKey = {
     foto_diri: {
       key: 'foto_diri',
@@ -121,13 +122,31 @@ const getDocumentItemsForTicket = (ticket, feeCategory) => {
       label: DOCUMENT_LABELS.surat_permohonan_penelitian,
       url: ticket?.researchRequestLetterUrl || '/placeholder.svg',
     },
+    foto_identitas_penanggung_jawab: {
+      key: 'foto_identitas_penanggung_jawab',
+      label: DOCUMENT_LABELS.foto_identitas_penanggung_jawab,
+      url:
+        ticket?.fotoIdentitasPenanggungJawabUrl ||
+        ticket?.personInChargeIdentityUrl ||
+        ticket?.identityDocumentUrl ||
+        ticket?.ktmUrl ||
+        '/placeholder.svg',
+    },
+    foto_identitas_peneliti: {
+      key: 'foto_identitas_peneliti',
+      label: DOCUMENT_LABELS.foto_identitas_peneliti,
+      url: ticket?.identityDocumentUrl || ticket?.ktmUrl || '/placeholder.svg',
+    },
     foto_kapal: {
       key: 'foto_kapal',
       label: DOCUMENT_LABELS.foto_kapal,
       url: ticket?.boatPhotoUrl || '/placeholder.svg',
     },
   };
-  return getRequiredDocumentKeys(feeCategory).map((key) => byKey[key]).filter(Boolean);
+  const documentKeys = explicitDocumentKeys?.length
+    ? explicitDocumentKeys
+    : getRequiredDocumentKeys(feeCategory);
+  return documentKeys.map((key) => byKey[key]).filter(Boolean);
 };
 
 const formatPaymentMethod = (method, ticket) => {
@@ -155,6 +174,198 @@ const formatPaymentMethod = (method, ticket) => {
 const getCountryForTicket = (ticketId) => {
   const ticket = getTicketById(ticketId);
   return ticket?.countryOCR || '-';
+};
+
+const isResearcherFeeCategory = (feeCategory) =>
+  String(feeCategory || '').startsWith('peneliti_');
+
+const hasDisplayValue = (value) => {
+  if (value === null || value === undefined) return false;
+  if (typeof value === 'string') return value.trim().length > 0;
+  if (Array.isArray(value)) return value.length > 0;
+  return true;
+};
+
+const pickFirstValue = (source, keys, fallback = '-') => {
+  for (const key of keys) {
+    const value = source?.[key];
+    if (hasDisplayValue(value)) return value;
+  }
+  return fallback;
+};
+
+const toNameList = (value) => {
+  if (Array.isArray(value)) {
+    const validItems = value.map((item) => String(item || '').trim()).filter(Boolean);
+    return validItems.length ? validItems.join(', ') : '-';
+  }
+  if (typeof value === 'string') {
+    return value.trim() || '-';
+  }
+  return '-';
+};
+
+const toNumericValue = (value) => {
+  if (value === null || value === undefined || value === '') return null;
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : null;
+};
+
+const formatResearchDate = (value) => {
+  if (!hasDisplayValue(value)) return '-';
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) return String(value);
+  return parsed.toLocaleDateString('id-ID', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+  });
+};
+
+const buildResearcherInvoiceDetail = (ticket, ticketRow) => {
+  const source = ticket || {};
+  const indonesianVesselNamesRaw = pickFirstValue(source, [
+    'indonesianResearchVesselNames',
+    'indonesianResearchVessels',
+    'kapalPenelitianIndonesiaNames',
+    'kapalPenelitianIndonesia',
+    'namaKapalPenelitianIndonesia',
+    'namaKapalIndonesia',
+  ], []);
+  const foreignVesselNamesRaw = pickFirstValue(source, [
+    'foreignResearchVesselNames',
+    'foreignResearchVessels',
+    'kapalPenelitianAsingNames',
+    'kapalPenelitianAsing',
+    'namaKapalPenelitianAsing',
+    'namaKapalAsing',
+  ], []);
+
+  const derivedIndonesianCount = Array.isArray(indonesianVesselNamesRaw)
+    ? indonesianVesselNamesRaw.filter(Boolean).length
+    : null;
+  const derivedForeignCount = Array.isArray(foreignVesselNamesRaw)
+    ? foreignVesselNamesRaw.filter(Boolean).length
+    : null;
+
+  const indonesianCountValue = toNumericValue(pickFirstValue(source, [
+    'indonesianResearchVesselCount',
+    'kapalPenelitianIndonesiaCount',
+    'jumlahKapalPenelitianIndonesia',
+    'jumlahKapalIndonesia',
+  ], null));
+  const foreignCountValue = toNumericValue(pickFirstValue(source, [
+    'foreignResearchVesselCount',
+    'kapalPenelitianAsingCount',
+    'jumlahKapalPenelitianAsing',
+    'jumlahKapalAsing',
+  ], null));
+
+  return {
+    ticketId: ticketRow?.ticketId || source?.id || '-',
+    ticketName: ticketRow?.namaLengkap || source?.namaLengkap || '-',
+    feeLabel: ticketRow?.feeLabel || source?.feeCategory || 'Peneliti',
+    lokasiKkpn: pickFirstValue(source, ['lokasiKKPN', 'lokasiKkpn', 'researchLocationKKPN', 'kkpnLocation']),
+    namaInstitusi: pickFirstValue(source, ['namaInstitusi', 'institutionName', 'researchInstitutionName']),
+    asalInstitusi: pickFirstValue(source, ['asalInstitusi', 'institutionOrigin', 'researchInstitutionOrigin']),
+    alamatInstitusi: pickFirstValue(source, ['alamatInstitusi', 'institutionAddress', 'researchInstitutionAddress']),
+    provinsi: pickFirstValue(source, ['provinsi', 'province', 'institutionProvince', 'provinsiInstitusi']),
+    kabupatenKota: pickFirstValue(source, ['kabupatenKota', 'kabupaten_kota', 'city', 'institutionCity', 'kotaInstitusi']),
+    teleponInstitusi: pickFirstValue(source, [
+      'nomorTeleponInstitusiPeneliti',
+      'nomorTeleponInstitusi',
+      'institutionPhone',
+      'researchInstitutionPhone',
+    ]),
+    emailInstitusi: pickFirstValue(source, [
+      'emailInstitusiPeneliti',
+      'emailInstitusi',
+      'institutionEmail',
+      'researchInstitutionEmail',
+    ]),
+    judulPenelitian: pickFirstValue(source, ['judulPenelitian', 'researchTitle']),
+    tujuanPenelitian: pickFirstValue(source, ['tujuanPenelitian', 'researchObjective']),
+    uraianSingkatPenelitian: pickFirstValue(source, ['uraianSingkatPenelitian', 'researchSummary', 'researchDescription']),
+    tanggalMulaiKegiatan: formatResearchDate(
+      pickFirstValue(source, ['tanggalMulaiKegiatan', 'activityStartDate', 'researchStartDate'], null),
+    ),
+    tanggalSelesaiKegiatan: formatResearchDate(
+      pickFirstValue(source, ['tanggalSelesaiKegiatan', 'activityEndDate', 'researchEndDate'], null),
+    ),
+    penanggungJawabNama: pickFirstValue(
+      source,
+      ['namaLengkapPenanggungJawab', 'penanggungJawabNama', 'personInChargeName'],
+      ticketRow?.namaLengkap || source?.namaLengkap || '-',
+    ),
+    penanggungJawabKewarganegaraan: pickFirstValue(
+      source,
+      ['kewarganegaraanPenanggungJawab', 'penanggungJawabKewarganegaraan', 'personInChargeCitizenship'],
+      source?.countryOCR || '-',
+    ),
+    penanggungJawabNomorSeluler: pickFirstValue(
+      source,
+      ['nomorSelulerPenanggungJawab', 'penanggungJawabNomorSeluler', 'personInChargePhone'],
+      ticketRow?.noHP || source?.noHP || '-',
+    ),
+    saranaPenelitian: pickFirstValue(
+      source,
+      ['saranaPenelitianDigunakan', 'saranaPenelitian', 'researchFacilitiesUsed', 'researchFacility'],
+      '-',
+    ),
+    kapalPenelitianIndonesiaJumlah: indonesianCountValue ?? derivedIndonesianCount ?? '-',
+    kapalPenelitianIndonesiaNama: toNameList(indonesianVesselNamesRaw),
+    kapalPenelitianAsingJumlah: foreignCountValue ?? derivedForeignCount ?? '-',
+    kapalPenelitianAsingNama: toNameList(foreignVesselNamesRaw),
+  };
+};
+
+const getResearcherIdentityParticipants = (ticket, ticketRow) => {
+  const source = ticket || {};
+  const participantSources = [
+    source?.researcherIdentityDocs,
+    source?.researcherIdentities,
+    source?.anggotaPeneliti,
+    source?.researchMembers,
+    source?.researchers,
+  ];
+  const firstList = participantSources.find((value) => Array.isArray(value) && value.length > 0);
+  const fallbackUrl = source?.identityDocumentUrl || source?.ktmUrl || '/placeholder.svg';
+
+  if (firstList) {
+    return firstList.map((member, index) => ({
+      id: member?.id || member?.identityId || `${ticketRow?.ticketId || source?.id || 'ticket'}-${index + 1}`,
+      name:
+        member?.nama ||
+        member?.name ||
+        member?.namaLengkap ||
+        member?.fullName ||
+        `Peneliti ${index + 1}`,
+      url:
+        member?.dokumenIdentitasUrl ||
+        member?.identityDocumentUrl ||
+        member?.ktpUrl ||
+        member?.url ||
+        fallbackUrl,
+    }));
+  }
+
+  const totalParticipants = Math.max(
+    1,
+    Number(source?.jumlahDomestik || 0) + Number(source?.jumlahMancanegara || 0),
+  );
+  if (totalParticipants > 1) {
+    return Array.from({ length: totalParticipants }, (_, index) => ({
+      id: `${ticketRow?.ticketId || source?.id || 'ticket'}-${index + 1}`,
+      name: `Peneliti ${index + 1}`,
+      url: fallbackUrl,
+    }));
+  }
+
+  return [{
+    id: `${ticketRow?.ticketId || source?.id || 'ticket'}-1`,
+    name: ticketRow?.namaLengkap || source?.namaLengkap || '-',
+    url: fallbackUrl,
+  }];
 };
 
 export default function InvoiceDetailPage() {
@@ -347,7 +558,18 @@ export default function InvoiceDetailPage() {
     )
   ).join(', ');
 
-  const supportingDocsByCategory = invoice.byCategory.map((item) => {
+  const researcherInvoiceDetails = invoice.tickets
+    .filter((ticket) => isResearcherFeeCategory(ticket.feeCategory))
+    .map((ticket) => buildResearcherInvoiceDetail(getTicketById(ticket.ticketId), ticket));
+
+  const hasResearcherTicket = invoice.tickets.some((ticket) =>
+    isResearcherFeeCategory(ticket.feeCategory),
+  );
+  const docCategorySource = hasResearcherTicket
+    ? invoice.byCategory.filter((item) => isResearcherFeeCategory(item.feeCategory))
+    : invoice.byCategory;
+
+  const supportingDocsByCategory = docCategorySource.flatMap((item) => {
     const ticketsInCategory = invoice.tickets.filter((ticket) => ticket.feeCategory === item.feeCategory);
     const ownerNames = Array.from(
       new Set(
@@ -361,19 +583,91 @@ export default function InvoiceDetailPage() {
         ? ownerNames.join(', ')
         : `${ownerNames[0]} +${ownerNames.length - 1} lainnya`;
 
-    return {
+    if (isResearcherFeeCategory(item.feeCategory)) {
+      const researcherDocCards = [
+        {
+          id: `${item.feeCategory}-surat-izin`,
+          ownerLabel: DOCUMENT_LABELS.surat_izin_penelitian,
+          docs: ['Dokumen terpisah per tiket peneliti'],
+          docKeys: ['surat_izin_penelitian'],
+        },
+        {
+          id: `${item.feeCategory}-surat-permohonan`,
+          ownerLabel: DOCUMENT_LABELS.surat_permohonan_penelitian,
+          docs: ['Dokumen terpisah per tiket peneliti'],
+          docKeys: ['surat_permohonan_penelitian'],
+        },
+        {
+          id: `${item.feeCategory}-foto-identitas-penanggung-jawab`,
+          ownerLabel: DOCUMENT_LABELS.foto_identitas_penanggung_jawab,
+          docs: ['Dokumen terpisah per tiket peneliti'],
+          docKeys: ['foto_identitas_penanggung_jawab'],
+        },
+        {
+          id: `${item.feeCategory}-foto-identitas-peneliti`,
+          ownerLabel: DOCUMENT_LABELS.foto_identitas_peneliti,
+          docs: ['Klik untuk melihat banyak data identitas peneliti'],
+          docKeys: ['foto_identitas_peneliti'],
+        },
+      ];
+
+      return researcherDocCards.map((card) => ({
+        feeCategory: item.feeCategory,
+        feeLabel: item.feeLabel,
+        ownerLabel: card.ownerLabel,
+        docs: card.docs,
+        tickets: ticketsInCategory,
+        ticketCount: ticketsInCategory.length,
+        docKeys: card.docKeys,
+        id: card.id,
+      }));
+    }
+
+    return [{
+      id: item.feeCategory,
       feeCategory: item.feeCategory,
       feeLabel: item.feeLabel,
       ownerLabel: ownerLabel || item.feeLabel,
       docs: getRequiredDocumentLabels(item.feeCategory),
       tickets: ticketsInCategory,
       ticketCount: ticketsInCategory.length,
-    };
+      docKeys: null,
+    }];
   });
 
   const selectedDocTicket = selectedDocTicketId ? getTicketById(selectedDocTicketId) : null;
+  const shouldShowAllResearcherIdentityDocs = Boolean(
+    selectedDocCategory?.docKeys?.length === 1 &&
+    selectedDocCategory?.docKeys?.[0] === 'foto_identitas_peneliti',
+  );
+  const researcherIdentityPreviewItems = shouldShowAllResearcherIdentityDocs
+    ? selectedDocCategory.tickets
+      .flatMap((ticketRow) => {
+        const sourceTicket = getTicketById(ticketRow.ticketId);
+        const docMeta = getDocumentItemsForTicket(
+          sourceTicket,
+          selectedDocCategory.feeCategory,
+          selectedDocCategory.docKeys,
+        )[0] || {
+          key: 'foto_identitas_peneliti',
+          label: DOCUMENT_LABELS.foto_identitas_peneliti,
+        };
+        return getResearcherIdentityParticipants(sourceTicket, ticketRow).map((participant) => ({
+          ...docMeta,
+          ticketId: ticketRow.ticketId,
+          ticketName: participant.name,
+          participantId: participant.id,
+          url: participant.url,
+        }));
+      })
+      .filter(Boolean)
+    : [];
   const selectedDocItems = selectedDocCategory
-    ? getDocumentItemsForTicket(selectedDocTicket, selectedDocCategory.feeCategory)
+    ? getDocumentItemsForTicket(
+      selectedDocTicket,
+      selectedDocCategory.feeCategory,
+      selectedDocCategory.docKeys,
+    )
     : [];
 
   const openDocumentsDialog = (categoryGroup) => {
@@ -566,6 +860,95 @@ export default function InvoiceDetailPage() {
               </CardContent>
             </Card>
 
+            {researcherInvoiceDetails.length > 0 && (
+              <Card className="card-ocean">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-base font-semibold">Detail Peneliti</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {researcherInvoiceDetails.map((detail) => {
+                    const formItems = [
+                      { label: 'Lokasi KKPN', value: detail.lokasiKkpn },
+                      { label: 'Nama Institusi', value: detail.namaInstitusi },
+                      { label: 'Asal Institusi', value: detail.asalInstitusi },
+                      { label: 'Alamat Institusi', value: detail.alamatInstitusi },
+                      { label: 'Provinsi', value: detail.provinsi },
+                      { label: 'Kabupaten/Kota', value: detail.kabupatenKota },
+                      { label: 'Nomor Telepon Institusi Peneliti', value: detail.teleponInstitusi },
+                      { label: 'Email Institusi Peneliti', value: detail.emailInstitusi },
+                      { label: 'Judul Penelitian', value: detail.judulPenelitian },
+                      { label: 'Tujuan Penelitian', value: detail.tujuanPenelitian },
+                      { label: 'Uraian Singkat Penelitian', value: detail.uraianSingkatPenelitian },
+                      { label: 'Tanggal Mulai Kegiatan', value: detail.tanggalMulaiKegiatan },
+                      { label: 'Tanggal Selesai Kegiatan', value: detail.tanggalSelesaiKegiatan },
+                      { label: 'Nama Lengkap Penanggung Jawab', value: detail.penanggungJawabNama },
+                      { label: 'Kewarganegaraan Penanggung Jawab', value: detail.penanggungJawabKewarganegaraan },
+                      { label: 'Nomor Seluler Penanggung Jawab', value: detail.penanggungJawabNomorSeluler },
+                    ];
+
+                    return (
+                      <div key={detail.ticketId} className="rounded-lg border border-border p-4">
+                        <div className="flex flex-wrap items-start justify-between gap-3">
+                          <div>
+                            <p className="text-sm font-semibold">{detail.ticketName}</p>
+                            <p className="text-xs text-muted-foreground">
+                              {detail.ticketId} - {detail.feeLabel}
+                            </p>
+                          </div>
+                          <Badge variant="outline">Form Peneliti</Badge>
+                        </div>
+
+                        <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-3">
+                          {formItems.map((item) => (
+                            <div key={`${detail.ticketId}-${item.label}`}>
+                              <p className="text-xs text-muted-foreground mb-1">{item.label}</p>
+                              <p className="text-sm font-medium whitespace-pre-wrap break-words">
+                                {item.value || '-'}
+                              </p>
+                            </div>
+                          ))}
+                        </div>
+
+                        <div className="mt-4 pt-4 border-t border-border">
+                          <p className="text-xs text-muted-foreground mb-2">Sarana Penelitian yang Digunakan</p>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            <div className="rounded-md bg-muted/40 p-3">
+                              <p className="text-xs text-muted-foreground mb-1">Sarana</p>
+                              <p className="text-sm font-medium whitespace-pre-wrap break-words">
+                                {detail.saranaPenelitian || '-'}
+                              </p>
+                            </div>
+                            <div className="rounded-md bg-muted/40 p-3">
+                              <p className="text-xs text-muted-foreground mb-1">
+                                Kapal Penelitian - Ekspedisi Berbendera Indonesia
+                              </p>
+                              <p className="text-sm font-medium">
+                                Jumlah: {detail.kapalPenelitianIndonesiaJumlah ?? '-'}
+                              </p>
+                              <p className="text-xs text-muted-foreground mt-1 whitespace-pre-wrap break-words">
+                                Nama Kapal: {detail.kapalPenelitianIndonesiaNama || '-'}
+                              </p>
+                            </div>
+                            <div className="rounded-md bg-muted/40 p-3 md:col-span-2">
+                              <p className="text-xs text-muted-foreground mb-1">
+                                Kapal Penelitian - Ekspedisi Berbendera Asing
+                              </p>
+                              <p className="text-sm font-medium">
+                                Jumlah: {detail.kapalPenelitianAsingJumlah ?? '-'}
+                              </p>
+                              <p className="text-xs text-muted-foreground mt-1 whitespace-pre-wrap break-words">
+                                Nama Kapal: {detail.kapalPenelitianAsingNama || '-'}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </CardContent>
+              </Card>
+            )}
+
             {/* TICKETS TABLE */}
             <Card className="card-ocean">
               <CardHeader className="pb-3">
@@ -679,7 +1062,7 @@ export default function InvoiceDetailPage() {
               </CardHeader>
               <CardContent className="space-y-4 text-sm">
                 {supportingDocsByCategory.map((group) => (
-                  <div key={group.feeCategory} className="rounded-lg border border-border p-3">
+                  <div key={group.id} className="rounded-lg border border-border p-3">
                     <p className="text-xs font-semibold text-foreground mb-2">
                       {group.ownerLabel}
                     </p>
@@ -711,14 +1094,16 @@ export default function InvoiceDetailPage() {
             <DialogTitle>Dokumen Pendukung Invoice</DialogTitle>
             <DialogDescription>
               {selectedDocCategory
-                ? `${selectedDocCategory.ownerLabel} - pilih tiket untuk melihat dokumen`
+                ? shouldShowAllResearcherIdentityDocs
+                  ? `${selectedDocCategory.ownerLabel} - pratinjau per peneliti`
+                  : `${selectedDocCategory.ownerLabel} - pilih tiket untuk melihat dokumen`
                 : 'Pilih kategori dokumen'}
             </DialogDescription>
           </DialogHeader>
 
           {selectedDocCategory && (
             <div className="space-y-4">
-              {selectedDocCategory.tickets.length > 1 && (
+              {selectedDocCategory.tickets.length > 1 && !shouldShowAllResearcherIdentityDocs && (
                 <div className="space-y-2">
                   <Label>Pilih Tiket</Label>
                   <Select value={selectedDocTicketId} onValueChange={setSelectedDocTicketId}>
@@ -736,7 +1121,41 @@ export default function InvoiceDetailPage() {
                 </div>
               )}
 
-              {selectedDocItems.length ? (
+              {shouldShowAllResearcherIdentityDocs ? (
+                researcherIdentityPreviewItems.length ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {researcherIdentityPreviewItems.map((doc) => (
+                      <div key={`${doc.ticketId}-${doc.participantId}-${doc.key}`} className="space-y-2 rounded-lg border border-border p-3">
+                        <p className="text-xs font-medium text-foreground">{doc.ticketName}</p>
+                        <div className="w-full aspect-video bg-muted rounded-lg overflow-hidden">
+                          <img
+                            src={doc.url || '/placeholder.svg'}
+                            alt={`Pratinjau identitas ${doc.ticketName}`}
+                            className="w-full h-full object-contain"
+                          />
+                        </div>
+                        <div className="flex items-center justify-end gap-2">
+                          <Button type="button" size="sm" variant="outline" onClick={() => window.open(doc.url, '_blank', 'noopener,noreferrer')}>
+                            Preview
+                          </Button>
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleDocumentDownload(doc.url, `${doc.ticketId}-${doc.key}`)}
+                          >
+                            Unduh
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="rounded-lg border border-dashed border-border p-6 text-center text-sm text-muted-foreground">
+                    Dokumen belum tersedia untuk tiket peneliti.
+                  </div>
+                )
+              ) : selectedDocItems.length ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {selectedDocItems.map((doc) => (
                     <div key={`${selectedDocTicketId}-${doc.key}`} className="space-y-2 rounded-lg border border-border p-3">
@@ -913,3 +1332,4 @@ export default function InvoiceDetailPage() {
     </AdminLayout>
   );
 }
+
