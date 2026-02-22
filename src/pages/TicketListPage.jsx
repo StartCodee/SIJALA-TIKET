@@ -19,7 +19,6 @@ import {
   FileText,
   Printer,
   FileCheck,
-  Landmark,
   IdCard,
   Eye,
 } from "lucide-react";
@@ -68,9 +67,6 @@ export default function TicketListPage() {
   };
   const getGerbangDisplay = (ticket) =>
     getPaymentType(ticket) === "online" ? "DOKU" : getPetugasGerbangName(ticket);
-  const isInternationalTicket = (ticket) =>
-    ticket.domisiliOCR === "mancanegara" ||
-    ticket.feeCategory?.includes("mancanegara");
   const getCardActiveStart = (ticket) => ticket.paidAt || ticket.createdAt;
   const getValidityMonths = (ticket) => {
     const validityLabel = FEE_PRICING[ticket.feeCategory]?.validity || "12 bulan";
@@ -591,29 +587,16 @@ export default function TicketListPage() {
                             </Button>
                           )}
 
-                          {isInternationalTicket(ticket) ? (
-                            <Link to={`/payments/${ticket.id}?type=turis`}>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-7 w-7"
-                                title="Bukti Pembayaran Turis"
-                              >
-                                <FileCheck className="w-3.5 h-3.5" />
-                              </Button>
-                            </Link>
-                          ) : (
-                            <Link to={`/payments/${ticket.id}?type=blud`}>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-7 w-7"
-                                title="Bukti Pembayaran BLUD UPTD KKP"
-                              >
-                                <Landmark className="w-3.5 h-3.5" />
-                              </Button>
-                            </Link>
-                          )}
+                          <Link to={`/payments/${ticket.id}?type=turis`}>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7"
+                              title="Bukti Pembayaran"
+                            >
+                              <FileCheck className="w-3.5 h-3.5" />
+                            </Button>
+                          </Link>
 
                           <Link to={`/cards/${ticket.id}`}>
                             <Button

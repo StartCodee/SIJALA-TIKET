@@ -29,7 +29,7 @@ const mainNavItems = [
   { to: '/invoices', icon: CreditCard, label: 'Invoice' },
   { to: '/payments', icon: CreditCard, label: 'Pembayaran' },
   { to: '/refund-request', icon: FileInput, label: 'Pengajuan Refund' },
-  { to: '/refunds', icon: RotateCcw, label: 'Pusat Refund' },
+  { to: '/refunds', icon: RotateCcw, label: 'Pengembalian Dana' },
   { to: '/approval', icon: ClipboardCheck, label: 'Antrian Persetujuan' },
   { to: '/reports', icon: BarChart3, label: 'Laporan Keuangan' },
   { to: '/gate', icon: DoorOpen, label: 'Tiket Langsung' },
