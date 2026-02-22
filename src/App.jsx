@@ -19,6 +19,8 @@ import InvoiceDetailPage from "./pages/InvoiceDetailPage";
 import InvoiceListPage from "./pages/InvoiceListPage";
 import TicketDesignerPage from "./pages/TicketDesigner";
 import ProfilePage from "./pages/ProfilePage";
+import VisitorPage from "./pages/VisitorPage";
+import VisitorDetailPage from "./pages/VisitorDetailPage";
 
 const queryClient = new QueryClient();
 
@@ -44,6 +46,8 @@ const App = () => (
         <Routes>
           <Route path="/" element={<OverviewPage />} />
           <Route path="/tickets" element={<TicketListPage />} />
+          <Route path="/visitors" element={<VisitorPage />} />
+          <Route path="/visitors/:visitorKey" element={<VisitorDetailPage />} />
           <Route path="/ticket-designer" element={<TicketDesignerPage />} />
           <Route path="/tickets/:ticketId" element={<TicketDetailPage />} />
           <Route path="/approval" element={<ApprovalQueuePage />} />

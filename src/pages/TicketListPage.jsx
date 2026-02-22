@@ -236,7 +236,7 @@ export default function TicketListPage() {
         showSearch={false}
       />
 
-      <div className="flex-1 overflow-auto p-4 xl:p-5">
+      <div className="flex-1 overflow-auto px-5 py-4 xl:px-6 xl:py-5">
         {/* Search & Actions Bar */}
         <div className="flex flex-col gap-3 mb-4 lg:flex-row lg:items-center lg:justify-between">
           <div className="relative w-full min-w-[220px] lg:flex-1 lg:max-w-md">
@@ -433,12 +433,12 @@ export default function TicketListPage() {
 
         {/* Table */}
         <Card className="card-ocean overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="data-table data-table-compact table-fixed">
+          <div className="overflow-x-auto custom-scrollbar">
+            <table className="data-table table-fixed min-w-[1660px]">
               <thead>
-                <tr className="[&>th]:text-center [&>th]:whitespace-nowrap">
+                <tr className="[&>th]:text-center [&>th]:align-middle">
                   <th
-                    className="w-[17%] cursor-pointer hover:bg-muted/70 transition-colors"
+                    className="w-[260px] min-w-[260px] max-w-[260px] sticky left-0 z-50 relative isolate !bg-muted cursor-pointer hover:!bg-muted transition-colors shadow-[8px_0_12px_-10px_rgba(15,23,42,0.35)] after:content-[''] after:absolute after:right-0 after:top-0 after:h-full after:w-px after:bg-border"
                     onClick={() => handleSort("namaLengkap")}
                   >
                     <div className="flex items-center justify-center gap-1 overflow-hidden">
@@ -446,45 +446,45 @@ export default function TicketListPage() {
                     </div>
                   </th>
                   <th
-                    className="w-[10%] cursor-pointer hover:bg-muted/70 transition-colors"
+                    className="w-[150px] min-w-[150px] max-w-[150px] cursor-pointer hover:bg-muted/70 transition-colors"
                     onClick={() => handleSort("activeStartAt")}
                   >
                     <div className="flex items-center justify-center gap-1 overflow-hidden">
                       Tanggal <SortIcon field="activeStartAt" />
                     </div>
                   </th>
-                  <th className="w-[6%]">
+                  <th className="w-[90px] min-w-[90px] max-w-[90px]">
                     <div>Waktu</div>
                   </th>
                   <th
-                    className="w-[7%] cursor-pointer hover:bg-muted/70 transition-colors"
+                    className="w-[120px] min-w-[120px] max-w-[120px] cursor-pointer hover:bg-muted/70 transition-colors"
                     onClick={() => handleSort("id")}
                   >
                     <div className="flex items-center justify-center gap-1 overflow-hidden">
                       ID tiket <SortIcon field="id" />
                     </div>
                   </th>
-                  <th className="w-[6%]">
+                  <th className="w-[110px] min-w-[110px] max-w-[110px]">
                     <div>Tipe</div>
                   </th>
-                  <th className="w-[13%]">
+                  <th className="w-[170px] min-w-[170px] max-w-[170px]">
                     <div>Lokasi Pembayaran</div>
                   </th>
                   <th
-                    className="w-[11%] cursor-pointer hover:bg-muted/70 transition-colors"
+                    className="w-[240px] min-w-[240px] max-w-[240px] cursor-pointer hover:bg-muted/70 transition-colors"
                     onClick={() => handleSort("targetPengunjung")}
                   >
-                    <div className="flex items-center justify-center gap-1 overflow-hidden">
+                    <div className="flex items-center justify-center gap-1">
                       Target Pengunjung <SortIcon field="targetPengunjung" />
                     </div>
                   </th>
-                  <th className="w-[7%]">
+                  <th className="w-[110px] min-w-[110px] max-w-[110px]">
                     <div>Status</div>
                   </th>
-                  <th className="w-[10%] text-center">
+                  <th className="w-[150px] min-w-[150px] max-w-[150px] text-center">
                     <div>Aksi</div>
                   </th>
-                  <th className="w-[13%]">
+                  <th className="w-[170px] min-w-[170px] max-w-[170px]">
                     <div>Gerbang</div>
                   </th>
                 </tr>
@@ -496,7 +496,7 @@ export default function TicketListPage() {
                   const invoiceId = getInvoiceIdForTicket(ticket.id);
                   return (
                     <tr key={ticket.id} className="group">
-                      <td className="whitespace-nowrap text-sm font-medium">
+                      <td className="w-[260px] min-w-[260px] max-w-[260px] whitespace-nowrap text-sm font-medium sticky left-0 z-40 relative isolate !bg-card group-hover:!bg-card shadow-[8px_0_12px_-10px_rgba(15,23,42,0.25)] after:content-[''] after:absolute after:right-0 after:top-0 after:h-full after:w-px after:bg-border">
                         <div className="truncate" title={ticket.namaLengkap}>
                           {ticket.namaLengkap}
                         </div>
@@ -538,9 +538,9 @@ export default function TicketListPage() {
                         </div>
                       </td>
 
-                      <td className="whitespace-nowrap">
+                      <td className="w-[240px] min-w-[240px] max-w-[240px]">
                         <span
-                          className="block truncate text-sm"
+                          className="block text-sm whitespace-normal break-words leading-snug"
                           title={getTargetPengunjungLabel(ticket)}
                         >
                           {getTargetPengunjungLabel(ticket)}

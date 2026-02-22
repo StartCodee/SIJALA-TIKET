@@ -10,6 +10,7 @@ import {
   DoorOpen,
   BarChart3,
   RotateCcw,
+  User,
   Users,
   History,
   ChevronLeft,
@@ -23,6 +24,7 @@ import motifSidebar from '@/assets/motif-sidebar.svg';
 const mainNavItems = [
   { to: '/', icon: LayoutDashboard, label: 'Ringkasan' },
   { to: '/tickets', icon: Ticket, label: 'Tiket' },
+  { to: '/visitors', icon: User, label: 'Visitor' },
   { to: '/invoices', icon: CreditCard, label: 'Invoice' },
   { to: '/payments', icon: CreditCard, label: 'Pembayaran' },
   { to: '/refunds', icon: RotateCcw, label: 'Pengembalian Dana' },

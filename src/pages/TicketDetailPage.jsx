@@ -16,7 +16,6 @@ import {
   FEE_PRICING,
   DOMISILI_LABELS,
   REFUND_TYPE_LABELS,
-  BOOKING_TYPE_LABELS,
 } from "@/data/dummyData";
 import {
   ArrowLeft,
@@ -46,13 +45,6 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 export default function TicketDetailPage() {
   const { ticketId } = useParams();
   const location = useLocation();
@@ -61,48 +53,16 @@ export default function TicketDetailPage() {
   );
   const ticketRefunds = dummyRefunds.filter((r) => r.ticketId === ticketId);
   const [showEditDialog, setShowEditDialog] = useState(false);
-  const adminApproverOptions = dummyAdminUsers.filter(
-    (admin) => admin.role === "admin_utama" || admin.role === "admin_tiket",
-  );
-  const OPERATOR_CATEGORY_OPTIONS = [
-    { value: "kapal", label: "Kapal" },
-    { value: "resort", label: "Resort" },
-    { value: "homestay", label: "Homestay" },
-    { value: "dive_center", label: "Dive Center" },
-    { value: "mandiri", label: "Mandiri" },
-    { value: "lainnya", label: "Lainnya" },
-  ];
-  const getOperatorCategoryFromTicket = (ticketData) => {
-    if (ticketData?.operatorCategory) return ticketData.operatorCategory;
-    if (ticketData?.bookingType === "group" || ticketData?.feeCategory === "mooring") return "kapal";
-    if (ticketData?.feeCategory === "sport_fishing") return "dive_center";
-    if (ticketData?.operatorType === "doku") return "resort";
-    if (ticketData?.operatorType === "qris") return "homestay";
-    if (ticketData?.operatorType === "loket") return "mandiri";
-    return "lainnya";
-  };
-  const getOperatorTypeFromCategory = (category) => {
-    const categoryToOperatorType = {
-      resort: "doku",
-      homestay: "qris",
-      mandiri: "loket",
-      kapal: "transfer",
-      dive_center: "transfer",
-      lainnya: "transfer",
-    };
-    return categoryToOperatorType[category] || "transfer";
-  };
-  const getDefaultOperatorName = (operatorCategory) => {
-    const operatorNameByCategory = {
-      kapal: "Kapal Raja Ampat Explorer",
-      resort: "Resort Waigeo Paradise",
-      homestay: "Homestay Misool Indah",
-      dive_center: "Dive Center Blue Lagoon",
-      mandiri: "Mandiri Loket Utama",
-      lainnya: "Operator Lainnya Raja Ampat",
-    };
-    return operatorNameByCategory[operatorCategory] || "Operator Lainnya Raja Ampat";
-  };
+  const [editForm, setEditForm] = useState({
+    namaLengkap: "",
+    email: "",
+    noHP: "",
+    countryOCR: "Indonesia",
+  });
+  useEffect(() => {
+    if (!ticketId) return;
+    setTicket(getTicketById(ticketId));
+  }, [ticketId]);
   const getDefaultGateOfficerName = (ticketData) => {
     if (ticketData?.operatorType === "doku") {
       return "DOKU";
@@ -122,43 +82,8 @@ export default function TicketDetailPage() {
     };
     return petugasByOperator[ticketData?.operatorType] || "Bambang Susilo";
   };
-  const [editForm, setEditForm] = useState({
-    namaLengkap: "",
-    email: "",
-    noHP: "",
-    countryOCR: "Indonesia",
-    bookingType: "perorangan",
-    feeCategory: "wisatawan_domestik_pbd",
-    hargaPerOrang: 0,
-    totalBiaya: 0,
-    invoiceAvailable: "tidak",
-    paymentProofAvailable: "tidak",
-    operatorCategory: "mandiri",
-    operatorName: "",
-    refundApprovalStatus: "tidak_disetujui",
-    paymentStatus: "belum_bayar",
-    gateValue: "",
-    approvedBy: "",
-  });
-  useEffect(() => {
-    if (!ticketId) return;
-    setTicket(getTicketById(ticketId));
-  }, [ticketId]);
   const openEditDialog = () => {
     if (!ticket) return;
-    const invoiceExists = Boolean(getInvoiceIdForTicket(ticket.id));
-    const paidTicketStatuses = [
-      "sudah_bayar",
-      "refund_diajukan",
-      "refund_diproses",
-      "refund_selesai",
-    ];
-    const isTicketPaid = paidTicketStatuses.includes(ticket.paymentStatus);
-    const latestTicketRefund = [...ticketRefunds].sort(
-      (a, b) => new Date(b.requestedAt).getTime() - new Date(a.requestedAt).getTime(),
-    )[0];
-    const operatorCategory = getOperatorCategoryFromTicket(ticket);
-    const selectedOperatorType = getOperatorTypeFromCategory(operatorCategory);
     setEditForm({
       namaLengkap: ticket.namaLengkap || "",
       email: ticket.email || "",
@@ -166,70 +91,16 @@ export default function TicketDetailPage() {
       countryOCR:
         ticket.countryOCR ||
         (ticket.domisiliOCR === "mancanegara" ? "Mancanegara" : "Indonesia"),
-      bookingType: ticket.bookingType || "perorangan",
-      feeCategory: ticket.feeCategory || "wisatawan_domestik_pbd",
-      hargaPerOrang: ticket.hargaPerOrang || 0,
-      totalBiaya: ticket.totalBiaya || 0,
-      invoiceAvailable:
-        (typeof ticket.invoiceAvailable === "boolean"
-          ? ticket.invoiceAvailable
-          : invoiceExists)
-          ? "ada"
-          : "tidak",
-      paymentProofAvailable:
-        (typeof ticket.paymentProofAvailable === "boolean"
-          ? ticket.paymentProofAvailable
-          : Boolean(ticket.paidAt))
-          ? "ada"
-          : "tidak",
-      operatorCategory,
-      operatorName: ticket.operatorName || getDefaultOperatorName(operatorCategory),
-      refundApprovalStatus:
-        ticket.refundApprovalStatus ||
-        (latestTicketRefund?.status === "completed"
-          ? "disetujui"
-          : "tidak_disetujui"),
-      paymentStatus: isTicketPaid ? "sudah_bayar" : "belum_bayar",
-      gateValue:
-        selectedOperatorType === "doku"
-          ? "DOKU"
-          : ticket.gateOfficerName || getDefaultGateOfficerName(ticket),
-      approvedBy: ticket.approvedBy || "",
     });
     setShowEditDialog(true);
   };
   const handleSaveEdit = () => {
     if (!ticket) return;
-    const isPaid = editForm.paymentStatus === "sudah_bayar";
-    const hasPaymentProof = editForm.paymentProofAvailable === "ada";
-    const paidAtValue = isPaid || hasPaymentProof ? ticket.paidAt || new Date().toISOString() : "";
-    const selectedOperatorType = getOperatorTypeFromCategory(editForm.operatorCategory);
-    const gateOfficerName =
-      selectedOperatorType === "doku" ? "DOKU" : editForm.gateValue.trim();
     saveTicketOverride(ticket.id, {
       namaLengkap: editForm.namaLengkap,
       email: editForm.email,
       noHP: editForm.noHP,
       countryOCR: editForm.countryOCR,
-      bookingType: editForm.bookingType,
-      feeCategory: editForm.feeCategory,
-      hargaPerOrang: Number(editForm.hargaPerOrang || 0),
-      totalBiaya: Number(editForm.totalBiaya || 0),
-      invoiceAvailable: editForm.invoiceAvailable === "ada",
-      paymentProofAvailable: hasPaymentProof,
-      operatorType: selectedOperatorType,
-      operatorCategory: editForm.operatorCategory,
-      operatorName: editForm.operatorName || getDefaultOperatorName(editForm.operatorCategory),
-      refundApprovalStatus: editForm.refundApprovalStatus,
-      paymentStatus: isPaid ? "sudah_bayar" : "belum_bayar",
-      paidAt: paidAtValue,
-      qrActive: isPaid,
-      gateOfficerName,
-      lastActionBy:
-        selectedOperatorType === "doku"
-          ? ticket.lastActionBy
-          : gateOfficerName || ticket.lastActionBy,
-      approvedBy: editForm.approvedBy,
     });
     setTicket(getTicketById(ticket.id));
     setShowEditDialog(false);
@@ -763,7 +634,7 @@ export default function TicketDetailPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label>Nomor Kontak</Label>
+              <Label>No Telp</Label>
               <Input
                 value={editForm.noHP}
                 onChange={(e) =>
@@ -786,252 +657,6 @@ export default function TicketDetailPage() {
                   }))
                 }
               />
-            </div>
-            <div className="space-y-2">
-              <Label>Tipe Pemesan</Label>
-              <Select
-                value={editForm.bookingType}
-                onValueChange={(value) => {
-                  const pesertaCount = Math.max(
-                    1,
-                    (ticket.jumlahDomestik || 0) + (ticket.jumlahMancanegara || 0),
-                  );
-                  setEditForm((prev) => ({
-                    ...prev,
-                    bookingType: value,
-                    totalBiaya:
-                      value === "group"
-                        ? Number(prev.hargaPerOrang || 0) * pesertaCount
-                        : Number(prev.hargaPerOrang || 0),
-                  }));
-                }}
-              >
-                <SelectTrigger className="bg-background">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent className="bg-popover border-border">
-                  {Object.entries(BOOKING_TYPE_LABELS).map(([key, label]) => (
-                    <SelectItem key={key} value={key}>
-                      {label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label>Kategori</Label>
-              <Select
-                value={editForm.feeCategory}
-                onValueChange={(value) => {
-                  const nextHarga = FEE_PRICING[value]?.price ?? Number(editForm.hargaPerOrang || 0);
-                  const pesertaCount = Math.max(
-                    1,
-                    (ticket.jumlahDomestik || 0) + (ticket.jumlahMancanegara || 0),
-                  );
-                  setEditForm((prev) => ({
-                    ...prev,
-                    feeCategory: value,
-                    hargaPerOrang: nextHarga,
-                    totalBiaya:
-                      prev.bookingType === "group" ? nextHarga * pesertaCount : nextHarga,
-                  }));
-                }}
-              >
-                <SelectTrigger className="bg-background">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent className="bg-popover border-border">
-                  {Object.entries(FEE_PRICING).map(([key, value]) => (
-                    <SelectItem key={key} value={key}>
-                      {value.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label>Harga per Orang</Label>
-              <Input
-                type="number"
-                value={editForm.hargaPerOrang}
-                onChange={(e) =>
-                  setEditForm((prev) => ({
-                    ...prev,
-                    hargaPerOrang: e.target.value,
-                  }))
-                }
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>Total Biaya</Label>
-              <Input
-                type="number"
-                value={editForm.totalBiaya}
-                onChange={(e) =>
-                  setEditForm((prev) => ({
-                    ...prev,
-                    totalBiaya: e.target.value,
-                  }))
-                }
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>Invoice</Label>
-              <Select
-                value={editForm.invoiceAvailable}
-                onValueChange={(value) =>
-                  setEditForm((prev) => ({
-                    ...prev,
-                    invoiceAvailable: value,
-                  }))
-                }
-              >
-                <SelectTrigger className="bg-background">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent className="bg-popover border-border">
-                  <SelectItem value="ada">Ada</SelectItem>
-                  <SelectItem value="tidak">Tidak</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label>Bukti Bayar</Label>
-              <Select
-                value={editForm.paymentProofAvailable}
-                onValueChange={(value) =>
-                  setEditForm((prev) => ({
-                    ...prev,
-                    paymentProofAvailable: value,
-                  }))
-                }
-              >
-                <SelectTrigger className="bg-background">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent className="bg-popover border-border">
-                  <SelectItem value="ada">Ada</SelectItem>
-                  <SelectItem value="tidak">Tidak</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label>Jenis Operator</Label>
-              <Select
-                value={editForm.operatorCategory}
-                onValueChange={(value) =>
-                  setEditForm((prev) => ({
-                    ...prev,
-                    operatorCategory: value,
-                    operatorName: getDefaultOperatorName(value),
-                    gateValue:
-                      getOperatorTypeFromCategory(value) === "doku"
-                        ? "DOKU"
-                        : prev.gateValue || getDefaultGateOfficerName(ticket),
-                  }))
-                }
-              >
-                <SelectTrigger className="bg-background">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent className="bg-popover border-border">
-                  {OPERATOR_CATEGORY_OPTIONS.map((option) => (
-                    <SelectItem key={option.value} value={option.value}>
-                      {option.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label>Nama Operator</Label>
-              <Input
-                value={editForm.operatorName}
-                placeholder="Nama homestay/resort/operator"
-                onChange={(e) =>
-                  setEditForm((prev) => ({
-                    ...prev,
-                    operatorName: e.target.value,
-                  }))
-                }
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>Status Pengembalian</Label>
-              <Select
-                value={editForm.refundApprovalStatus}
-                onValueChange={(value) =>
-                  setEditForm((prev) => ({
-                    ...prev,
-                    refundApprovalStatus: value,
-                  }))
-                }
-              >
-                <SelectTrigger className="bg-background">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent className="bg-popover border-border">
-                  <SelectItem value="disetujui">Disetujui</SelectItem>
-                  <SelectItem value="tidak_disetujui">Tidak Disetujui</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label>Status Pembayaran</Label>
-              <Select
-                value={editForm.paymentStatus}
-                onValueChange={(value) =>
-                  setEditForm((prev) => ({
-                    ...prev,
-                    paymentStatus: value,
-                  }))
-                }
-              >
-                <SelectTrigger className="bg-background">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent className="bg-popover border-border">
-                  <SelectItem value="sudah_bayar">Sudah Dibayar</SelectItem>
-                  <SelectItem value="belum_bayar">Belum Dibayar</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label>Gerbang</Label>
-              <Input
-                value={editForm.gateValue}
-                placeholder="DOKU atau nama petugas tiket"
-                onChange={(e) =>
-                  setEditForm((prev) => ({
-                    ...prev,
-                    gateValue: e.target.value,
-                  }))
-                }
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>Disetujui oleh</Label>
-              <Select
-                value={editForm.approvedBy || "__none__"}
-                onValueChange={(value) =>
-                  setEditForm((prev) => ({
-                    ...prev,
-                    approvedBy: value === "__none__" ? "" : value,
-                  }))
-                }
-              >
-                <SelectTrigger className="bg-background">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent className="bg-popover border-border">
-                  <SelectItem value="__none__">Belum dipilih</SelectItem>
-                  {adminApproverOptions.map((admin) => (
-                    <SelectItem key={admin.id} value={admin.name}>
-                      {admin.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
             </div>
           </div>
 

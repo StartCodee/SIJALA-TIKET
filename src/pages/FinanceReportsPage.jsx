@@ -76,7 +76,7 @@ export default function FinanceReportsPage() {
   const totalSaldoPemasukan = totalPaid;
   const reportSubtitle = (
     <span className="inline-flex flex-wrap items-center gap-1.5">
-      <span>Laporan keuangan</span>
+      <span>Periode Waktu</span>
       <Input
         type="date"
         value={reportDateFrom}
