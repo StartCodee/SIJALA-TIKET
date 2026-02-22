@@ -167,8 +167,10 @@ export default function VisitorDetailPage() {
                     <p className="text-sm font-medium">{visitor.noHP || "-"}</p>
                   </div>
                   <div>
-                    <p className="text-xs text-muted-foreground mb-1">No KTP</p>
-                    <p className="text-sm font-medium">{visitor.noKTP || "-"}</p>
+                    <p className="text-xs text-muted-foreground mb-1">No Identitas</p>
+                    <p className="text-sm font-medium">
+                      {visitor.noIdentitasDisplay || visitor.noIdentitas || "-"}
+                    </p>
                   </div>
                 </div>
               </CardContent>
@@ -184,8 +186,8 @@ export default function VisitorDetailPage() {
                     </SelectTrigger>
                     <SelectContent className="bg-popover border-border">
                       <SelectItem value="all">Semua Tiket</SelectItem>
-                      <SelectItem value="active">Masa Berlaku {">"} 0 hari</SelectItem>
-                      <SelectItem value="inactive">Masa Berlaku 0 hari</SelectItem>
+                      <SelectItem value="active">Tiket Active</SelectItem>
+                      <SelectItem value="inactive">Tiket Non Active</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -295,11 +297,11 @@ export default function VisitorDetailPage() {
                   <p className="text-2xl font-bold">{ticketRows.length}</p>
                 </div>
                 <div className="rounded-lg border border-status-approved/30 bg-status-approved-bg/50 p-3">
-                  <p className="text-xs text-muted-foreground">Masa Berlaku {">"} 0 hari</p>
+                  <p className="text-xs text-muted-foreground">Tiket Active</p>
                   <p className="text-2xl font-bold text-status-approved">{activeCount}</p>
                 </div>
                 <div className="rounded-lg border border-slate-300 bg-slate-100/70 p-3">
-                  <p className="text-xs text-muted-foreground">Masa Berlaku 0 hari</p>
+                  <p className="text-xs text-muted-foreground">Tiket Non Active</p>
                   <p className="text-2xl font-bold text-slate-700">{inactiveCount}</p>
                 </div>
               </CardContent>
@@ -319,8 +321,8 @@ export default function VisitorDetailPage() {
                   }
                 >
                   {activeCount > 0
-                    ? "Ada Tiket dengan Masa Berlaku > 0 hari"
-                    : "Semua Tiket Masa Berlaku 0 hari"}
+                    ? "Visitor Active"
+                    : "Visitor Non Active"}
                 </Badge>
               </CardContent>
             </Card>

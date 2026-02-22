@@ -14,23 +14,83 @@ const canUseStorage = () =>
 
 const normalizeString = (value) => String(value || "").trim().toLowerCase();
 
-const normalizeKtp = (value) => String(value || "").replace(/\s+/g, "").trim();
+const normalizeIdentityNumber = (value) => String(value || "").replace(/\s+/g, "").trim();
+const normalizeIdentityType = (value) => String(value || "").trim().toLowerCase();
+
+const IDENTITY_TYPE_LABELS = {
+  ktp: "NIK",
+  sim: "No SIM",
+  paspor: "No Paspor",
+  kitas: "No KITAS",
+  kitap: "No KITAP",
+  dokumen_peneliti: "Dokumen Peneliti",
+};
+
+export const getIdentityTypeLabel = (identityType) =>
+  IDENTITY_TYPE_LABELS[normalizeIdentityType(identityType)] || "No Identitas";
+
+const hashToDigits = (value, length = 16) => {
+  const input = String(value || "ticket");
+  let hash = 0;
+  for (let index = 0; index < input.length; index += 1) {
+    hash = (hash * 31 + input.charCodeAt(index)) % 1000000007;
+  }
+  let digits = String(Math.abs(hash));
+  while (digits.length < length) {
+    const lastDigit = Number(digits[digits.length - 1] || 7);
+    digits += String((lastDigit * 7 + 3) % 10);
+  }
+  return digits.slice(0, length);
+};
+
+const buildDummyIdentityNumber = (ticket, identityType) => {
+  const seed = `${ticket?.id || "TICKET"}|${ticket?.namaLengkap || ""}|${ticket?.createdAt || ""}`;
+  const digits = hashToDigits(seed, 16);
+
+  if (identityType === "paspor") return `P${digits.slice(0, 8)}`;
+  if (identityType === "sim") return `SIM${digits.slice(0, 12)}`;
+  if (identityType === "kitas") return `KITAS${digits.slice(0, 10)}`;
+  if (identityType === "kitap") return `KITAP${digits.slice(0, 10)}`;
+  if (identityType === "dokumen_peneliti") return `DOC${digits.slice(0, 10)}`;
+  return digits;
+};
+
+export const getTicketIdentityType = (ticket) => {
+  const directType = normalizeIdentityType(ticket?.identityType);
+  if (directType) return directType;
+  if (ticket?.noKTP) return "ktp";
+  if (ticket?.domisiliOCR === "mancanegara") return "paspor";
+  return "ktp";
+};
+
+export const getTicketIdentityNumber = (ticket) => {
+  if (ticket?.identityNumber) return String(ticket.identityNumber).trim();
+  if (ticket?.noKTP) return String(ticket.noKTP).trim();
+  return buildDummyIdentityNumber(ticket, getTicketIdentityType(ticket));
+};
+
+export const getTicketIdentityDisplay = (ticket) => {
+  const identityNumber = getTicketIdentityNumber(ticket);
+  if (!identityNumber) return "-";
+  return `${getIdentityTypeLabel(getTicketIdentityType(ticket))}: ${identityNumber}`;
+};
 
 export const getTicketKtp = (ticket) => {
-  if (ticket?.noKTP) return String(ticket.noKTP).trim();
-  if (ticket?.identityType === "ktp" && ticket?.identityNumber) {
-    return String(ticket.identityNumber).trim();
-  }
-  return "";
+  if (getTicketIdentityType(ticket) !== "ktp") return "";
+  return getTicketIdentityNumber(ticket);
 };
 
 export const getVisitorKeyFromTicket = (ticket) => {
-  const ktp = normalizeKtp(getTicketKtp(ticket));
+  const identityNumber = normalizeIdentityNumber(getTicketIdentityNumber(ticket));
+  const identityType = getTicketIdentityType(ticket);
   const email = normalizeString(ticket?.email);
   const phone = normalizeString(ticket?.noHP);
   const name = normalizeString(ticket?.namaLengkap);
 
-  if (ktp) return `ktp:${ktp}`;
+  if (identityNumber) {
+    if (identityType === "ktp") return `ktp:${identityNumber}`;
+    return `identity:${identityType || "unknown"}:${identityNumber}`;
+  }
   if (email && phone) return `contact:${email}|${phone}`;
   if (email) return `email:${email}`;
   if (phone) return `phone:${phone}`;
@@ -65,11 +125,17 @@ export const groupTicketsByVisitor = (tickets, hiddenVisitorKeys = []) => {
     if (hiddenSet.has(key)) continue;
 
     if (!groupMap.has(key)) {
+      const noIdentitas = getTicketIdentityNumber(ticket);
+      const identityType = getTicketIdentityType(ticket);
       groupMap.set(key, {
         visitorKey: key,
         namaLengkap: ticket.namaLengkap || "-",
         email: ticket.email || "-",
         noHP: ticket.noHP || "-",
+        noIdentitas: noIdentitas || "-",
+        noIdentitasDisplay: noIdentitas
+          ? `${getIdentityTypeLabel(identityType)}: ${noIdentitas}`
+          : "-",
         noKTP: getTicketKtp(ticket) || "-",
         tickets: [],
       });

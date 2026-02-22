@@ -12,6 +12,7 @@ import ServiceRatesPage from "./pages/ServiceRatesPage";
 import GateMonitorPage from "./pages/GateMonitorPage";
 import FinanceReportsPage from "./pages/FinanceReportsPage";
 import RefundCenterPage from "./pages/RefundCenterPage";
+import RefundRequestPage from "./pages/RefundRequestPage";
 import UserManagementPage from "./pages/UserManagementPage";
 import ActivityLogsPage from "./pages/ActivityLogsPage";
 import NotFound from "./pages/NotFound";
@@ -55,6 +56,7 @@ const App = () => (
           <Route path="/tarif" element={<ServiceRatesPage />} />
           <Route path="/gate" element={<GateMonitorPage />} />
           <Route path="/reports" element={<FinanceReportsPage />} />
+          <Route path="/refund-request" element={<RefundRequestPage />} />
           <Route path="/refunds" element={<RefundCenterPage />} />
           <Route path="/users" element={<UserManagementPage />} />
           <Route path="/logs" element={<ActivityLogsPage />} />

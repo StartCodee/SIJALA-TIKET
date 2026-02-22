@@ -33,7 +33,7 @@ export default function VisitorPage() {
     namaLengkap: "",
     email: "",
     noHP: "",
-    noKTP: "",
+    noIdentitas: "",
   });
 
   const visitors = useMemo(
@@ -49,7 +49,8 @@ export default function VisitorPage() {
         String(visitor.namaLengkap || "").toLowerCase().includes(query) ||
         String(visitor.email || "").toLowerCase().includes(query) ||
         String(visitor.noHP || "").toLowerCase().includes(query) ||
-        String(visitor.noKTP || "").toLowerCase().includes(query)
+        String(visitor.noIdentitas || "").toLowerCase().includes(query) ||
+        String(visitor.noIdentitasDisplay || "").toLowerCase().includes(query)
       );
     });
   }, [visitors, searchQuery]);
@@ -60,7 +61,7 @@ export default function VisitorPage() {
       namaLengkap: visitor.namaLengkap === "-" ? "" : visitor.namaLengkap,
       email: visitor.email === "-" ? "" : visitor.email,
       noHP: visitor.noHP === "-" ? "" : visitor.noHP,
-      noKTP: visitor.noKTP === "-" ? "" : visitor.noKTP,
+      noIdentitas: visitor.noIdentitas === "-" ? "" : visitor.noIdentitas,
     });
     setShowEditDialog(true);
   };
@@ -70,16 +71,21 @@ export default function VisitorPage() {
     const nextName = editForm.namaLengkap.trim();
     const nextEmail = editForm.email.trim();
     const nextNoHp = editForm.noHP.trim();
-    const nextNoKtp = editForm.noKTP.trim();
+    const nextIdentityNumber = editForm.noIdentitas.trim();
 
     for (const ticket of selectedVisitor.tickets) {
+      const currentIdentityType = String(ticket.identityType || (ticket.noKTP ? "ktp" : ""))
+        .trim()
+        .toLowerCase();
+      const fallbackIdentityNumber = ticket.identityNumber || ticket.noKTP || "";
+
       saveTicketOverride(ticket.id, {
         namaLengkap: nextName || ticket.namaLengkap || "",
         email: nextEmail || ticket.email || "",
         noHP: nextNoHp || ticket.noHP || "",
-        noKTP: nextNoKtp,
-        identityType: nextNoKtp ? "ktp" : ticket.identityType || "",
-        identityNumber: nextNoKtp || ticket.identityNumber || "",
+        noKTP: currentIdentityType === "ktp" ? nextIdentityNumber : "",
+        identityType: currentIdentityType,
+        identityNumber: nextIdentityNumber || fallbackIdentityNumber,
       });
     }
 
@@ -87,14 +93,18 @@ export default function VisitorPage() {
     setTickets((prev) =>
       prev.map((ticket) => {
         if (!selectedIds.has(ticket.id)) return ticket;
+        const currentIdentityType = String(ticket.identityType || (ticket.noKTP ? "ktp" : ""))
+          .trim()
+          .toLowerCase();
+        const fallbackIdentityNumber = ticket.identityNumber || ticket.noKTP || "";
         return {
           ...ticket,
           namaLengkap: nextName || ticket.namaLengkap || "",
           email: nextEmail || ticket.email || "",
           noHP: nextNoHp || ticket.noHP || "",
-          noKTP: nextNoKtp,
-          identityType: nextNoKtp ? "ktp" : ticket.identityType || "",
-          identityNumber: nextNoKtp || ticket.identityNumber || "",
+          noKTP: currentIdentityType === "ktp" ? nextIdentityNumber : "",
+          identityType: currentIdentityType,
+          identityNumber: nextIdentityNumber || fallbackIdentityNumber,
         };
       }),
     );
@@ -132,7 +142,7 @@ export default function VisitorPage() {
             <Input
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Cari nama, email, no telp, atau no KTP..."
+              placeholder="Cari nama, email, no telp, atau no Identitas..."
               className="bg-card pl-9"
             />
           </div>
@@ -151,7 +161,7 @@ export default function VisitorPage() {
                   <th>Nama</th>
                   <th>Email</th>
                   <th>No Telp</th>
-                  <th>No KTP</th>
+                  <th>No Identitas</th>
                   <th className="text-center">Jumlah Tiket</th>
                   <th className="text-center">Aksi</th>
                 </tr>
@@ -162,7 +172,7 @@ export default function VisitorPage() {
                     <td className="font-medium">{visitor.namaLengkap}</td>
                     <td>{visitor.email}</td>
                     <td>{visitor.noHP}</td>
-                    <td>{visitor.noKTP}</td>
+                    <td>{visitor.noIdentitasDisplay || visitor.noIdentitas || "-"}</td>
                     <td className="text-center">{visitor.tickets.length}</td>
                     <td className="text-center">
                       <div className="flex items-center justify-center gap-1">
@@ -243,10 +253,10 @@ export default function VisitorPage() {
               />
             </div>
             <div className="space-y-2 md:col-span-2">
-              <Label>No KTP</Label>
+              <Label>No Identitas</Label>
               <Input
-                value={editForm.noKTP}
-                onChange={(e) => setEditForm((prev) => ({ ...prev, noKTP: e.target.value }))}
+                value={editForm.noIdentitas}
+                onChange={(e) => setEditForm((prev) => ({ ...prev, noIdentitas: e.target.value }))}
               />
             </div>
           </div>

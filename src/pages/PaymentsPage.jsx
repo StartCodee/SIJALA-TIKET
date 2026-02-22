@@ -12,7 +12,18 @@ import {
   formatShortId,
   getTicketById,
 } from "@/data/dummyData";
-import { Search, Download, FileText, Printer, Plus, Check, ChevronsUpDown } from "lucide-react";
+import {
+  Search,
+  Download,
+  FileText,
+  Printer,
+  Plus,
+  Check,
+  ChevronsUpDown,
+  TrendingUp,
+  TrendingDown,
+  Minus,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
@@ -313,31 +324,47 @@ export default function PaymentsPage() {
         Math.abs(value),
       )}%`;
 
-    const getTrend = (currentValue, previousValue, preferHigher = true) => {
+    const getTrend = (currentValue, previousValue) => {
       const percent = toPercent(currentValue, previousValue);
       if (Math.abs(percent) < 0.1) {
         return {
-          text: "Stabil vs bln lalu",
+          direction: "stable",
+          percentText: "0%",
           className: "text-muted-foreground",
         };
       }
 
       const isIncrease = percent > 0;
-      const isPositive = preferHigher ? isIncrease : !isIncrease;
       return {
-        text: `${isIncrease ? "Naik" : "Turun"} ${formatPercent(percent)} vs bln lalu`,
-        className: isPositive ? "text-status-approved" : "text-destructive",
+        direction: isIncrease ? "up" : "down",
+        percentText: formatPercent(percent),
+        className: isIncrease ? "text-status-approved" : "text-destructive",
       };
     };
 
     return {
-      paidCount: getTrend(current.paidCount, prev.paidCount, true),
-      refundCount: getTrend(current.refundCount, prev.refundCount, false),
-      potential: getTrend(current.potential, prev.potential, true),
-      realized: getTrend(current.realized, prev.realized, true),
-      unpaidGap: getTrend(current.unpaidGap, prev.unpaidGap, false),
+      paidCount: getTrend(current.paidCount, prev.paidCount),
+      refundCount: getTrend(current.refundCount, prev.refundCount),
+      potential: getTrend(current.potential, prev.potential),
+      realized: getTrend(current.realized, prev.realized),
+      unpaidGap: getTrend(current.unpaidGap, prev.unpaidGap),
     };
   }, [paymentRows]);
+
+  const renderTrendIndicator = (trend) => {
+    const TrendIcon =
+      trend.direction === "up"
+        ? TrendingUp
+        : trend.direction === "down"
+          ? TrendingDown
+          : Minus;
+    return (
+      <p className={`mt-1 flex items-center gap-1 text-[10px] leading-tight ${trend.className}`}>
+        <TrendIcon className="h-3 w-3" />
+        <span>{trend.percentText}</span>
+      </p>
+    );
+  };
   const openAddTransaction = () => {
     setEditError("");
     setInvoicePickerOpen(false);
@@ -532,9 +559,7 @@ export default function PaymentsPage() {
             <p className="text-xl sm:text-2xl font-bold leading-tight break-words">
               {paidInvoices.length}
             </p>
-            <p className={`mt-1 text-[10px] leading-tight ${kpiTrends.paidCount.className}`}>
-              {kpiTrends.paidCount.text}
-            </p>
+            {renderTrendIndicator(kpiTrends.paidCount)}
           </Card>
           <Card className="card-ocean p-4 min-w-0">
             <p className="text-xs text-muted-foreground mb-1 break-words">
@@ -543,9 +568,7 @@ export default function PaymentsPage() {
             <p className="text-xl sm:text-2xl font-bold text-status-revision leading-tight break-words">
               {paymentLines.filter((i) => i.refundFlag).length}
             </p>
-            <p className={`mt-1 text-[10px] leading-tight ${kpiTrends.refundCount.className}`}>
-              {kpiTrends.refundCount.text}
-            </p>
+            {renderTrendIndicator(kpiTrends.refundCount)}
           </Card>
           <Card className="card-ocean p-4 min-w-0">
             <p className="text-xs text-muted-foreground mb-1 break-words">
@@ -554,9 +577,7 @@ export default function PaymentsPage() {
             <p className="text-lg sm:text-xl font-bold text-status-approved leading-tight break-words">
               {formatNominal(totalPotential)}
             </p>
-            <p className={`mt-1 text-[10px] leading-tight ${kpiTrends.potential.className}`}>
-              {kpiTrends.potential.text}
-            </p>
+            {renderTrendIndicator(kpiTrends.potential)}
           </Card>
           <Card className="card-ocean p-4 min-w-0">
             <p className="text-xs text-muted-foreground mb-1 break-words">
@@ -565,9 +586,7 @@ export default function PaymentsPage() {
             <p className="text-lg sm:text-xl font-bold text-primary leading-tight break-words">
               {formatNominal(totalRealized)}
             </p>
-            <p className={`mt-1 text-[10px] leading-tight ${kpiTrends.realized.className}`}>
-              {kpiTrends.realized.text}
-            </p>
+            {renderTrendIndicator(kpiTrends.realized)}
           </Card>
           <Card className="card-ocean p-4 min-w-0">
             <p className="text-xs text-muted-foreground mb-1 break-words">
@@ -576,9 +595,7 @@ export default function PaymentsPage() {
             <p className="text-lg sm:text-xl font-bold text-status-pending leading-tight break-words">
               {formatNominal(unpaidGap)}
             </p>
-            <p className={`mt-1 text-[10px] leading-tight ${kpiTrends.unpaidGap.className}`}>
-              {kpiTrends.unpaidGap.text}
-            </p>
+            {renderTrendIndicator(kpiTrends.unpaidGap)}
           </Card>
         </div>
         <div className="mb-4 flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">

@@ -127,6 +127,97 @@ export default function FinanceReportsPage() {
       }));
   }, [dailyTrend, reportDateFrom, reportDateTo]);
 
+  const kpiTrends = useMemo(() => {
+    const parseDate = (value) => {
+      const date = new Date(value || "");
+      if (Number.isNaN(date.getTime())) return null;
+      return date;
+    };
+
+    const from = reportDateFrom ? new Date(`${reportDateFrom}T00:00:00`) : null;
+    const to = reportDateTo ? new Date(`${reportDateTo}T23:59:59`) : null;
+
+    const rowsWithDate = dailyTrend
+      .map((row) => ({
+        ...row,
+        dateObj: parseDate(row.date),
+      }))
+      .filter((row) => row.dateObj);
+
+    const rowsInRange = rowsWithDate.filter((row) => {
+      if (from && row.dateObj < from) return false;
+      if (to && row.dateObj > to) return false;
+      return true;
+    });
+
+    const sourceRows = rowsInRange.length ? rowsInRange : rowsWithDate;
+    const latestDate = sourceRows.length
+      ? sourceRows.reduce((latest, row) => (row.dateObj > latest ? row.dateObj : latest), sourceRows[0].dateObj)
+      : new Date();
+
+    const currentMonthStart = new Date(latestDate.getFullYear(), latestDate.getMonth(), 1);
+    const nextMonthStart = new Date(latestDate.getFullYear(), latestDate.getMonth() + 1, 1);
+    const prevMonthStart = new Date(latestDate.getFullYear(), latestDate.getMonth() - 1, 1);
+    const isInRange = (date, start, end) => date >= start && date < end;
+
+    const currentRows = sourceRows.filter((row) =>
+      isInRange(row.dateObj, currentMonthStart, nextMonthStart),
+    );
+    const previousRows = sourceRows.filter((row) =>
+      isInRange(row.dateObj, prevMonthStart, currentMonthStart),
+    );
+
+    const calculateTotals = (rows) =>
+      rows.reduce(
+        (acc, row) => {
+          const total = Number(row.total) || 0;
+          const realized = Number(row.realized) || 0;
+          const refunds = Number(row.refunds) || 0;
+          acc.totalPaid += total;
+          acc.totalRealized += realized;
+          acc.totalUnrealized += Math.max(0, total - realized);
+          acc.totalRefunds += refunds;
+          return acc;
+        },
+        {
+          totalPaid: 0,
+          totalRealized: 0,
+          totalUnrealized: 0,
+          totalRefunds: 0,
+        },
+      );
+
+    const currentTotals = calculateTotals(currentRows);
+    const previousTotals = calculateTotals(previousRows);
+
+    const toPercent = (curr, prevValue) => {
+      if (!prevValue && !curr) return 0;
+      if (!prevValue && curr) return 100;
+      return ((curr - prevValue) / Math.abs(prevValue)) * 100;
+    };
+
+    const formatPercent = (value) =>
+      `${new Intl.NumberFormat("id-ID", { maximumFractionDigits: 1 }).format(Math.abs(value))}%`;
+
+    const buildTrend = (currentValue, previousValue) => {
+      const percent = toPercent(currentValue, previousValue);
+      if (Math.abs(percent) < 0.1) {
+        return { value: 0, display: "0%" };
+      }
+      return {
+        value: Number(percent.toFixed(1)),
+        display: formatPercent(percent),
+      };
+    };
+
+    return {
+      totalPaid: buildTrend(currentTotals.totalPaid, previousTotals.totalPaid),
+      totalRealized: buildTrend(currentTotals.totalRealized, previousTotals.totalRealized),
+      totalUnrealized: buildTrend(currentTotals.totalUnrealized, previousTotals.totalUnrealized),
+      totalRefunds: buildTrend(currentTotals.totalRefunds, previousTotals.totalRefunds),
+    };
+  }, [dailyTrend, reportDateFrom, reportDateTo]);
+
   const refundBreakdown = useMemo(() => {
     const completedRefunds = dummyRefunds.filter((refund) => refund.status === "completed");
     const byCategoryMap = new Map();
@@ -208,24 +299,36 @@ export default function FinanceReportsPage() {
             value={formatNominal(totalPaid)}
             icon={Wallet}
             variant="brand"
+            trend={kpiTrends.totalPaid}
+            trendCompact
+            trendUseStatusColor
           />
           <KPICard
             title="Total Potensi Pemasukan Rp."
             value={formatNominal(totalRealized)}
             icon={TrendingUp}
             variant="brand"
+            trend={kpiTrends.totalRealized}
+            trendCompact
+            trendUseStatusColor
           />
           <KPICard
             title="Total Belum Terealisasi Rp."
             value={formatNominal(totalUnrealized)}
             icon={TrendingDown}
             variant="brand"
+            trend={kpiTrends.totalUnrealized}
+            trendCompact
+            trendUseStatusColor
           />
           <KPICard
             title="Total Pengembalian Dana Rp."
             value={formatNominal(totalRefunds)}
             icon={RotateCcw}
             variant="brand"
+            trend={kpiTrends.totalRefunds}
+            trendCompact
+            trendUseStatusColor
           />
         </div>
         <div className="grid grid-cols-1 gap-6 mb-6">

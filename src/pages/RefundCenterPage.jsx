@@ -11,6 +11,8 @@ import {
   formatShortId,
   REFUND_TYPE_LABELS,
   getTicketById,
+  getInvoiceIdForTicket,
+  getTicketIdsByInvoiceId,
 } from "@/data/dummyData";
 import {
   Search,
@@ -38,6 +40,23 @@ import {
 } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { exportExcel } from "@/lib/exporters";
+
+const REFUND_REQUEST_STORAGE_KEY = "refund_requests_v1";
+
+const canUseStorage = () =>
+  typeof window !== "undefined" && typeof window.localStorage !== "undefined";
+
+const loadRefundRequests = () => {
+  if (!canUseStorage()) return [];
+  try {
+    const raw = window.localStorage.getItem(REFUND_REQUEST_STORAGE_KEY);
+    const parsed = raw ? JSON.parse(raw) : [];
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+};
+
 export default function RefundCenterPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedRefund, setSelectedRefund] = useState(null);
@@ -50,6 +69,22 @@ export default function RefundCenterPage() {
   const [actionNotes, setActionNotes] = useState("");
   const [referenceNumber, setReferenceNumber] = useState("");
   const [activeTab, setActiveTab] = useState("menunggu");
+  const [formRequests] = useState(() => loadRefundRequests());
+
+  const getRefundInvoiceId = (refund) => {
+    if (refund?.invoiceId) return String(refund.invoiceId);
+    if (refund?.ticketId) return getInvoiceIdForTicket(refund.ticketId) || "";
+    return "";
+  };
+
+  const getRefundPrimaryTicketId = (refund) => {
+    if (refund?.ticketId) return String(refund.ticketId);
+    if (refund?.invoiceId) {
+      const ticketIds = getTicketIdsByInvoiceId(refund.invoiceId);
+      return ticketIds[0] || "";
+    }
+    return "";
+  };
 
   const getOverviewOperatorName = (ticket) => {
     if (!ticket) return "Lainnya";
@@ -63,7 +98,7 @@ export default function RefundCenterPage() {
     return "Lainnya";
   };
   const getOperatorNameForRefund = (refund) => {
-    const ticket = getTicketById(refund.ticketId);
+    const ticket = getTicketById(getRefundPrimaryTicketId(refund));
     return getOverviewOperatorName(ticket);
   };
   const normalizeReasonText = (text) => String(text || "-").slice(0, 255);
@@ -75,11 +110,51 @@ export default function RefundCenterPage() {
     setShowReasonDialog(true);
   };
 
+  const mappedFormRequests = formRequests.map((item) => {
+    const invoiceId = item.invoiceId || (item.ticketId ? getInvoiceIdForTicket(item.ticketId) : "");
+    const ticketIds = Array.isArray(item.ticketIds)
+      ? item.ticketIds
+      : invoiceId
+        ? getTicketIdsByInvoiceId(invoiceId)
+        : item.ticketId
+          ? [item.ticketId]
+          : [];
+    const primaryTicketId = item.ticketId || ticketIds[0] || "";
+    const ticket = getTicketById(primaryTicketId);
+    return {
+      id: item.id,
+      invoiceId,
+      ticketId: primaryTicketId,
+      ticketIds,
+      ticketName: item.requesterName || ticket?.namaLengkap || "Pengaju",
+      status: "requested",
+      requestedAt: item.createdAt,
+      type: item.refundType || "partial",
+      originalAmount: Number(ticket?.totalBiaya || ticket?.hargaPerOrang || 0),
+      refundAmount: Number(item.requestedAmount || 0),
+      reason: item.reason || "-",
+      requestedBy: item.requesterName || "-",
+      processedBy: "",
+      processedAt: "",
+      completedAt: "",
+      referenceNumber: "",
+      notes: "Dibuat dari menu Pengajuan Refund",
+      attachmentName: item.attachmentName || "",
+    };
+  });
+
+  const allRefunds = [...dummyRefunds, ...mappedFormRequests].sort(
+    (a, b) => new Date(b.requestedAt || 0).getTime() - new Date(a.requestedAt || 0).getTime(),
+  );
+
   // Filter refunds
-  const filteredRefunds = dummyRefunds.filter((refund) => {
+  const filteredRefunds = allRefunds.filter((refund) => {
+    const refundInvoiceId = getRefundInvoiceId(refund);
+    const refundTicketId = getRefundPrimaryTicketId(refund);
     const matchesSearch =
       refund.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      refund.ticketId.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      String(refundInvoiceId).toLowerCase().includes(searchQuery.toLowerCase()) ||
+      String(refundTicketId).toLowerCase().includes(searchQuery.toLowerCase()) ||
       refund.ticketName.toLowerCase().includes(searchQuery.toLowerCase()) ||
       getOperatorNameForRefund(refund).toLowerCase().includes(searchQuery.toLowerCase());
     return matchesSearch;
@@ -87,10 +162,10 @@ export default function RefundCenterPage() {
 
   // Stats
   const stats = {
-    menunggu: dummyRefunds.filter((r) => r.status === "requested").length,
-    diterima: dummyRefunds.filter((r) => r.status === "completed").length,
-    ditolak: dummyRefunds.filter((r) => r.status === "rejected").length,
-    totalRefunded: dummyRefunds
+    menunggu: allRefunds.filter((r) => r.status === "requested").length,
+    diterima: allRefunds.filter((r) => r.status === "completed").length,
+    ditolak: allRefunds.filter((r) => r.status === "rejected").length,
+    totalRefunded: allRefunds
       .filter((r) => r.status === "completed")
       .reduce((sum, r) => sum + r.refundAmount, 0),
   };
@@ -104,7 +179,8 @@ export default function RefundCenterPage() {
     exportExcel(
       activeRefunds.map((r) => ({
         refund_id: r.id,
-        ticket_id: r.ticketId,
+        invoice_id: getRefundInvoiceId(r),
+        ticket_id: getRefundPrimaryTicketId(r),
         ticket_name: r.ticketName,
         status: r.status,
         requested_at: r.requestedAt,
@@ -128,8 +204,12 @@ export default function RefundCenterPage() {
             label: "ID Pengembalian",
           },
           {
+            key: "invoice_id",
+            label: "ID Invoice",
+          },
+          {
             key: "ticket_id",
-            label: "ID Tiket",
+            label: "ID Tiket Utama",
           },
           {
             key: "ticket_name",
@@ -224,7 +304,7 @@ export default function RefundCenterPage() {
             <thead>
               <tr>
                 <th>ID Pengembalian</th>
-                <th>ID Tiket</th>
+                <th>ID Invoice</th>
                 <th>Nama Pengajuan</th>
                 <th>Nama Operator</th>
                 <th>Status</th>
@@ -241,7 +321,7 @@ export default function RefundCenterPage() {
             </thead>
             <tbody>
               {refunds.map((refund) => (
-                <tr key={refund.id}>
+                <tr key={`${refund.id}-${getRefundInvoiceId(refund) || "noinv"}`}>
                   <td>
                     <button
                       onClick={() => openDetail(refund)}
@@ -251,12 +331,16 @@ export default function RefundCenterPage() {
                     </button>
                   </td>
                   <td>
-                    <Link
-                      to={`/tickets/${refund.ticketId}`}
-                      className="font-mono text-sm text-muted-foreground hover:text-primary hover:underline"
-                    >
-                      {formatShortId(refund.ticketId)}
-                    </Link>
+                    {getRefundInvoiceId(refund) ? (
+                      <Link
+                        to={`/invoices/${getRefundInvoiceId(refund)}`}
+                        className="font-mono text-sm text-muted-foreground hover:text-primary hover:underline"
+                      >
+                        {formatShortId(getRefundInvoiceId(refund))}
+                      </Link>
+                    ) : (
+                      <span className="font-mono text-sm text-muted-foreground">-</span>
+                    )}
                   </td>
                   <td className="text-sm">{refund.ticketName}</td>
                   <td className="text-sm">{getOperatorNameForRefund(refund)}</td>
@@ -414,7 +498,7 @@ export default function RefundCenterPage() {
           <div className="relative w-full min-w-[220px] lg:max-w-md">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
-              placeholder="Cari ID Pengembalian, ID Tiket, nama, atau operator..."
+              placeholder="Cari ID Pengembalian, ID Invoice, nama, atau operator..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-9 bg-card"
@@ -553,9 +637,11 @@ export default function RefundCenterPage() {
               </DialogHeader>
               <div className="grid grid-cols-2 gap-4 py-4">
                 <div>
-                  <p className="text-xs text-muted-foreground mb-1">ID Tiket</p>
+                  <p className="text-xs text-muted-foreground mb-1">ID Invoice</p>
                   <p className="text-sm font-medium">
-                    {formatShortId(selectedRefund.ticketId)}
+                    {getRefundInvoiceId(selectedRefund)
+                      ? formatShortId(getRefundInvoiceId(selectedRefund))
+                      : "-"}
                   </p>
                 </div>
                 <div>

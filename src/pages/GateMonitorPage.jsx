@@ -15,7 +15,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   FEE_PRICING,
   getAllTickets,
@@ -35,10 +34,10 @@ const APPROVAL_REQUIRED_CATEGORIES = new Set([
   "sport_fishing",
 ]);
 
-const FORM_TYPE_OPTIONS = [
-  { value: "wisatawan", label: "Wisatawan" },
-  { value: "peneliti", label: "Peneliti" },
-];
+// const FORM_TYPE_OPTIONS = [
+//   { value: "wisatawan", label: "Wisatawan" },
+//   // { value: "peneliti", label: "Peneliti" },
+// ];
 
 const OPERATOR_CATEGORY_OPTIONS = [
   { value: "homestay", label: "Homestay" },
@@ -210,6 +209,8 @@ const createDefaultForm = (formType = "wisatawan") => ({
   foreignVesselCount: "0",
   foreignVesselNames: "",
   paymentMethod: "blud_cash",
+  paymentProofName: "",
+  paymentProofPreview: "",
   gateName: "Waisai",
   officerName: "Rudi Hartono",
 });
@@ -238,6 +239,7 @@ const collectObjectUrls = (sourceForm) => {
     sourceForm.institutionPermitFilePreview,
     sourceForm.researchRequestFilePreview,
     sourceForm.picIdentityPhotoPreview,
+    sourceForm.paymentProofPreview,
   ];
   (sourceForm.researchers || []).forEach((item) => {
     if (item.identityPhotoPreview) urls.push(item.identityPhotoPreview);
@@ -313,6 +315,7 @@ export default function GateMonitorPage() {
   }, [recentTransactions]);
 
   const handleReset = () => {
+    collectObjectUrls(form).forEach((url) => revokeObjectUrl(url));
     setForm(createDefaultForm(form.formType));
   };
 
@@ -341,6 +344,10 @@ export default function GateMonitorPage() {
 
   const handleIdentityPhotoChange = (event) => {
     handleSingleUploadChange("identityPhotoName", "identityPhotoPreview", event);
+  };
+
+  const handlePaymentProofChange = (event) => {
+    handleSingleUploadChange("paymentProofName", "paymentProofPreview", event);
   };
 
   const handleResearcherIdentityPhotoChange = (index, event) => {
@@ -487,6 +494,8 @@ export default function GateMonitorPage() {
       lastActionAt: createdAtValue,
       createdAt: createdAtValue,
       paidAt: paidAtValue,
+      paymentProofUrl: form.paymentProofPreview || "",
+      paymentProofAvailable: Boolean(form.paymentProofPreview),
       qrActive: isInitialPaid,
       ...(form.formType === "peneliti"
         ? {
@@ -535,6 +544,7 @@ export default function GateMonitorPage() {
       method: form.paymentMethod,
       paidAt: paidAtValue,
       paymentStatus: isInitialPaid ? "sudah_bayar" : "belum_bayar",
+      proofUrl: form.paymentProofPreview || "",
       realisasiStatus,
       refundFlag: false,
     };
@@ -619,19 +629,8 @@ export default function GateMonitorPage() {
             </CardHeader>
             <CardContent>
               <form className="space-y-4" onSubmit={handleSubmit}>
-                <Tabs
-                  value={form.formType}
-                  onValueChange={(value) => setForm((prev) => ({ ...prev, formType: value }))}
-                  className="space-y-4"
-                >
-                  <TabsList className="grid h-auto w-full grid-cols-2 gap-1 rounded-lg p-1">
-                    {FORM_TYPE_OPTIONS.map((opt) => (
-                      <TabsTrigger key={opt.value} value={opt.value} className="w-full px-3 py-2 text-center">
-                        {opt.label}
-                      </TabsTrigger>
-                    ))}
-                  </TabsList>
-                </Tabs>
+                {/* Tab tipe form disembunyikan sementara.
+                    Tiket langsung saat ini difokuskan ke form wisatawan saja. */}
 
                 {form.formType === "wisatawan" ? (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -828,6 +827,19 @@ export default function GateMonitorPage() {
                           ))}
                         </SelectContent>
                       </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Unggah Bukti Pembayaran</Label>
+                      <Input
+                        type="file"
+                        accept="image/*,.pdf"
+                        onChange={handlePaymentProofChange}
+                      />
+                      {form.paymentProofName ? (
+                        <p className="text-xs text-muted-foreground truncate">{form.paymentProofName}</p>
+                      ) : (
+                        <p className="text-xs text-muted-foreground">Belum ada file dipilih.</p>
+                      )}
                     </div>
                     <div className="space-y-2">
                       <Label>Gerbang Tiket</Label>
@@ -1417,6 +1429,19 @@ export default function GateMonitorPage() {
                               ))}
                             </SelectContent>
                           </Select>
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Unggah Bukti Pembayaran</Label>
+                          <Input
+                            type="file"
+                            accept="image/*,.pdf"
+                            onChange={handlePaymentProofChange}
+                          />
+                          {form.paymentProofName ? (
+                            <p className="text-xs text-muted-foreground truncate">{form.paymentProofName}</p>
+                          ) : (
+                            <p className="text-xs text-muted-foreground">Belum ada file dipilih.</p>
+                          )}
                         </div>
                         <div className="space-y-2">
                           <Label>Gerbang Tiket</Label>

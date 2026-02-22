@@ -38,6 +38,11 @@ import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
+  getIdentityTypeLabel,
+  getTicketIdentityNumber,
+  getTicketIdentityType,
+} from "@/features/visitors/visitorUtils";
+import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -45,6 +50,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
+
 export default function TicketDetailPage() {
   const { ticketId } = useParams();
   const location = useLocation();
@@ -180,6 +186,9 @@ export default function TicketDetailPage() {
     return "-";
   };
   const bookingTypeLabel = ticket.bookingType === "group" ? "Grup" : "Individu";
+  const identityType = getTicketIdentityType(ticket);
+  const identityLabel = getIdentityTypeLabel(identityType);
+  const identityNumber = getTicketIdentityNumber(ticket);
   const isOnlinePayment = ticket.operatorType === "doku";
   const petugasTiketName = ticket.gateOfficerName || getDefaultGateOfficerName(ticket);
   const gerbangValue = isOnlinePayment ? "DOKU" : petugasTiketName;
@@ -415,11 +424,11 @@ export default function TicketDetailPage() {
                     Teks Terdeteksi
                   </p>
                   <p className="text-sm font-mono text-foreground">
-                    NIK: 9201****00001234
+                    {identityLabel}: {identityNumber}
                     <br />
-                    Provinsi: Papua Barat Daya
+                    Domisili: {DOMISILI_LABELS[ticket.domisiliOCR] || "-"}
                     <br />
-                    Kabupaten: Raja Ampat
+                    Negara: {ticket.countryOCR || "-"}
                   </p>
                 </div>
               </CardContent>
