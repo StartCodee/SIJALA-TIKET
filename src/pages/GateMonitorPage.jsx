@@ -267,7 +267,6 @@ export default function GateMonitorPage() {
           invoiceMethodByTicket.get(ticket.id) ||
           normalizeMethodByOperator(ticket.operatorType),
         gateName: ticket.gateOfficerName ? "Onsite" : "Waisai",
-        officerName: ticket.gateOfficerName || "Petugas Lapangan",
         amount: Number(ticket.totalBiaya || ticket.hargaPerOrang || 0),
         createdAt: ticket.createdAt,
         status:
@@ -859,24 +858,6 @@ export default function GateMonitorPage() {
                         </SelectContent>
                       </Select>
                     </div>
-                    <div className="space-y-2">
-                      <Label>Petugas Tiket</Label>
-                      <Select
-                        value={form.officerName}
-                        onValueChange={(value) => setForm((prev) => ({ ...prev, officerName: value }))}
-                      >
-                        <SelectTrigger className="bg-background">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent className="bg-popover border-border">
-                          {OFFICER_OPTIONS.map((officer) => (
-                            <SelectItem key={officer} value={officer}>
-                              {officer}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
                   </div>
                 ) : (
                   <div className="space-y-4">
@@ -1461,24 +1442,7 @@ export default function GateMonitorPage() {
                             </SelectContent>
                           </Select>
                         </div>
-                        <div className="space-y-2">
-                          <Label>Petugas Tiket</Label>
-                          <Select
-                            value={form.officerName}
-                            onValueChange={(value) => setForm((prev) => ({ ...prev, officerName: value }))}
-                          >
-                            <SelectTrigger className="bg-background">
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent className="bg-popover border-border">
-                              {OFFICER_OPTIONS.map((officer) => (
-                                <SelectItem key={officer} value={officer}>
-                                  {officer}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
+
                       </div>
                     </div>
                   </div>
@@ -1567,7 +1531,6 @@ export default function GateMonitorPage() {
                     <th>Nama</th>
                     <th>Kategori</th>
                     <th>Pembayaran</th>
-                    <th>Petugas</th>
                     <th>Total</th>
                     <th>Status</th>
                   </tr>

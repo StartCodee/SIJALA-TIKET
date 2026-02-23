@@ -16,7 +16,9 @@ import { ArrowLeft, AlertTriangle, Eye, FileText } from "lucide-react";
 import {
   FEE_PRICING,
   formatDate,
+  formatRupiah,
   formatShortId,
+  getAllInvoiceLines,
   getAllTickets,
   getInvoiceIdForTicket,
 } from "@/data/dummyData";
@@ -37,6 +39,11 @@ const PAYMENT_STATUS_LABELS = {
   no_activity: "Belum Ada Aktivitas",
 };
 
+const REALISASI_STATUS_LABELS = {
+  sudah_terealisasi: "Sudah Terealisasi",
+  belum_terealisasi: "Belum Terealisasi",
+};
+
 const getPaymentBadgeClass = (paymentStatus) => {
   if (paymentStatus === "sudah_bayar") {
     return "bg-status-approved-bg text-status-approved";
@@ -48,6 +55,29 @@ const getPaymentBadgeClass = (paymentStatus) => {
     return "bg-status-pending-bg text-status-pending";
   }
   return "bg-slate-200 text-slate-700";
+};
+
+const getRealisasiBadgeClass = (realisasiStatus) => {
+  if (realisasiStatus === "sudah_terealisasi") {
+    return "bg-status-approved-bg text-status-approved";
+  }
+  return "bg-status-pending-bg text-status-pending";
+};
+
+const resolveInvoicePaymentStatus = (statuses) => {
+  if (statuses.some((status) => String(status || "").startsWith("refund_"))) {
+    return statuses.find((status) => String(status || "").startsWith("refund_")) || "refund_diajukan";
+  }
+  if (statuses.includes("belum_bayar")) return "belum_bayar";
+  if (statuses.includes("sudah_bayar")) return "sudah_bayar";
+  return statuses[0] || "no_activity";
+};
+
+const resolveInvoiceRealisasiStatus = (statuses) => {
+  if (!statuses.length) return "belum_terealisasi";
+  return statuses.every((status) => status === "sudah_terealisasi")
+    ? "sudah_terealisasi"
+    : "belum_terealisasi";
 };
 
 export default function VisitorDetailPage() {
@@ -89,6 +119,75 @@ export default function VisitorDetailPage() {
           invoiceId: getInvoiceIdForTicket(ticket.id) || "",
         };
       });
+  }, [visitor]);
+
+  const invoiceRows = useMemo(() => {
+    if (!visitor) return [];
+    const ticketIdSet = new Set(visitor.tickets.map((ticket) => ticket.id));
+    const groupedInvoices = new Map();
+
+    getAllInvoiceLines()
+      .filter((line) => ticketIdSet.has(line.ticketId))
+      .forEach((line) => {
+        const current = groupedInvoices.get(line.id) || {
+          id: line.id,
+          lines: [],
+        };
+        current.lines.push(line);
+        groupedInvoices.set(line.id, current);
+      });
+
+    return Array.from(groupedInvoices.values())
+      .map((invoice) => {
+        const paidAtCandidates = invoice.lines
+          .map((line) => line.paidAt)
+          .filter(Boolean)
+          .sort((a, b) => new Date(b).getTime() - new Date(a).getTime());
+        const paymentStatuses = [...new Set(invoice.lines.map((line) => line.paymentStatus).filter(Boolean))];
+        const realisasiStatuses = [...new Set(invoice.lines.map((line) => line.realisasiStatus).filter(Boolean))];
+
+        return {
+          id: invoice.id,
+          paidAt: paidAtCandidates[0] || "",
+          ticketIds: [...new Set(invoice.lines.map((line) => line.ticketId).filter(Boolean))],
+          totalAmount: invoice.lines.reduce((sum, line) => sum + (Number(line.amount) || 0), 0),
+          paymentStatus: resolveInvoicePaymentStatus(paymentStatuses),
+          realisasiStatus: resolveInvoiceRealisasiStatus(realisasiStatuses),
+        };
+      })
+      .sort((a, b) => {
+        const aTime = new Date(a.paidAt || 0).getTime();
+        const bTime = new Date(b.paidAt || 0).getTime();
+        return bTime - aTime;
+      });
+  }, [visitor]);
+
+  const visitorDocumentPreview = useMemo(() => {
+    if (!visitor) {
+      return {
+        identityDocumentUrl: "/placeholder.svg",
+        selfieUrl: "/placeholder.svg",
+      };
+    }
+
+    const identityTicket =
+      visitor.tickets.find(
+        (ticket) =>
+          ticket.identityDocumentUrl || ticket.ktmUrl || ticket.fotoIdentitasPenanggungJawabUrl,
+      ) || visitor.tickets[0];
+    const selfieTicket =
+      visitor.tickets.find((ticket) => ticket.selfieUrl || ticket.fotoIdentitasPenanggungJawabUrl) ||
+      identityTicket;
+
+    return {
+      identityDocumentUrl:
+        identityTicket?.identityDocumentUrl ||
+        identityTicket?.ktmUrl ||
+        identityTicket?.fotoIdentitasPenanggungJawabUrl ||
+        "/placeholder.svg",
+      selfieUrl:
+        selfieTicket?.selfieUrl || selfieTicket?.fotoIdentitasPenanggungJawabUrl || "/placeholder.svg",
+    };
   }, [visitor]);
 
   const activeCount = ticketRows.filter((row) => row.activity.status === "active").length;
@@ -172,6 +271,84 @@ export default function VisitorDetailPage() {
                       {visitor.noIdentitasDisplay || visitor.noIdentitas || "-"}
                     </p>
                   </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+              <div className="rounded-lg border border-border bg-card p-3">
+                <p className="text-xs text-muted-foreground">Total Tiket</p>
+                <p className="text-2xl font-bold">{ticketRows.length}</p>
+              </div>
+              <div className="rounded-lg border border-status-approved/30 bg-status-approved-bg/50 p-3">
+                <p className="text-xs text-muted-foreground">Tiket Active</p>
+                <p className="text-2xl font-bold text-status-approved">{activeCount}</p>
+              </div>
+              <div className="rounded-lg border border-slate-300 bg-slate-100/70 p-3">
+                <p className="text-xs text-muted-foreground">Tiket Non Active</p>
+                <p className="text-2xl font-bold text-slate-700">{inactiveCount}</p>
+              </div>
+            </div>
+
+            <Card className="card-ocean overflow-hidden">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-base font-semibold">Daftar Invoice Visitor</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="overflow-x-auto custom-scrollbar">
+                  <table className="data-table min-w-[900px]">
+                    <thead>
+                      <tr>
+                        <th>ID Invoice</th>
+                        <th className="text-center">Total Tiket</th>
+                        <th>Total Tagihan</th>
+                        <th>Tanggal Bayar</th>
+                        <th>Status Pembayaran</th>
+                        <th>Status Realisasi</th>
+                        <th className="text-center">Aksi</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {invoiceRows.map((invoice) => (
+                        <tr key={invoice.id}>
+                          <td className="font-mono text-sm">{formatShortId(invoice.id)}</td>
+                          <td className="text-center text-sm">{invoice.ticketIds.length}</td>
+                          <td className="text-sm">{formatRupiah(invoice.totalAmount)}</td>
+                          <td className="text-sm">{invoice.paidAt ? formatDate(invoice.paidAt) : "-"}</td>
+                          <td>
+                            <span
+                              className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${getPaymentBadgeClass(invoice.paymentStatus)}`}
+                            >
+                              {PAYMENT_STATUS_LABELS[invoice.paymentStatus] || invoice.paymentStatus || "-"}
+                            </span>
+                          </td>
+                          <td>
+                            <span
+                              className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${getRealisasiBadgeClass(invoice.realisasiStatus)}`}
+                            >
+                              {REALISASI_STATUS_LABELS[invoice.realisasiStatus] ||
+                                invoice.realisasiStatus ||
+                                "-"}
+                            </span>
+                          </td>
+                          <td className="text-center">
+                            <Link to={`/invoices/${invoice.id}`}>
+                              <Button variant="ghost" size="icon" className="h-8 w-8" title="Detail invoice">
+                                <FileText className="w-4 h-4" />
+                              </Button>
+                            </Link>
+                          </td>
+                        </tr>
+                      ))}
+                      {!invoiceRows.length && (
+                        <tr>
+                          <td colSpan={7} className="py-8 text-center text-sm text-muted-foreground">
+                            Visitor ini belum memiliki invoice.
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
                 </div>
               </CardContent>
             </Card>
@@ -289,20 +466,28 @@ export default function VisitorDetailPage() {
           <div className="space-y-6">
             <Card className="card-ocean">
               <CardHeader className="pb-3">
-                <CardTitle className="text-base font-semibold">Ringkasan Tiket</CardTitle>
+                <CardTitle className="text-base font-semibold">File Identitas & Foto Diri</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
-                <div className="rounded-lg border border-border p-3">
-                  <p className="text-xs text-muted-foreground">Total Tiket</p>
-                  <p className="text-2xl font-bold">{ticketRows.length}</p>
+                <div className="space-y-2">
+                  <p className="text-xs font-medium text-foreground">KTP/SIM/PASPOR/KITAS/KITAP</p>
+                  <div className="w-full aspect-video rounded-lg bg-muted overflow-hidden">
+                    <img
+                      src={visitorDocumentPreview.identityDocumentUrl}
+                      alt="File identitas visitor"
+                      className="w-full h-full object-contain"
+                    />
+                  </div>
                 </div>
-                <div className="rounded-lg border border-status-approved/30 bg-status-approved-bg/50 p-3">
-                  <p className="text-xs text-muted-foreground">Tiket Active</p>
-                  <p className="text-2xl font-bold text-status-approved">{activeCount}</p>
-                </div>
-                <div className="rounded-lg border border-slate-300 bg-slate-100/70 p-3">
-                  <p className="text-xs text-muted-foreground">Tiket Non Active</p>
-                  <p className="text-2xl font-bold text-slate-700">{inactiveCount}</p>
+                <div className="space-y-2">
+                  <p className="text-xs font-medium text-foreground">Foto Diri</p>
+                  <div className="w-full aspect-video rounded-lg bg-muted overflow-hidden">
+                    <img
+                      src={visitorDocumentPreview.selfieUrl}
+                      alt="Foto diri visitor"
+                      className="w-full h-full object-contain"
+                    />
+                  </div>
                 </div>
               </CardContent>
             </Card>
