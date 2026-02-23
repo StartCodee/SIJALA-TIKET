@@ -1176,23 +1176,17 @@ export const groupInvoiceLinesById = (lines) =>
   }, {});
 
 export const getInvoiceLinesById = (invoiceId) =>
-  dummyInvoices.filter((inv) => inv.id === invoiceId);
+  getAllInvoiceLines().filter((inv) => inv.id === invoiceId);
 
 export const getInvoiceIdByTicketId = (ticketId) =>
-  dummyInvoices.find((inv) => inv.ticketId === ticketId)?.id;
-
-// Map cepat: ticketId -> invoiceId
-export const invoiceIdByTicketId = dummyInvoices.reduce((acc, inv) => {
-  acc[inv.ticketId] = inv.id;
-  return acc;
-}, {});
+  getAllInvoiceLines().find((inv) => inv.ticketId === ticketId)?.id;
 
 export const getInvoiceIdForTicket = (ticketId) => {
-  return invoiceIdByTicketId[ticketId];
+  return getInvoiceIdByTicketId(ticketId);
 };
 
 export const getInvoiceLinesByInvoiceId = (invoiceId) => {
-  return dummyInvoices.filter((inv) => inv.id === invoiceId);
+  return getAllInvoiceLines().filter((inv) => inv.id === invoiceId);
 };
 
 export const getTicketIdsByInvoiceId = (invoiceId) => {
@@ -1710,29 +1704,66 @@ export const formatShortId = (id) => {
 };
 
 const TICKET_OVERRIDE_KEY = 'ticket_overrides_v1';
+const ONSITE_TICKETS_KEY = 'onsite_tickets_v1';
+const ONSITE_INVOICE_LINES_KEY = 'onsite_invoice_lines_v1';
+const INVOICE_OVERRIDE_KEY = 'invoice_overrides_v1';
 
 const canUseStorage = () =>
   typeof window !== 'undefined' && typeof window.localStorage !== 'undefined';
 
-const loadTicketOverrides = () => {
-  if (!canUseStorage()) return {};
+const loadJsonStorage = (key, fallbackValue, contextLabel) => {
+  if (!canUseStorage()) return fallbackValue;
   try {
-    const raw = window.localStorage.getItem(TICKET_OVERRIDE_KEY);
-    return raw ? JSON.parse(raw) : {};
+    const raw = window.localStorage.getItem(key);
+    return raw ? JSON.parse(raw) : fallbackValue;
   } catch (error) {
-    console.warn('Gagal membaca override tiket:', error);
-    return {};
+    console.warn(`Gagal membaca ${contextLabel}:`, error);
+    return fallbackValue;
   }
 };
 
-const saveTicketOverrides = (overrides) => {
-  if (!canUseStorage()) return overrides;
+const saveJsonStorage = (key, value, contextLabel) => {
+  if (!canUseStorage()) return value;
   try {
-    window.localStorage.setItem(TICKET_OVERRIDE_KEY, JSON.stringify(overrides));
+    window.localStorage.setItem(key, JSON.stringify(value));
   } catch (error) {
-    console.warn('Gagal menyimpan override tiket:', error);
+    console.warn(`Gagal menyimpan ${contextLabel}:`, error);
   }
-  return overrides;
+  return value;
+};
+
+const loadTicketOverrides = () =>
+  loadJsonStorage(TICKET_OVERRIDE_KEY, {}, 'override tiket');
+
+const saveTicketOverrides = (overrides) =>
+  saveJsonStorage(TICKET_OVERRIDE_KEY, overrides, 'override tiket');
+
+const loadOnsiteTickets = () =>
+  loadJsonStorage(ONSITE_TICKETS_KEY, [], 'tiket onsite');
+
+const saveOnsiteTickets = (tickets) =>
+  saveJsonStorage(ONSITE_TICKETS_KEY, tickets, 'tiket onsite');
+
+const loadOnsiteInvoiceLines = () =>
+  loadJsonStorage(ONSITE_INVOICE_LINES_KEY, [], 'invoice onsite');
+
+const saveOnsiteInvoiceLines = (lines) =>
+  saveJsonStorage(ONSITE_INVOICE_LINES_KEY, lines, 'invoice onsite');
+
+const loadInvoiceOverrides = () =>
+  loadJsonStorage(INVOICE_OVERRIDE_KEY, {}, 'override invoice');
+
+const saveInvoiceOverrides = (overrides) =>
+  saveJsonStorage(INVOICE_OVERRIDE_KEY, overrides, 'override invoice');
+
+const getInvoiceLineKey = (invoiceId, ticketId) => `${invoiceId}::${ticketId}`;
+
+const uniqueBy = (items, getKey) => {
+  const map = new Map();
+  for (const item of items) {
+    map.set(getKey(item), item);
+  }
+  return Array.from(map.values());
 };
 
 export const getTicketOverride = (ticketId) => {
@@ -1754,9 +1785,57 @@ export const applyTicketOverride = (ticket) => {
   return { ...ticket, ...override };
 };
 
-export const getTicketById = (ticketId) => {
-  const ticket = dummyTickets.find((t) => t.id === ticketId);
-  return ticket ? applyTicketOverride(ticket) : null;
+export const addOnsiteTicket = (ticket) => {
+  const current = loadOnsiteTickets();
+  const next = uniqueBy([...current, ticket], (item) => item.id);
+  saveOnsiteTickets(next);
+  return ticket;
 };
 
-export const getAllTickets = () => dummyTickets.map((t) => applyTicketOverride(t));
+export const getOnsiteTickets = () => loadOnsiteTickets();
+
+export const getAllTickets = () => {
+  const mergedTickets = uniqueBy([...dummyTickets, ...loadOnsiteTickets()], (ticket) => ticket.id);
+  return mergedTickets.map((ticket) => applyTicketOverride(ticket));
+};
+
+export const getTicketById = (ticketId) => {
+  const ticket = getAllTickets().find((item) => item.id === ticketId);
+  return ticket || null;
+};
+
+export const getInvoiceLineOverride = (invoiceId, ticketId) => {
+  const overrides = loadInvoiceOverrides();
+  return overrides[getInvoiceLineKey(invoiceId, ticketId)] || null;
+};
+
+export const saveInvoiceLineOverride = (invoiceId, ticketId, patch) => {
+  const overrides = loadInvoiceOverrides();
+  const key = getInvoiceLineKey(invoiceId, ticketId);
+  overrides[key] = { ...(overrides[key] || {}), ...patch };
+  saveInvoiceOverrides(overrides);
+  return overrides[key];
+};
+
+export const addOnsiteInvoiceLine = (line) => {
+  const current = loadOnsiteInvoiceLines();
+  const next = uniqueBy(
+    [...current, line],
+    (item) => getInvoiceLineKey(item.id, item.ticketId),
+  );
+  saveOnsiteInvoiceLines(next);
+  return line;
+};
+
+export const getOnsiteInvoiceLines = () => loadOnsiteInvoiceLines();
+
+export const getAllInvoiceLines = () => {
+  const mergedLines = uniqueBy(
+    [...dummyInvoices, ...loadOnsiteInvoiceLines()],
+    (line) => getInvoiceLineKey(line.id, line.ticketId),
+  );
+  return mergedLines.map((line) => {
+    const override = getInvoiceLineOverride(line.id, line.ticketId);
+    return override ? { ...line, ...override } : line;
+  });
+};

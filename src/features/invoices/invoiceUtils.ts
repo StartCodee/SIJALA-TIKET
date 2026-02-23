@@ -1,9 +1,9 @@
 import type { Invoice, PaymentStatus, RealisasiStatus, Ticket } from '@/data/dummyData';
 import {
-  dummyTickets,
   DOMISILI_LABELS,
   FEE_PRICING,
   groupInvoiceLinesById,
+  getAllTickets,
   getTicketById,
   getTicketOverride,
 } from '@/data/dummyData';
@@ -90,9 +90,11 @@ export function buildInvoicesFromLines(allLines: Invoice[]): InvoiceViewModel[] 
 }
 
 export function buildInvoiceFromLines(invoiceId: string, lines: Invoice[]): InvoiceViewModel {
+  const allTickets = getAllTickets();
+  const ticketById = new Map(allTickets.map((ticket) => [ticket.id, ticket]));
   const lineTicketIds = lines.map((l) => l.ticketId);
   const tickets = lineTicketIds
-    .map((id) => getTicketById(id) || dummyTickets.find((t) => t.id === id))
+    .map((id) => getTicketById(id) || ticketById.get(id))
     .filter(Boolean) as Ticket[];
 
   // fallback kalau ticket tidak ketemu
@@ -100,7 +102,7 @@ export function buildInvoiceFromLines(invoiceId: string, lines: Invoice[]): Invo
 
   const ticketRows: InvoiceTicketRow[] = lines.map((l) => {
     const override = getTicketOverride(l.ticketId);
-    const t = getTicketById(l.ticketId) || dummyTickets.find((x) => x.id === l.ticketId);
+    const t = getTicketById(l.ticketId) || ticketById.get(l.ticketId);
 
     const feeCategory = override?.feeCategory || t?.feeCategory || 'wisatawan_domestik_pbd';
     const feeLabel =

@@ -24,7 +24,7 @@ import {
   Printer,
   FileText,
 } from "lucide-react";
-import { dummyInvoices, formatDate, formatRupiah, getTicketById } from "@/data/dummyData";
+import { getAllInvoiceLines, formatDate, formatRupiah, getTicketById } from "@/data/dummyData";
 import { buildInvoicesFromLines } from "@/features/invoices/invoiceUtils";
 import { exportExcel } from "@/lib/exporters";
 import { getUserRole, isAdministrator } from "@/lib/rbac";
@@ -36,6 +36,78 @@ const OPERATOR_LABELS = {
   dive_center: "Dive Center",
   mandiri: "Mandiri",
   lainnya: "Lainnya",
+};
+
+const INVOICE_STATUS_OPTIONS = [
+  { value: "all", label: "Semua" },
+  { value: "sudah_bayar", label: "Sudah Dibayar" },
+  { value: "belum_bayar", label: "Belum Dibayar" },
+  { value: "tidak_bayar", label: "Tidak Bayar (>24 jam)" },
+  { value: "refund_diajukan", label: "Pengembalian Diajukan" },
+  { value: "refund_diproses", label: "Pengembalian Diproses" },
+  { value: "refund_selesai", label: "Pengembalian Selesai" },
+];
+
+const getInvoiceStatusView = (status) => {
+  const config = {
+    sudah_bayar: {
+      label: "Sudah Dibayar",
+      className: "bg-status-approved-bg text-status-approved",
+    },
+    belum_bayar: {
+      label: "Belum Dibayar",
+      className: "bg-status-pending-bg text-status-pending",
+    },
+    tidak_bayar: {
+      label: "Tidak Bayar (>24 jam)",
+      className: "bg-slate-200 text-slate-700",
+    },
+    refund_diajukan: {
+      label: "Pengembalian Diajukan",
+      className: "bg-status-revision-bg text-status-revision",
+    },
+    refund_diproses: {
+      label: "Pengembalian Diproses",
+      className: "bg-status-pending-bg text-status-pending",
+    },
+    refund_selesai: {
+      label: "Pengembalian Selesai",
+      className: "bg-status-approved-bg text-status-approved",
+    },
+  };
+
+  return (
+    config[status] || {
+      label: String(status || "-"),
+      className: "bg-muted text-muted-foreground",
+    }
+  );
+};
+
+const normalizeInvoicePaymentStatus = (invoice) => {
+  const directStatus = String(invoice?.paymentStatus || "");
+  if (directStatus && directStatus !== "campuran") {
+    if (directStatus === "no_activity" || directStatus === "unsuccessful") {
+      return "belum_bayar";
+    }
+    return directStatus;
+  }
+
+  const ticketStatuses = (invoice?.tickets || [])
+    .map((ticket) => String(ticket?.paymentStatus || ""))
+    .filter(Boolean);
+  if (!ticketStatuses.length) return "belum_bayar";
+
+  if (ticketStatuses.includes("refund_diproses")) return "refund_diproses";
+  if (ticketStatuses.includes("refund_diajukan")) return "refund_diajukan";
+  if (ticketStatuses.includes("refund_selesai")) return "refund_selesai";
+  if (ticketStatuses.includes("tidak_bayar")) return "tidak_bayar";
+  if (ticketStatuses.includes("belum_bayar")) return "belum_bayar";
+  if (ticketStatuses.includes("no_activity")) return "belum_bayar";
+  if (ticketStatuses.includes("unsuccessful")) return "belum_bayar";
+  if (ticketStatuses.includes("sudah_bayar")) return "sudah_bayar";
+
+  return "belum_bayar";
 };
 
 const getOverviewOperatorCategory = (ticket) => {
@@ -113,7 +185,7 @@ export default function InvoiceListPage() {
   const [ticketCountFilter, setTicketCountFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
   const [totalFilter, setTotalFilter] = useState("all");
-  const invoices = useMemo(() => buildInvoicesFromLines(dummyInvoices), []);
+  const invoices = useMemo(() => buildInvoicesFromLines(getAllInvoiceLines()), []);
   const enrichedInvoices = useMemo(
     () =>
       invoices.map((inv) => {
@@ -122,14 +194,12 @@ export default function InvoiceListPage() {
             .map((row) => getOverviewOperatorCategory(getTicketById(row.ticketId)))
             .filter(Boolean);
         const operatorType = getDominantOperatorCategory(operatorCategories);
-        const normalizedStatus =
-          inv.paymentStatus === "sudah_bayar" ? "sudah_bayar" : "belum_bayar";
 
         return {
           ...inv,
           operatorType,
           operatorLabel: OPERATOR_LABELS[operatorType] || OPERATOR_LABELS.lainnya,
-          normalizedStatus,
+          normalizedPaymentStatus: normalizeInvoicePaymentStatus(inv),
         };
       }),
     [invoices],
@@ -156,7 +226,7 @@ export default function InvoiceListPage() {
         ticketCountFilter,
       );
       const matchesStatus =
-        statusFilter === "all" || inv.normalizedStatus === statusFilter;
+        statusFilter === "all" || inv.normalizedPaymentStatus === statusFilter;
       const matchesTotal = isTotalInFilter(inv.grandTotal, totalFilter);
 
       return (
@@ -204,7 +274,7 @@ export default function InvoiceListPage() {
         billed_name: i.billedTo.name,
         billed_email: i.billedTo.email,
         ticket_count: i.ticketCount,
-        payment_status: i.paymentStatus,
+        payment_status: i.normalizedPaymentStatus,
         method: i.method,
         refund_flag: i.refundFlag ? "yes" : "no",
         total: i.grandTotal,
@@ -395,9 +465,11 @@ export default function InvoiceListPage() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent className="bg-popover border-border">
-                      <SelectItem value="all">Semua</SelectItem>
-                      <SelectItem value="sudah_bayar">Sudah dibayar</SelectItem>
-                      <SelectItem value="belum_bayar">Belum dibayar</SelectItem>
+                      {INVOICE_STATUS_OPTIONS.map((status) => (
+                        <SelectItem key={status.value} value={status.value}>
+                          {status.label}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
@@ -512,17 +584,16 @@ export default function InvoiceListPage() {
                       {inv.ticketCount}
                     </td>
                     <td>
+                      {(() => {
+                        const statusView = getInvoiceStatusView(inv.normalizedPaymentStatus);
+                        return (
                       <span
-                        className={
-                          inv.normalizedStatus === "sudah_bayar"
-                            ? "inline-flex items-center rounded-full bg-status-approved-bg px-2.5 py-0.5 text-xs font-medium text-status-approved"
-                            : "inline-flex items-center rounded-full bg-status-pending-bg px-2.5 py-0.5 text-xs font-medium text-status-pending"
-                        }
+                        className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${statusView.className}`}
                       >
-                        {inv.normalizedStatus === "sudah_bayar"
-                          ? "Sudah dibayar"
-                          : "Belum dibayar"}
+                        {statusView.label}
                       </span>
+                        );
+                      })()}
                     </td>
                     <td className="text-right text-sm font-semibold">
                       {formatCurrencyNumber(inv.grandTotal)}

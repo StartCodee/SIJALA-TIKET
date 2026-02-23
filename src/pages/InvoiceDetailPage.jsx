@@ -33,6 +33,8 @@ import {
   formatDateTime,
   formatNominal,
   getTicketById,
+  saveInvoiceLineOverride,
+  saveTicketOverride,
 } from '@/data/dummyData';
 import { buildInvoiceFromLines } from '@/features/invoices/invoiceUtils';
 import { exportJSON, exportExcel } from '@/lib/exporters';
@@ -72,6 +74,21 @@ const PAYMENT_METHOD_LABELS = {
   blud_bank_direct: 'BLUD R4 - Bank Langsung',
   blud_cash: 'BLUD R4 - Tunai',
 };
+
+const EDITABLE_PAYMENT_METHOD_VALUES = new Set([
+  'doku_credit_card',
+  'doku_bank_va',
+  'doku_qris',
+  'doku_e_wallet',
+  'doku_minimarket',
+  'doku_paylater',
+  'doku_bank_direct',
+  'doku_bank_digital',
+  'blud_bank_va',
+  'blud_qris',
+  'blud_bank_direct',
+  'blud_cash',
+]);
 
 const DOCUMENT_LABELS = {
   foto_diri: 'Foto diri',
@@ -169,6 +186,46 @@ const formatPaymentMethod = (method, ticket) => {
     return `Doku - ${normalized}`;
   }
   return normalized || '-';
+};
+
+const shouldPreferDokuMethod = (invoice) => {
+  const ticketMethods = Array.isArray(invoice?.tickets)
+    ? invoice.tickets.map((ticket) => String(ticket?.method || '').toLowerCase())
+    : [];
+  if (ticketMethods.some((method) => method.startsWith('doku_'))) return true;
+  if (ticketMethods.some((method) => method.startsWith('blud_'))) return false;
+
+  const operatorTypes = Array.isArray(invoice?.tickets)
+    ? invoice.tickets.map((ticket) => String(ticket?.operatorType || '').toLowerCase())
+    : [];
+  return operatorTypes.some((operatorType) => operatorType === 'doku');
+};
+
+const getDefaultEditableMethod = (invoice) =>
+  shouldPreferDokuMethod(invoice) ? 'doku_bank_va' : 'blud_bank_va';
+
+const normalizeEditablePaymentMethod = (method, invoice) => {
+  const normalized = String(method || '').toLowerCase();
+  if (EDITABLE_PAYMENT_METHOD_VALUES.has(normalized)) return normalized;
+
+  const preferDoku = shouldPreferDokuMethod(invoice);
+  if (normalized === 'bank_transfer') {
+    return preferDoku ? 'doku_bank_va' : 'blud_bank_va';
+  }
+  if (normalized === 'qris') {
+    return preferDoku ? 'doku_qris' : 'blud_qris';
+  }
+  if (normalized === 'cash') {
+    return 'blud_cash';
+  }
+  if (normalized === 'credit_card') {
+    return preferDoku ? 'doku_credit_card' : 'blud_bank_va';
+  }
+  if (normalized === 'e_wallet') {
+    return preferDoku ? 'doku_e_wallet' : 'blud_bank_va';
+  }
+
+  return getDefaultEditableMethod(invoice);
 };
 
 const getCountryForTicket = (ticketId) => {
@@ -390,7 +447,7 @@ export default function InvoiceDetailPage() {
     invoiceNo: '',
     issuedAt: '',
     paymentStatus: 'belum_bayar',
-    method: 'bank_transfer',
+    method: 'blud_bank_va',
     paidAt: '',
     billedName: '',
     billedEmail: '',
@@ -490,7 +547,10 @@ export default function InvoiceDetailPage() {
       invoiceNo: invoice.invoiceNo || '',
       issuedAt: toDateTimeLocal(invoice.issuedAt),
       paymentStatus: invoice.paymentStatus === 'campuran' ? 'belum_bayar' : invoice.paymentStatus,
-      method: invoice.method === 'campuran' ? 'bank_transfer' : invoice.method,
+      method: normalizeEditablePaymentMethod(
+        invoice.method === 'campuran' ? '' : invoice.method,
+        invoice,
+      ),
       paidAt: toDateTimeLocal(invoice.tickets?.[0]?.paidAt || ''),
       billedName: invoice.billedTo?.name || '',
       billedEmail: invoice.billedTo?.email || '',
@@ -501,12 +561,42 @@ export default function InvoiceDetailPage() {
   };
 
   const handleSaveEdit = () => {
+    const normalizedMethod = normalizeEditablePaymentMethod(editForm.method, invoice);
+    const normalizedPaidAt = fromDateTimeLocal(editForm.paidAt);
+    const normalizedPaymentStatus = editForm.paymentStatus;
+    const isPaidOrRefunded = [
+      'sudah_bayar',
+      'refund_diajukan',
+      'refund_diproses',
+      'refund_selesai',
+    ].includes(normalizedPaymentStatus);
+    const nextRealisasiStatus = isPaidOrRefunded ? 'sudah_terealisasi' : 'belum_terealisasi';
+
+    lines.forEach((line) => {
+      saveInvoiceLineOverride(invoice.invoiceId, line.ticketId, {
+        paymentStatus: normalizedPaymentStatus,
+        method: normalizedMethod,
+        paidAt: isPaidOrRefunded ? normalizedPaidAt : '',
+        refundFlag: normalizedPaymentStatus.startsWith('refund_'),
+        realisasiStatus: nextRealisasiStatus,
+      });
+
+      if (getTicketById(line.ticketId)) {
+        saveTicketOverride(line.ticketId, {
+          paymentStatus: normalizedPaymentStatus,
+          paidAt: isPaidOrRefunded ? normalizedPaidAt : '',
+          realisasiStatus: nextRealisasiStatus,
+          qrActive: isPaidOrRefunded,
+        });
+      }
+    });
+
     setInvoiceOverride({
       invoiceNo: editForm.invoiceNo,
       issuedAt: fromDateTimeLocal(editForm.issuedAt),
-      paymentStatus: editForm.paymentStatus,
-      method: editForm.method,
-      paidAt: fromDateTimeLocal(editForm.paidAt),
+      paymentStatus: normalizedPaymentStatus,
+      method: normalizedMethod,
+      paidAt: normalizedPaidAt,
       billedName: editForm.billedName,
       billedEmail: editForm.billedEmail,
       billedPhone: editForm.billedPhone,
@@ -1237,6 +1327,8 @@ export default function InvoiceDetailPage() {
                 <SelectContent className="bg-popover border-border">
                   <SelectItem value="belum_bayar">Belum Bayar</SelectItem>
                   <SelectItem value="sudah_bayar">Sudah Bayar</SelectItem>
+                  <SelectItem value="tidak_bayar">Tidak Bayar (lebih dari 24 jam)</SelectItem>
+                  <SelectItem value="refund_diajukan">Refund Diajukan</SelectItem>
                   <SelectItem value="refund_diproses">Refund Diproses</SelectItem>
                   <SelectItem value="refund_selesai">Refund Selesai</SelectItem>
                 </SelectContent>
@@ -1265,11 +1357,6 @@ export default function InvoiceDetailPage() {
                   <SelectItem value="blud_qris">BLUD R4 - QRIS</SelectItem>
                   <SelectItem value="blud_bank_direct">BLUD R4 - Bank Langsung</SelectItem>
                   <SelectItem value="blud_cash">BLUD R4 - Tunai</SelectItem>
-                  <SelectItem value="bank_transfer">Transfer Bank (Legacy)</SelectItem>
-                  <SelectItem value="credit_card">Credit Card (Legacy)</SelectItem>
-                  <SelectItem value="qris">QRIS (Legacy)</SelectItem>
-                  <SelectItem value="e_wallet">E-Wallet (Legacy)</SelectItem>
-                  <SelectItem value="cash">Tunai (Legacy)</SelectItem>
                 </SelectContent>
               </Select>
             </div>

@@ -35,6 +35,8 @@ export function KPICard({
   subtitle,
   icon: Icon,
   trend,
+  trendCompact = false,
+  trendUseStatusColor = false,
   variant = 'default',
   className,
 }) {
@@ -49,13 +51,23 @@ export function KPICard({
     : null;
   
   const trendColor = trend
-    ? variant === 'brand'
-      ? 'text-primary'
-      : trend.value > 0
+    ? trendUseStatusColor
+      ? trend.value > 0
         ? 'text-status-approved'
         : trend.value < 0
           ? 'text-status-rejected'
           : 'text-muted-foreground'
+      : variant === 'brand'
+        ? 'text-primary'
+        : trend.value > 0
+          ? 'text-status-approved'
+          : trend.value < 0
+            ? 'text-status-rejected'
+            : 'text-muted-foreground'
+    : '';
+
+  const trendValueText = trend
+    ? trend.display || `${trend.value > 0 ? '+' : ''}${trend.value}%`
     : '';
 
   return (
@@ -84,12 +96,14 @@ export function KPICard({
       , trend && TrendIcon && (
         React.createElement('div', { className: cn('flex items-center gap-1 mt-2', trendColor), __self: this, __source: {fileName: _jsxFileName, lineNumber: 97}}
           , React.createElement(TrendIcon, { className: "w-3.5 h-3.5" , __self: this, __source: {fileName: _jsxFileName, lineNumber: 98}} )
-          , React.createElement('span', { className: "text-xs font-medium" , __self: this, __source: {fileName: _jsxFileName, lineNumber: 99}}
-            , trend.value > 0 ? '+' : '', trend.value, "%"
+          , React.createElement('span', { className: trendCompact ? "text-[10px] font-medium" : "text-xs font-medium" , __self: this, __source: {fileName: _jsxFileName, lineNumber: 99}}
+            , trendValueText
           )
-          , React.createElement('span', { className: "text-xs text-muted-foreground ml-1"  , __self: this, __source: {fileName: _jsxFileName, lineNumber: 102}}
-            , trend.label
-          )
+          , (!trendCompact && trend.label)
+            ? React.createElement('span', { className: "text-xs text-muted-foreground ml-1"  , __self: this, __source: {fileName: _jsxFileName, lineNumber: 102}}
+              , trend.label
+            )
+            : null
         )
       )
     )

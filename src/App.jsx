@@ -12,6 +12,7 @@ import ServiceRatesPage from "./pages/ServiceRatesPage";
 import GateMonitorPage from "./pages/GateMonitorPage";
 import FinanceReportsPage from "./pages/FinanceReportsPage";
 import RefundCenterPage from "./pages/RefundCenterPage";
+import RefundRequestPage from "./pages/RefundRequestPage";
 import UserManagementPage from "./pages/UserManagementPage";
 import ActivityLogsPage from "./pages/ActivityLogsPage";
 import NotFound from "./pages/NotFound";
@@ -19,6 +20,8 @@ import InvoiceDetailPage from "./pages/InvoiceDetailPage";
 import InvoiceListPage from "./pages/InvoiceListPage";
 import TicketDesignerPage from "./pages/TicketDesigner";
 import ProfilePage from "./pages/ProfilePage";
+import VisitorPage from "./pages/VisitorPage";
+import VisitorDetailPage from "./pages/VisitorDetailPage";
 
 const queryClient = new QueryClient();
 
@@ -44,6 +47,8 @@ const App = () => (
         <Routes>
           <Route path="/" element={<OverviewPage />} />
           <Route path="/tickets" element={<TicketListPage />} />
+          <Route path="/visitors" element={<VisitorPage />} />
+          <Route path="/visitors/:visitorKey" element={<VisitorDetailPage />} />
           <Route path="/ticket-designer" element={<TicketDesignerPage />} />
           <Route path="/tickets/:ticketId" element={<TicketDetailPage />} />
           <Route path="/approval" element={<ApprovalQueuePage />} />
@@ -51,6 +56,7 @@ const App = () => (
           <Route path="/tarif" element={<ServiceRatesPage />} />
           <Route path="/gate" element={<GateMonitorPage />} />
           <Route path="/reports" element={<FinanceReportsPage />} />
+          <Route path="/refund-request" element={<RefundRequestPage />} />
           <Route path="/refunds" element={<RefundCenterPage />} />
           <Route path="/users" element={<UserManagementPage />} />
           <Route path="/logs" element={<ActivityLogsPage />} />
