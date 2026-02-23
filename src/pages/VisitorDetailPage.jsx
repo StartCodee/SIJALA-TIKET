@@ -285,7 +285,7 @@ export default function VisitorDetailPage() {
                 <p className="text-2xl font-bold text-status-approved">{activeCount}</p>
               </div>
               <div className="rounded-lg border border-slate-300 bg-slate-100/70 p-3">
-                <p className="text-xs text-muted-foreground">Tiket Non Active</p>
+                <p className="text-xs text-muted-foreground">Tiket Inactive</p>
                 <p className="text-2xl font-bold text-slate-700">{inactiveCount}</p>
               </div>
             </div>
@@ -304,7 +304,6 @@ export default function VisitorDetailPage() {
                         <th>Total Tagihan</th>
                         <th>Tanggal Bayar</th>
                         <th>Status Pembayaran</th>
-                        <th>Status Realisasi</th>
                         <th className="text-center">Aksi</th>
                       </tr>
                     </thead>
@@ -317,13 +316,6 @@ export default function VisitorDetailPage() {
                           <td className="text-sm">{invoice.paidAt ? formatDate(invoice.paidAt) : "-"}</td>
                           <td>
                             <span
-                              className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${getPaymentBadgeClass(invoice.paymentStatus)}`}
-                            >
-                              {PAYMENT_STATUS_LABELS[invoice.paymentStatus] || invoice.paymentStatus || "-"}
-                            </span>
-                          </td>
-                          <td>
-                            <span
                               className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${getRealisasiBadgeClass(invoice.realisasiStatus)}`}
                             >
                               {REALISASI_STATUS_LABELS[invoice.realisasiStatus] ||
@@ -331,7 +323,7 @@ export default function VisitorDetailPage() {
                                 "-"}
                             </span>
                           </td>
-                          <td className="text-center">
+                          <td className="text-left">
                             <Link to={`/invoices/${invoice.id}`}>
                               <Button variant="ghost" size="icon" className="h-8 w-8" title="Detail invoice">
                                 <FileText className="w-4 h-4" />
@@ -378,7 +370,6 @@ export default function VisitorDetailPage() {
                         <th>Kategori</th>
                         <th>Tanggal</th>
                         <th>Status Tiket</th>
-                        <th>Status Pembayaran</th>
                         <th>Invoice</th>
                         <th className="text-center">Aksi</th>
                       </tr>
@@ -400,15 +391,6 @@ export default function VisitorDetailPage() {
                               {row.activity.label}
                             </span>
                           </td>
-                          <td>
-                            <span
-                              className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${getPaymentBadgeClass(row.ticket.paymentStatus)}`}
-                            >
-                              {PAYMENT_STATUS_LABELS[row.ticket.paymentStatus] ||
-                                row.ticket.paymentStatus ||
-                                "-"}
-                            </span>
-                          </td>
                           <td className="text-sm">
                             {row.invoiceId ? (
                               <span className="font-mono">{formatShortId(row.invoiceId)}</span>
@@ -416,35 +398,13 @@ export default function VisitorDetailPage() {
                               "-"
                             )}
                           </td>
-                          <td className="text-center">
-                            <div className="flex items-center justify-center gap-1">
+                          <td className="text-left">
+                            <div className="flex items-left gap-1">
                               <Link to={`/tickets/${row.ticket.id}`}>
                                 <Button variant="ghost" size="icon" className="h-8 w-8" title="Detail tiket">
                                   <Eye className="w-4 h-4" />
                                 </Button>
                               </Link>
-                              {row.invoiceId ? (
-                                <Link to={`/invoices/${row.invoiceId}`}>
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    className="h-8 w-8"
-                                    title="Detail invoice"
-                                  >
-                                    <FileText className="w-4 h-4" />
-                                  </Button>
-                                </Link>
-                              ) : (
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-8 w-8 opacity-40"
-                                  disabled
-                                  title="Invoice belum tersedia"
-                                >
-                                  <FileText className="w-4 h-4" />
-                                </Button>
-                              )}
                             </div>
                           </td>
                         </tr>
@@ -489,26 +449,6 @@ export default function VisitorDetailPage() {
                     />
                   </div>
                 </div>
-              </CardContent>
-            </Card>
-
-            <Card className="card-ocean">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-base font-semibold">Status Visitor</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <Badge
-                  variant="outline"
-                  className={
-                    activeCount > 0
-                      ? "border-status-approved text-status-approved"
-                      : "border-slate-400 text-slate-700"
-                  }
-                >
-                  {activeCount > 0
-                    ? "Visitor Active"
-                    : "Visitor Non Active"}
-                </Badge>
               </CardContent>
             </Card>
           </div>
