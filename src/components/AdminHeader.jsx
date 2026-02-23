@@ -69,7 +69,7 @@ export function AdminHeader({
   const today = toInputDate(new Date());
   const defaultCustomStart = toInputDate(new Date(new Date().setDate(new Date().getDate() - 29)));
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedDateFilter, setSelectedDateFilter] = useState('month');
+  const [selectedDateFilter, setSelectedDateFilter] = useState('today');
   const [showCustomDialog, setShowCustomDialog] = useState(false);
   const [customError, setCustomError] = useState('');
   const [customRange, setCustomRange] = useState({
@@ -84,7 +84,7 @@ export function AdminHeader({
   const selectedDateLabel =
     selectedDateFilter === 'custom'
       ? `${formatDateLabel(customRange.from)} - ${formatDateLabel(customRange.to)}`
-      : (dateFilters.find((filter) => filter.value === selectedDateFilter)?.label ?? 'Bulan Ini');
+      : (dateFilters.find((filter) => filter.value === selectedDateFilter)?.label ?? 'Hari Ini');
 
   const handleSelectDateFilter = (value) => {
     if (value !== 'custom') {
