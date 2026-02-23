@@ -359,34 +359,6 @@ export default function RefundRequestPage() {
                     />
                   </div>
 
-                  <div className="space-y-2">
-                    <Label>Nama Bank</Label>
-                    <Input
-                      value={form.bankName}
-                      onChange={(event) => setForm((prev) => ({ ...prev, bankName: event.target.value }))}
-                      placeholder="Contoh: BCA"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>No. Rekening</Label>
-                    <Input
-                      value={form.bankAccountNumber}
-                      onChange={(event) =>
-                        setForm((prev) => ({ ...prev, bankAccountNumber: event.target.value }))
-                      }
-                      placeholder="Nomor rekening tujuan"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Atas Nama Rekening</Label>
-                    <Input
-                      value={form.bankAccountHolder}
-                      onChange={(event) =>
-                        setForm((prev) => ({ ...prev, bankAccountHolder: event.target.value }))
-                      }
-                      placeholder="Nama pemilik rekening"
-                    />
-                  </div>
                 </div>
 
                 {formError ? (
