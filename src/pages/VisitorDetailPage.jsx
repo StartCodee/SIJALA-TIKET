@@ -80,6 +80,13 @@ const resolveInvoiceRealisasiStatus = (statuses) => {
     : "belum_terealisasi";
 };
 
+const isChildTicket = (ticket) =>
+  Boolean(
+    ticket?.isChildVisitor ||
+      ticket?.relationshipToParent === "anak" ||
+      ticket?.parentTicketId,
+  );
+
 export default function VisitorDetailPage() {
   const { visitorKey } = useParams();
   const [statusFilter, setStatusFilter] = useState("all");
@@ -377,7 +384,9 @@ export default function VisitorDetailPage() {
                     <tbody>
                       {filteredRows.map((row) => (
                         <tr key={row.ticket.id}>
-                          <td className="font-mono text-sm">{formatShortId(row.ticket.id)}</td>
+                          <td className="font-mono text-sm">
+                            {isChildTicket(row.ticket) ? "-" : formatShortId(row.ticket.id)}
+                          </td>
                           <td className="text-sm">
                             {FEE_PRICING[row.ticket.feeCategory]?.label || row.ticket.feeCategory}
                           </td>

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useParams, Link, useLocation } from "react-router-dom";
 import { AdminLayout } from "@/components/AdminLayout";
 import { AdminHeader } from "@/components/AdminHeader";
@@ -6,6 +6,7 @@ import {
   RefundStatusChip,
 } from "@/components/StatusChip";
 import {
+  getAllTickets,
   getTicketById,
   getInvoiceIdForTicket,
   saveTicketOverride,
@@ -237,7 +238,15 @@ export default function TicketDetailPage() {
       ...(documentMetaByKey[key] || {}),
     }))
     .filter((doc) => doc.label);
-
+  const childTickets = useMemo(
+    () =>
+      getAllTickets()
+        .filter((item) => item.parentTicketId === ticket.id)
+        .sort((a, b) =>
+          String(a.namaLengkap || "").localeCompare(String(b.namaLengkap || "")),
+        ),
+    [ticket.id],
+  );
   const displayTotalBiaya = isGroupInvoice
     ? ticket.hargaPerOrang
     : ticket.totalBiaya;
@@ -360,6 +369,30 @@ export default function TicketDetailPage() {
                 </div>
               </CardContent>
             </Card>
+
+            {childTickets.length > 0 && (
+              <Card className="card-ocean">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-sm font-semibold">
+                    Daftar Anak ({childTickets.length})
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    {childTickets.map((childTicket, index) => (
+                      <div
+                        key={childTicket.id}
+                        className="flex items-center gap-3 rounded-lg border border-border/70 bg-background/60 px-3 py-2"
+                      >
+                        <p className="text-sm font-medium leading-5">
+                          {childTicket.namaLengkap || "-"}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
 
             {/* Dokumen Pendukung */}
             <Card className="card-ocean">

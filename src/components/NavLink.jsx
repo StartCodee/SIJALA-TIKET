@@ -3,12 +3,6 @@ const _jsxFileName = "src\\components\\NavLink.tsx";import { NavLink as RouterNa
 import { forwardRef } from "react";
 import { cn } from "@/lib/utils";
 
-
-
-
-
-
-
 const NavLink = forwardRef(
   ({ className, activeClassName, pendingClassName, to, ...props }, ref) => {
     return (

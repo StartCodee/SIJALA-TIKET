@@ -1,12 +1,5 @@
 import { createContext, useContext } from 'react';
 
-
-
-
-
-
-
-
 export const AdminSidebarContext = createContext(null);
 
 export function useAdminSidebar() {

@@ -1,4 +1,4 @@
-import { FEE_PRICING } from "@/data/dummyData";
+import { FEE_PRICING, isChildVisitorTicket } from "@/data/dummyData";
 
 export const VISITOR_HIDE_KEY = "visitor_hidden_keys_v1";
 
@@ -121,6 +121,7 @@ export const groupTicketsByVisitor = (tickets, hiddenVisitorKeys = []) => {
   const groupMap = new Map();
 
   for (const ticket of tickets) {
+    if (isChildVisitorTicket(ticket)) continue;
     const key = getVisitorKeyFromTicket(ticket);
     if (hiddenSet.has(key)) continue;
 
