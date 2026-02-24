@@ -173,9 +173,12 @@ export default function PaymentsPage() {
 
   const matchesSearch = (row) => {
     const query = searchQuery.toLowerCase();
+    const searchableTicketId = getTicketById(row.ticketId)?.isChildVisitor
+      ? ""
+      : row.ticketId.toLowerCase();
     return (
       row.id.toLowerCase().includes(query) ||
-      row.ticketId.toLowerCase().includes(query) ||
+      searchableTicketId.includes(query) ||
       row.operatorName.toLowerCase().includes(query)
     );
   };
@@ -490,7 +493,7 @@ export default function PaymentsPage() {
     exportExcel(
       rowsToExport.map((invoice) => ({
         invoice_id: invoice.id,
-        ticket_id: invoice.ticketId,
+        ticket_id: getTicketById(invoice.ticketId)?.isChildVisitor ? "" : invoice.ticketId,
         jumlah_masuk: invoice.jumlahMasuk,
         jumlah_keluar: invoice.jumlahKeluar,
         payment_status: invoice.paymentStatus,

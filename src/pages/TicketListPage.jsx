@@ -9,6 +9,7 @@ import {
   DOMISILI_LABELS,
   BOOKING_TYPE_LABELS,
   formatDate,
+  isChildVisitorTicket,
 } from "@/data/dummyData";
 import {
   Search,
@@ -135,7 +136,7 @@ export default function TicketListPage() {
     ticket.paymentStatus === "sudah_bayar" ||
     ticket.gateStatus === "masuk" ||
     ticket.gateStatus === "keluar";
-  const allTickets = getAllTickets().filter(isPublishedTicket);
+  const allTickets = getAllTickets().filter((ticket) => !isChildVisitorTicket(ticket)).filter(isPublishedTicket);
 
   // Filter tickets
   const filteredTickets = allTickets.filter((ticket) => {

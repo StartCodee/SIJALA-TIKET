@@ -787,6 +787,18 @@ export default function InvoiceDetailPage() {
   const hasRefundForTicket = (ticket) =>
     String(ticket.paymentStatus || '').startsWith('refund_');
 
+  const isChildInvoiceTicket = (ticket) => {
+    const sourceTicket = getTicketById(ticket?.ticketId);
+    return Boolean(
+      sourceTicket?.isChildVisitor ||
+      sourceTicket?.relationshipToParent === 'anak' ||
+      sourceTicket?.parentTicketId,
+    );
+  };
+
+  const getInvoiceTicketIdDisplay = (ticket) =>
+    isChildInvoiceTicket(ticket) ? '-' : ticket?.ticketId || '-';
+
   const handleExportJSON = () => {
     if (!canExport) return;
     exportJSON(invoice, `invoice_${invoice.invoiceNo}.json`);
@@ -798,7 +810,7 @@ export default function InvoiceDetailPage() {
       invoice.tickets.map((t) => ({
         invoice_id: invoice.invoiceId,
         invoice_no: invoice.invoiceNo,
-        ticket_id: t.ticketId,
+        ticket_id: isChildInvoiceTicket(t) ? '' : t.ticketId,
         nama: t.namaLengkap,
         email: t.email,
         phone: t.noHP,
@@ -1064,7 +1076,7 @@ export default function InvoiceDetailPage() {
                     <tbody>
                       {invoice.tickets.map((t) => (
                         <tr key={t.ticketId}>
-                          <td className="whitespace-nowrap font-mono text-sm">{t.ticketId}</td>
+                          <td className="whitespace-nowrap font-mono text-sm">{getInvoiceTicketIdDisplay(t)}</td>
                           <td>
                             <div>
                               <p className="text-sm font-medium">{t.namaLengkap}</p>
@@ -1203,7 +1215,7 @@ export default function InvoiceDetailPage() {
                     <SelectContent className="bg-popover border-border max-h-72">
                       {selectedDocCategory.tickets.map((ticket) => (
                         <SelectItem key={ticket.ticketId} value={ticket.ticketId}>
-                          {ticket.ticketId} - {ticket.namaLengkap}
+                          {getInvoiceTicketIdDisplay(ticket)} - {ticket.namaLengkap}
                         </SelectItem>
                       ))}
                     </SelectContent>

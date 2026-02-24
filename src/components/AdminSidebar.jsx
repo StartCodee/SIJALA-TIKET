@@ -10,6 +10,7 @@ import {
   DoorOpen,
   BarChart3,
   RotateCcw,
+  FileInput,
   User,
   Users,
   History,
