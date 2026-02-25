@@ -25,7 +25,7 @@ import motifSidebar from '@/assets/motif-sidebar.svg';
 const mainNavItems = [
   { to: '/', icon: LayoutDashboard, label: 'Ringkasan' },
   { to: '/tickets', icon: Ticket, label: 'Tiket' },
-  { to: '/visitors', icon: User, label: 'Visitor' },
+  // { to: '/visitors', icon: User, label: 'Visitor' },
   { to: '/invoices', icon: CreditCard, label: 'Invoice' },
   { to: '/payments', icon: CreditCard, label: 'Pembayaran' },
   // { to: '/refund-request', icon: FileInput, label: 'Pengajuan Refund' },
