@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import logoRajaAmpat from '@/assets/image/KKP-RajaAmpat.png';
 import motifSidebar from '@/assets/motif-sidebar.svg';
+import { useLanguage } from '@/i18n/LanguageContext';
 
 const mainNavItems = [
   { to: '/', icon: LayoutDashboard, label: 'Ringkasan' },
@@ -44,7 +45,7 @@ const settingsItems = [
 
 export function AdminSidebar({ className, mobileOpen = false, onMobileClose }) {
   const [collapsed, setCollapsed] = useState(false);
-  const [language, setLanguage] = useState('id');
+  const { language, setLanguage } = useLanguage();
   const location = useLocation();
   const previousPath = useRef(location.pathname);
   const isCollapsed = collapsed && !mobileOpen;
