@@ -24,6 +24,8 @@ export function TopCountryMapCard({
     () => Boolean(echarts.getMap(WORLD_MAP_KEY)),
   );
 
+  
+
   useEffect(() => {
     let isMounted = true;
     if (echarts.getMap(WORLD_MAP_KEY)) {

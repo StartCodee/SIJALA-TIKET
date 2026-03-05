@@ -4,11 +4,21 @@ import { Tooltip, ResponsiveContainer, Cell, PieChart, Pie } from "recharts";
 import { formatRupiah } from "@/data/dummyData";
 
 const PIE_COLORS = [
-  "hsl(213 70% 35%)",
-  "hsl(213 65% 45%)",
-  "hsl(213 60% 55%)",
-  "hsl(213 60% 65%)",
-  "hsl(213 70% 75%)",
+  "#1F2937", // dark slate
+  "#2563EB", // blue
+  "#059669", // green
+  "#D97706", // orange
+  "#DC2626", // red
+  "#7C3AED", // purple
+  "#0F766E", // teal
+  "#BE123C", // rose
+  "#4338CA", // indigo
+  "#15803D", // dark green
+  "#B45309", // amber
+  "#0E7490", // cyan
+  "#9F1239", // dark pink
+  "#4C1D95", // deep purple
+  "#374151", // dark gray
 ];
 
 function DistributionTooltip({ active, payload }) {

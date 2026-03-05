@@ -228,9 +228,9 @@ export default function OverviewPage() {
     acc[kpi.id] = kpi;
     return acc;
   }, {});
-  const orderedKpis = OVERVIEW_DEFAULT_SUMMARY_ORDER
-    .map((id) => summaryKpiMap[id])
-    .filter(Boolean);
+  const orderedKpis = OVERVIEW_DEFAULT_SUMMARY_ORDER.map(
+    (id) => summaryKpiMap[id],
+  ).filter(Boolean);
   const visibleKpis = orderedKpis.filter((kpi) => isSelected(kpi.id));
   const kpiRows = [];
   for (let i = 0; i < visibleKpis.length; i += 5) {
@@ -388,130 +388,144 @@ export default function OverviewPage() {
           />
           <OperatorChartCard operatorTrendData={operatorTrendData} />
         </div>
-        <BookingWaffleCard
-          activeTrendFilterLabel={activeTrendFilter.label}
-          bookingYearFilter={bookingYearFilter}
-          onBookingYearChange={setBookingYearFilter}
-          bookingYearOptions={OVERVIEW_BOOKING_YEAR_OPTIONS}
-          bookingWaffleData={bookingWaffleData}
-          bookingTotalPeople={bookingTotalPeople}
-          bookingGroupPct={bookingGroupPct}
-          bookingIndividualPct={bookingIndividualPct}
-        />
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <Card className="card-ocean">
-            <CardHeader className="pb-3">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-base font-semibold">
-                  Tiket Terbaru
-                </CardTitle>
-                <Link to="/tickets">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="text-xs gap-1 text-primary hover:text-primary"
-                  >
-                    Lihat Semua <ArrowRight className="w-3.5 h-3.5" />
-                  </Button>
-                </Link>
+
+
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 lg:grid-rows-2 gap-6 mb-6 items-stretch">
+  {/* Kiri atas: Perbandingan Pengunjung */}
+  <div className="lg:col-start-1 lg:row-start-1">
+    <BookingWaffleCard
+      activeTrendFilterLabel={activeTrendFilter.label}
+      bookingYearFilter={bookingYearFilter}
+      onBookingYearChange={setBookingYearFilter}
+      bookingYearOptions={OVERVIEW_BOOKING_YEAR_OPTIONS}
+      bookingWaffleData={bookingWaffleData}
+      bookingTotalPeople={bookingTotalPeople}
+      bookingGroupPct={bookingGroupPct}
+      bookingIndividualPct={bookingIndividualPct}
+    />
+  </div>
+
+  {/* Kanan: Tiket Terbaru (span 2 baris) */}
+  <Card className="card-ocean h-full flex flex-col lg:col-start-2 lg:row-span-2">
+    <CardHeader className="pb-3">
+      <div className="flex items-center justify-between">
+        <CardTitle className="text-base font-semibold">Tiket Terbaru</CardTitle>
+        <Link to="/tickets">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="text-xs gap-1 text-primary hover:text-primary"
+          >
+            Lihat Semua <ArrowRight className="w-3.5 h-3.5" />
+          </Button>
+        </Link>
+      </div>
+    </CardHeader>
+
+    <CardContent className="p-0 flex-1">
+      <div className="divide-y divide-border">
+        {recentTickets.map((ticket) => (
+          <div
+            key={ticket.id}
+            className="flex items-center gap-4 px-6 py-3 hover:bg-muted/30 transition-colors"
+          >
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2">
+                <span className="font-mono text-sm font-medium text-primary">
+                  {formatShortId(ticket.id)}
+                </span>
+                <span className="text-xs text-muted-foreground">-</span>
+                <span className="text-sm text-foreground truncate">
+                  {ticket.namaLengkap}
+                </span>
               </div>
-            </CardHeader>
-            <CardContent className="p-0">
-              <div className="divide-y divide-border">
-                {recentTickets.map((ticket) => (
-                  <div
-                    key={ticket.id}
-                    className="flex items-center gap-4 px-6 py-3 hover:bg-muted/30 transition-colors"
-                  >
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <span className="font-mono text-sm font-medium text-primary">
-                          {formatShortId(ticket.id)}
-                        </span>
-                        <span className="text-xs text-muted-foreground">-</span>
-                        <span className="text-sm text-foreground truncate">
-                          {ticket.namaLengkap}
-                        </span>
-                      </div>
-                      <p className="text-xs text-muted-foreground mt-0.5">
-                        {FEE_PRICING[ticket.feeCategory].label} -{" "}
-                        {BOOKING_TYPE_LABELS[ticket.bookingType]}
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <PaymentStatusChip status={ticket.paymentStatus} />
-                      <GateStatusChip status={ticket.gateStatus} />
-                    </div>
-                  </div>
-                ))}
+              <p className="text-xs text-muted-foreground mt-0.5">
+                {FEE_PRICING[ticket.feeCategory].label} -{" "}
+                {BOOKING_TYPE_LABELS[ticket.bookingType]}
+              </p>
+            </div>
+            <div className="flex items-center gap-2">
+              <PaymentStatusChip status={ticket.paymentStatus} />
+              <GateStatusChip status={ticket.gateStatus} />
+            </div>
+          </div>
+        ))}
+      </div>
+    </CardContent>
+  </Card>
+
+  {/* Kiri bawah: Menunggu Persetujuan */}
+  <Card className="card-ocean h-full flex flex-col lg:col-start-1 lg:row-start-2">
+    <CardHeader className="pb-3">
+      <div className="flex items-center justify-between">
+        <CardTitle className="text-base font-semibold">
+          Menunggu Persetujuan
+          <span className="ml-2 px-2 py-0.5 bg-status-pending-bg text-status-pending text-xs font-medium rounded-full">
+            {pendingApprovalTickets.length}
+          </span>
+        </CardTitle>
+        <Link to="/approval">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="text-xs gap-1 text-primary hover:text-primary"
+          >
+            Lihat Semua <ArrowRight className="w-3.5 h-3.5" />
+          </Button>
+        </Link>
+      </div>
+    </CardHeader>
+
+    <CardContent className="p-0 flex-1">
+      {pendingApprovalTickets.length > 0 ? (
+        <div className="divide-y divide-border">
+          {pendingApprovalTickets.slice(0, 5).map((ticket) => (
+            <div
+              key={ticket.id}
+              className="flex items-center gap-4 px-6 py-3 hover:bg-muted/30 transition-colors"
+            >
+              <div className="flex-1 min-w-0">
+                <span className="font-mono text-sm font-medium text-primary">
+                  {formatShortId(ticket.id)}
+                </span>
+                <p className="text-sm text-foreground truncate">
+                  {ticket.namaLengkap}
+                </p>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  {FEE_PRICING[ticket.feeCategory].label}
+                </p>
               </div>
-            </CardContent>
-          </Card>
-          <Card className="card-ocean">
-            <CardHeader className="pb-3">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-base font-semibold">
-                  Menunggu Persetujuan
-                  <span className="ml-2 px-2 py-0.5 bg-status-pending-bg text-status-pending text-xs font-medium rounded-full">
-                    {pendingApprovalTickets.length}
-                  </span>
-                </CardTitle>
-                <Link to="/approval">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="text-xs gap-1 text-primary hover:text-primary"
-                  >
-                    Lihat Semua <ArrowRight className="w-3.5 h-3.5" />
-                  </Button>
-                </Link>
+
+              <div className="text-right">
+                <p className="text-sm font-semibold text-foreground">
+                  {formatRupiah(ticket.totalBiaya)}
+                </p>
               </div>
-            </CardHeader>
-            <CardContent className="p-0">
-              {pendingApprovalTickets.length > 0 ? (
-                <div className="divide-y divide-border">
-                  {pendingApprovalTickets.slice(0, 5).map((ticket) => (
-                    <div
-                      key={ticket.id}
-                      className="flex items-center gap-4 px-6 py-3 hover:bg-muted/30 transition-colors"
-                    >
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2">
-                          <span className="font-mono text-sm font-medium text-primary">
-                            {formatShortId(ticket.id)}
-                          </span>
-                        </div>
-                        <p className="text-sm text-foreground truncate">
-                          {ticket.namaLengkap}
-                        </p>
-                        <p className="text-xs text-muted-foreground mt-0.5">
-                          {FEE_PRICING[ticket.feeCategory].label}
-                        </p>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-sm font-semibold text-foreground">
-                          {formatRupiah(ticket.totalBiaya)}
-                        </p>
-                      </div>
-                      <Link to={`/tickets/${ticket.id}`}>
-                        <Button size="sm" className="btn-ocean text-xs">
-                          Tinjau
-                        </Button>
-                      </Link>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="flex flex-col items-center justify-center py-12 text-center">
-                  <ClipboardCheck className="w-12 h-12 text-muted-foreground/30 mb-3" />
-                  <p className="text-sm text-muted-foreground">
-                    Tidak ada tiket menunggu persetujuan
-                  </p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+
+              <Link to={`/tickets/${ticket.id}`}>
+                <Button size="sm" className="btn-ocean text-xs">
+                  Tinjau
+                </Button>
+              </Link>
+            </div>
+          ))}
         </div>
+      ) : (
+        <div className="flex flex-col items-center justify-center py-12 text-center">
+          <ClipboardCheck className="w-12 h-12 text-muted-foreground/30 mb-3" />
+          <p className="text-sm text-muted-foreground">
+            Tidak ada tiket menunggu persetujuan
+          </p>
+        </div>
+      )}
+    </CardContent>
+  </Card>
+</div>
+
+
+
+
       </div>
     </AdminLayout>
   );

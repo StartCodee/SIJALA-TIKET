@@ -9,22 +9,29 @@ import {
   Tooltip,
   ResponsiveContainer,
   Legend,
+  LabelList,
 } from "recharts";
 import { GENDER_LABELS } from "@/data/dummyData";
 
 const GENDER_STACK_COLORS = {
-  L: "hsl(213 70% 40%)",
-  P: "hsl(213 70% 52%)",
+  L: "#7bade9",
+  P: "#FF88BA",
 };
 
 export function GenderChartCard({ activeTrendFilterLabel, genderStackedData }) {
+  const formatNumber = (v) => new Intl.NumberFormat("id-ID").format(v);
+
   return (
     <Card className="card-ocean lg:h-[520px] flex flex-col">
       <CardHeader className="pb-2">
         <CardTitle className="text-base font-semibold">Jenis Kelamin</CardTitle>
       </CardHeader>
+
       <CardContent className="flex flex-1 flex-col">
-        <div className="mb-2 text-xs text-muted-foreground">Periode: {activeTrendFilterLabel}</div>
+        <div className="mb-2 text-xs text-muted-foreground">
+          Periode: {activeTrendFilterLabel}
+        </div>
+
         <div className="h-[320px]">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart
@@ -32,7 +39,7 @@ export function GenderChartCard({ activeTrendFilterLabel, genderStackedData }) {
               layout="vertical"
               margin={{
                 top: 8,
-                right: 12,
+                right: 18, // kasih ruang sedikit kalau label mepet kanan
                 left: 10,
                 bottom: 8,
               }}
@@ -57,9 +64,7 @@ export function GenderChartCard({ activeTrendFilterLabel, genderStackedData }) {
               />
               <Legend
                 iconType="circle"
-                wrapperStyle={{
-                  fontSize: "11px",
-                }}
+                wrapperStyle={{ fontSize: "11px" }}
                 formatter={(value) => GENDER_LABELS[value] || value}
               />
               <Tooltip
@@ -70,11 +75,12 @@ export function GenderChartCard({ activeTrendFilterLabel, genderStackedData }) {
                   fontSize: "12px",
                 }}
                 formatter={(value, name) => [
-                  `${value} orang`,
+                  `${formatNumber(value)} orang`,
                   GENDER_LABELS[name] || name,
                 ]}
                 labelFormatter={(label) => `Tahun: ${label}`}
               />
+
               <Bar
                 dataKey="L"
                 name="L"
@@ -82,7 +88,16 @@ export function GenderChartCard({ activeTrendFilterLabel, genderStackedData }) {
                 fill={GENDER_STACK_COLORS.L}
                 radius={[0, 0, 0, 0]}
                 barSize={18}
-              />
+              >
+                <LabelList
+                  dataKey="L"
+                  position="center"
+                  formatter={(v) => (v ? formatNumber(v) : "")}
+                  fill="#ffffff"
+                  fontSize={10}
+                />
+              </Bar>
+
               <Bar
                 dataKey="P"
                 name="P"
@@ -90,7 +105,15 @@ export function GenderChartCard({ activeTrendFilterLabel, genderStackedData }) {
                 fill={GENDER_STACK_COLORS.P}
                 radius={[0, 3, 3, 0]}
                 barSize={18}
-              />
+              >
+                <LabelList
+                  dataKey="P"
+                  position="center"
+                  formatter={(v) => (v ? formatNumber(v) : "")}
+                  fill="#ffffff"
+                  fontSize={10}
+                />
+              </Bar>
             </BarChart>
           </ResponsiveContainer>
         </div>

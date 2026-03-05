@@ -9,21 +9,25 @@ import {
   Tooltip,
   ResponsiveContainer,
   Legend,
+  LabelList,
 } from "recharts";
 
 export function OperatorChartCard({ operatorTrendData }) {
+  const formatNumber = (v) => new Intl.NumberFormat("id-ID").format(v);
+
   return (
     <Card className="card-ocean lg:h-[520px] flex flex-col">
       <CardHeader className="pb-2">
         <CardTitle className="text-base font-semibold">Jenis Operator</CardTitle>
       </CardHeader>
+
       <CardContent className="flex flex-1 flex-col">
         <div className="h-[320px]">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart
               data={operatorTrendData}
               margin={{
-                top: 8,
+                top: 24, // naikkan biar label nggak kepotong
                 right: 8,
                 left: -8,
                 bottom: 32,
@@ -65,20 +69,40 @@ export function OperatorChartCard({ operatorTrendData }) {
                   fontSize: "11px",
                 }}
               />
+
               <Bar
                 dataKey="current"
                 name="Tahun ini"
                 fill="hsl(213 70% 45%)"
                 radius={[3, 3, 0, 0]}
                 barSize={16}
-              />
+              >
+                <LabelList
+                  dataKey="current"
+                  position="top"
+                  offset={6}
+                  formatter={formatNumber}
+                  fill="hsl(var(--foreground))"
+                  fontSize={10}
+                />
+              </Bar>
+
               <Bar
                 dataKey="lastYear"
                 name="Tahun lalu"
                 fill="hsl(213 30% 70%)"
                 radius={[3, 3, 0, 0]}
                 barSize={16}
-              />
+              >
+                <LabelList
+                  dataKey="lastYear"
+                  position="top"
+                  offset={6}
+                  formatter={formatNumber}
+                  fill="hsl(var(--foreground))"
+                  fontSize={10}
+                />
+              </Bar>
             </BarChart>
           </ResponsiveContainer>
         </div>
