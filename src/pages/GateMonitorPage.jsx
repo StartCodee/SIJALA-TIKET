@@ -8,6 +8,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Switch } from "@/components/ui/switch";
 import {
   Select,
   SelectContent,
@@ -34,10 +36,10 @@ const APPROVAL_REQUIRED_CATEGORIES = new Set([
   "sport_fishing",
 ]);
 
-// const FORM_TYPE_OPTIONS = [
-//   { value: "wisatawan", label: "Wisatawan" },
-//   // { value: "peneliti", label: "Peneliti" },
-// ];
+const FORM_TYPE_OPTIONS = [
+  { value: "wisatawan", label: "Wisatawan" },
+  { value: "orang_penting", label: "Orang Penting" },
+];
 
 const OPERATOR_CATEGORY_OPTIONS = [
   { value: "homestay", label: "Homestay" },
@@ -93,6 +95,7 @@ const IDENTITY_OPTIONS = [
   { value: "kitas", label: "KITAS" },
   { value: "kitap", label: "KITAP" },
 ];
+const EMPTY_IDENTITY_TYPE_VALUE = "__none__";
 
 const TOURIST_TICKET_CATEGORY_OPTIONS = Object.entries(FEE_PRICING)
   .filter(([value]) => value.startsWith("wisatawan_"))
@@ -173,10 +176,11 @@ const createDefaultForm = (formType = "wisatawan") => ({
   originContinent: "asia",
   country: "Indonesia",
   gender: "U",
-  identityType: "ktp",
+  identityType: formType === "orang_penting" ? "" : "ktp",
   identityNumber: "",
   identityPhotoName: "",
   identityPhotoPreview: "",
+  disableOCR: false,
   feeCategory: "wisatawan_domestik_pbd",
   researchFeeCategory: "peneliti_domestik",
   researchLocationKKPN: "",
@@ -280,8 +284,11 @@ export default function GateMonitorPage() {
   });
   const [lastCreated, setLastCreated] = useState(null);
 
-  const activeFeeCategory =
-    form.formType === "wisatawan" ? form.feeCategory : form.researchFeeCategory;
+  const isResearchForm = form.formType === "peneliti";
+  const isImportantPersonForm = form.formType === "orang_penting";
+  const isTouristForm = !isResearchForm;
+
+  const activeFeeCategory = isTouristForm ? form.feeCategory : form.researchFeeCategory;
   const pricePerPerson = FEE_PRICING[activeFeeCategory]?.price || 0;
   const normalizedCount = 1;
   const researchMemberCount = Math.max(1, form.researchers.length);
@@ -291,10 +298,9 @@ export default function GateMonitorPage() {
   const foreignVesselSubtotal =
     toNumberValue(form.foreignVesselTariff) * toNumberValue(form.foreignVesselCount);
   const researchVesselTotal = indonesianVesselSubtotal + foreignVesselSubtotal;
-  const grandTotal =
-    form.formType === "wisatawan"
-      ? pricePerPerson * normalizedCount
-      : researchBaseTotal + researchVesselTotal;
+  const grandTotal = isTouristForm
+    ? pricePerPerson * normalizedCount
+    : researchBaseTotal + researchVesselTotal;
   const needsApproval = APPROVAL_REQUIRED_CATEGORIES.has(activeFeeCategory);
 
   const todaySummary = useMemo(() => {
@@ -312,6 +318,19 @@ export default function GateMonitorPage() {
       pendingApproval: todays.filter((item) => item.status === "pending_persetujuan").length,
     };
   }, [recentTransactions]);
+
+  const handleFormTypeChange = (nextType) => {
+    setForm((prev) => {
+      const nextIdentityType =
+        nextType === "orang_penting" ? prev.identityType || "" : prev.identityType || "ktp";
+      return {
+        ...prev,
+        formType: nextType,
+        identityType: nextIdentityType,
+        disableOCR: nextType === "orang_penting" ? prev.disableOCR : false,
+      };
+    });
+  };
 
   const handleReset = () => {
     collectObjectUrls(form).forEach((url) => revokeObjectUrl(url));
@@ -416,15 +435,16 @@ export default function GateMonitorPage() {
     const firstResearcher = form.researchers[0] || createResearcherItem();
     const researchCountry = firstResearcher.asalNegara || "Indonesia";
     const domisiliOCR =
-      form.formType === "wisatawan"
+      isTouristForm
         ? isIndonesiaCountry(form.country)
           ? "pbd"
           : "mancanegara"
         : isIndonesiaCountry(researchCountry)
           ? "pbd"
           : "mancanegara";
-    const operatorType =
-      form.formType === "wisatawan" ? mapOperatorCategoryToType(form.operatorCategory) : "transfer";
+    const operatorType = isTouristForm ? mapOperatorCategoryToType(form.operatorCategory) : "transfer";
+    const identityTypeValue = isTouristForm ? form.identityType || "-" : "dokumen_peneliti";
+    const identityNumberValue = isTouristForm ? form.identityNumber || "-" : "-";
     const approvalStatus = needsApproval ? "menunggu" : "disetujui";
     const paidAtValue = isInitialPaid ? now.toISOString() : "";
     const createdAtValue = now.toISOString();
@@ -446,41 +466,43 @@ export default function GateMonitorPage() {
       bookingType: "perorangan",
       feeCategory: activeFeeCategory,
       domisiliOCR,
-      countryOCR: form.formType === "wisatawan" ? form.country || "Indonesia" : researchCountry,
-      genderOCR: form.formType === "wisatawan" ? form.gender || "U" : "U",
+      countryOCR: isTouristForm ? form.country || "Indonesia" : researchCountry,
+      genderOCR: isTouristForm ? form.gender || "U" : "U",
       operatorType,
       operatorCategory: form.operatorCategory,
-      operatorName: form.formType === "wisatawan" ? form.operatorName || "-" : form.institutionName || "-",
-      operatorEmail: form.formType === "wisatawan" ? form.operatorEmail || "-" : form.institutionEmail || "-",
+      operatorName: isTouristForm ? form.operatorName || "-" : form.institutionName || "-",
+      operatorEmail: isTouristForm ? form.operatorEmail || "-" : form.institutionEmail || "-",
       bookerName:
-        form.formType === "wisatawan"
+        isTouristForm
           ? form.bookerName || form.visitorName || "Tanpa Nama"
           : form.picName || firstResearcher.namaLengkap || "Penanggung Jawab",
-      bookerEmail: form.formType === "wisatawan" ? form.bookerEmail || "-" : form.institutionEmail || "-",
+      bookerEmail: isTouristForm ? form.bookerEmail || "-" : form.institutionEmail || "-",
       namaLengkap:
-        form.formType === "wisatawan"
+        isTouristForm
           ? form.visitorName || "Tanpa Nama"
           : form.picName || firstResearcher.namaLengkap || "Peneliti",
-      email: form.formType === "wisatawan" ? form.visitorEmail || "-" : form.institutionEmail || "-",
-      visitorEmail: form.formType === "wisatawan" ? form.visitorEmail || "-" : form.institutionEmail || "-",
-      noHP: form.formType === "wisatawan" ? "-" : form.picPhone || "-",
-      originContinent: form.formType === "wisatawan" ? form.originContinent || "asia" : "-",
-      identityType: form.formType === "wisatawan" ? form.identityType : "dokumen_peneliti",
-      identityNumber: form.formType === "wisatawan" ? form.identityNumber : "-",
-      noKTP: form.formType === "wisatawan" ? (form.identityType === "ktp" ? form.identityNumber : "") : "",
+      email: isTouristForm ? form.visitorEmail || "-" : form.institutionEmail || "-",
+      visitorEmail: isTouristForm ? form.visitorEmail || "-" : form.institutionEmail || "-",
+      noHP: isTouristForm ? "-" : form.picPhone || "-",
+      originContinent: isTouristForm ? form.originContinent || "asia" : "-",
+      identityType: identityTypeValue,
+      identityNumber: identityNumberValue,
+      noKTP: isTouristForm && identityTypeValue === "ktp" ? identityNumberValue : "",
       identityDocumentUrl:
-        form.formType === "wisatawan"
+        isTouristForm
           ? form.identityPhotoPreview || ""
           : form.picIdentityPhotoPreview || "",
       ktmUrl:
-        form.formType === "wisatawan"
+        isTouristForm
           ? form.identityPhotoPreview || "/placeholder.svg"
           : form.picIdentityPhotoPreview || "/placeholder.svg",
-      jumlahDomestik: form.formType === "wisatawan" ? normalizedCount : researchMemberCount,
+      jumlahDomestik: isTouristForm ? normalizedCount : researchMemberCount,
       jumlahMancanegara:
-        form.formType === "wisatawan"
+        isTouristForm
           ? 0
           : form.researchers.filter((item) => !isIndonesiaCountry(item.asalNegara)).length,
+      ocrDisabled: isImportantPersonForm ? form.disableOCR : false,
+      ocrConfidence: isImportantPersonForm && form.disableOCR ? 0 : 95,
       hargaPerOrang: pricePerPerson,
       totalBiaya: grandTotal,
       approvalStatus,
@@ -556,11 +578,11 @@ export default function GateMonitorPage() {
       ticketId,
       invoiceId,
       visitorName:
-        form.formType === "wisatawan"
+        isTouristForm
           ? form.visitorName || "Tanpa Nama"
           : form.picName || firstResearcher.namaLengkap || "Peneliti",
       feeCategory: activeFeeCategory,
-      visitorCount: form.formType === "wisatawan" ? normalizedCount : researchMemberCount,
+      visitorCount: isTouristForm ? normalizedCount : researchMemberCount,
       paymentMethod: form.paymentMethod,
       gateName: form.gateName,
       officerName: form.officerName,
@@ -628,10 +650,17 @@ export default function GateMonitorPage() {
             </CardHeader>
             <CardContent>
               <form className="space-y-4" onSubmit={handleSubmit}>
-                {/* Tab tipe form disembunyikan sementara.
-                    Tiket langsung saat ini difokuskan ke form wisatawan saja. */}
+                <Tabs value={form.formType} onValueChange={handleFormTypeChange} className="space-y-4">
+                  <TabsList className="grid h-auto w-full grid-cols-2 gap-1 rounded-lg p-1">
+                    {FORM_TYPE_OPTIONS.map((item) => (
+                      <TabsTrigger key={item.value} value={item.value} className="w-full px-3 py-2 text-center">
+                        {item.label}
+                      </TabsTrigger>
+                    ))}
+                  </TabsList>
 
-                {form.formType === "wisatawan" ? (
+                  <TabsContent value={form.formType} className="mt-0">
+                {isTouristForm ? (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label>Jenis Operator</Label>
@@ -754,22 +783,40 @@ export default function GateMonitorPage() {
                       </Select>
                     </div>
                     <div className="space-y-2">
-                      <Label>Unggah Foto Jenis Identitas</Label>
+                      <Label>
+                        Unggah Foto Jenis Identitas
+                        {isImportantPersonForm ? " (Opsional)" : ""}
+                      </Label>
                       <Input type="file" accept="image/*" onChange={handleIdentityPhotoChange} />
                       {form.identityPhotoName ? (
                         <p className="text-xs text-muted-foreground truncate">{form.identityPhotoName}</p>
                       ) : null}
                     </div>
                     <div className="space-y-2">
-                      <Label>Jenis Identitas</Label>
+                      <Label>
+                        Jenis Identitas
+                        {isImportantPersonForm ? " (Opsional)" : ""}
+                      </Label>
                       <Select
-                        value={form.identityType}
-                        onValueChange={(value) => setForm((prev) => ({ ...prev, identityType: value }))}
+                        value={
+                          isImportantPersonForm
+                            ? form.identityType || EMPTY_IDENTITY_TYPE_VALUE
+                            : form.identityType || "ktp"
+                        }
+                        onValueChange={(value) =>
+                          setForm((prev) => ({
+                            ...prev,
+                            identityType: value === EMPTY_IDENTITY_TYPE_VALUE ? "" : value,
+                          }))
+                        }
                       >
                         <SelectTrigger className="bg-background">
-                          <SelectValue />
+                          <SelectValue placeholder="Pilih jenis identitas" />
                         </SelectTrigger>
                         <SelectContent className="bg-popover border-border">
+                          {isImportantPersonForm ? (
+                            <SelectItem value={EMPTY_IDENTITY_TYPE_VALUE}>Tidak diisi</SelectItem>
+                          ) : null}
                           {IDENTITY_OPTIONS.map((opt) => (
                             <SelectItem key={opt.value} value={opt.value}>
                               {opt.label}
@@ -779,12 +826,15 @@ export default function GateMonitorPage() {
                       </Select>
                     </div>
                     <div className="space-y-2">
-                      <Label>Nomor Identitas</Label>
+                      <Label>
+                        Nomor Identitas
+                        {isImportantPersonForm ? " (Opsional)" : ""}
+                      </Label>
                       <Input
                         value={form.identityNumber}
                         onChange={(e) => setForm((prev) => ({ ...prev, identityNumber: e.target.value }))}
                         placeholder="Masukkan nomor identitas"
-                        required
+                        required={!isImportantPersonForm}
                       />
                     </div>
                     <div className="space-y-2">
@@ -858,6 +908,25 @@ export default function GateMonitorPage() {
                         </SelectContent>
                       </Select>
                     </div>
+                    {isImportantPersonForm ? (
+                      <div className="space-y-2 md:col-span-2 rounded-md border border-border/60 bg-muted/30 p-3">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <Label htmlFor="disable-ocr-switch">Nonaktifkan OCR</Label>
+                            <p className="text-xs text-muted-foreground">
+                              Saat aktif, data OCR ditandai nonaktif untuk tiket ini.
+                            </p>
+                          </div>
+                          <Switch
+                            id="disable-ocr-switch"
+                            checked={form.disableOCR}
+                            onCheckedChange={(checked) =>
+                              setForm((prev) => ({ ...prev, disableOCR: Boolean(checked) }))
+                            }
+                          />
+                        </div>
+                      </div>
+                    ) : null}
                   </div>
                 ) : (
                   <div className="space-y-4">
@@ -1447,6 +1516,8 @@ export default function GateMonitorPage() {
                     </div>
                   </div>
                 )}
+                  </TabsContent>
+                </Tabs>
 
                 {needsApproval && (
                   <div className="rounded-md border border-status-pending/40 bg-status-pending/10 p-3 text-sm">
