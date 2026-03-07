@@ -37,6 +37,9 @@ import {
   saveTicketOverride,
 } from '@/data/dummyData';
 import { buildInvoiceFromLines } from '@/features/invoices/invoiceUtils';
+import {
+  isResearcherFeeCategory,
+} from '@/features/researchers/researcherDetailUtils';
 import { exportJSON, exportExcel } from '@/lib/exporters';
 import { getUserRole, isAdministrator } from '@/lib/rbac';
 import { PaymentStatusChip } from '@/components/StatusChip';
@@ -231,149 +234,6 @@ const normalizeEditablePaymentMethod = (method, invoice) => {
 const getCountryForTicket = (ticketId) => {
   const ticket = getTicketById(ticketId);
   return ticket?.countryOCR || '-';
-};
-
-const isResearcherFeeCategory = (feeCategory) =>
-  String(feeCategory || '').startsWith('peneliti_');
-
-const hasDisplayValue = (value) => {
-  if (value === null || value === undefined) return false;
-  if (typeof value === 'string') return value.trim().length > 0;
-  if (Array.isArray(value)) return value.length > 0;
-  return true;
-};
-
-const pickFirstValue = (source, keys, fallback = '-') => {
-  for (const key of keys) {
-    const value = source?.[key];
-    if (hasDisplayValue(value)) return value;
-  }
-  return fallback;
-};
-
-const toNameList = (value) => {
-  if (Array.isArray(value)) {
-    const validItems = value.map((item) => String(item || '').trim()).filter(Boolean);
-    return validItems.length ? validItems.join(', ') : '-';
-  }
-  if (typeof value === 'string') {
-    return value.trim() || '-';
-  }
-  return '-';
-};
-
-const toNumericValue = (value) => {
-  if (value === null || value === undefined || value === '') return null;
-  const parsed = Number(value);
-  return Number.isFinite(parsed) ? parsed : null;
-};
-
-const formatResearchDate = (value) => {
-  if (!hasDisplayValue(value)) return '-';
-  const parsed = new Date(value);
-  if (Number.isNaN(parsed.getTime())) return String(value);
-  return parsed.toLocaleDateString('id-ID', {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
-  });
-};
-
-const buildResearcherInvoiceDetail = (ticket, ticketRow) => {
-  const source = ticket || {};
-  const indonesianVesselNamesRaw = pickFirstValue(source, [
-    'indonesianResearchVesselNames',
-    'indonesianResearchVessels',
-    'kapalPenelitianIndonesiaNames',
-    'kapalPenelitianIndonesia',
-    'namaKapalPenelitianIndonesia',
-    'namaKapalIndonesia',
-  ], []);
-  const foreignVesselNamesRaw = pickFirstValue(source, [
-    'foreignResearchVesselNames',
-    'foreignResearchVessels',
-    'kapalPenelitianAsingNames',
-    'kapalPenelitianAsing',
-    'namaKapalPenelitianAsing',
-    'namaKapalAsing',
-  ], []);
-
-  const derivedIndonesianCount = Array.isArray(indonesianVesselNamesRaw)
-    ? indonesianVesselNamesRaw.filter(Boolean).length
-    : null;
-  const derivedForeignCount = Array.isArray(foreignVesselNamesRaw)
-    ? foreignVesselNamesRaw.filter(Boolean).length
-    : null;
-
-  const indonesianCountValue = toNumericValue(pickFirstValue(source, [
-    'indonesianResearchVesselCount',
-    'kapalPenelitianIndonesiaCount',
-    'jumlahKapalPenelitianIndonesia',
-    'jumlahKapalIndonesia',
-  ], null));
-  const foreignCountValue = toNumericValue(pickFirstValue(source, [
-    'foreignResearchVesselCount',
-    'kapalPenelitianAsingCount',
-    'jumlahKapalPenelitianAsing',
-    'jumlahKapalAsing',
-  ], null));
-
-  return {
-    ticketId: ticketRow?.ticketId || source?.id || '-',
-    ticketName: ticketRow?.namaLengkap || source?.namaLengkap || '-',
-    feeLabel: ticketRow?.feeLabel || source?.feeCategory || 'Peneliti',
-    lokasiKkpn: pickFirstValue(source, ['lokasiKKPN', 'lokasiKkpn', 'researchLocationKKPN', 'kkpnLocation']),
-    namaInstitusi: pickFirstValue(source, ['namaInstitusi', 'institutionName', 'researchInstitutionName']),
-    asalInstitusi: pickFirstValue(source, ['asalInstitusi', 'institutionOrigin', 'researchInstitutionOrigin']),
-    alamatInstitusi: pickFirstValue(source, ['alamatInstitusi', 'institutionAddress', 'researchInstitutionAddress']),
-    provinsi: pickFirstValue(source, ['provinsi', 'province', 'institutionProvince', 'provinsiInstitusi']),
-    kabupatenKota: pickFirstValue(source, ['kabupatenKota', 'kabupaten_kota', 'city', 'institutionCity', 'kotaInstitusi']),
-    teleponInstitusi: pickFirstValue(source, [
-      'nomorTeleponInstitusiPeneliti',
-      'nomorTeleponInstitusi',
-      'institutionPhone',
-      'researchInstitutionPhone',
-    ]),
-    emailInstitusi: pickFirstValue(source, [
-      'emailInstitusiPeneliti',
-      'emailInstitusi',
-      'institutionEmail',
-      'researchInstitutionEmail',
-    ]),
-    judulPenelitian: pickFirstValue(source, ['judulPenelitian', 'researchTitle']),
-    tujuanPenelitian: pickFirstValue(source, ['tujuanPenelitian', 'researchObjective']),
-    uraianSingkatPenelitian: pickFirstValue(source, ['uraianSingkatPenelitian', 'researchSummary', 'researchDescription']),
-    tanggalMulaiKegiatan: formatResearchDate(
-      pickFirstValue(source, ['tanggalMulaiKegiatan', 'activityStartDate', 'researchStartDate'], null),
-    ),
-    tanggalSelesaiKegiatan: formatResearchDate(
-      pickFirstValue(source, ['tanggalSelesaiKegiatan', 'activityEndDate', 'researchEndDate'], null),
-    ),
-    penanggungJawabNama: pickFirstValue(
-      source,
-      ['namaLengkapPenanggungJawab', 'penanggungJawabNama', 'personInChargeName'],
-      ticketRow?.namaLengkap || source?.namaLengkap || '-',
-    ),
-    penanggungJawabKewarganegaraan: pickFirstValue(
-      source,
-      ['kewarganegaraanPenanggungJawab', 'penanggungJawabKewarganegaraan', 'personInChargeCitizenship'],
-      source?.countryOCR || '-',
-    ),
-    penanggungJawabNomorSeluler: pickFirstValue(
-      source,
-      ['nomorSelulerPenanggungJawab', 'penanggungJawabNomorSeluler', 'personInChargePhone'],
-      ticketRow?.noHP || source?.noHP || '-',
-    ),
-    saranaPenelitian: pickFirstValue(
-      source,
-      ['saranaPenelitianDigunakan', 'saranaPenelitian', 'researchFacilitiesUsed', 'researchFacility'],
-      '-',
-    ),
-    kapalPenelitianIndonesiaJumlah: indonesianCountValue ?? derivedIndonesianCount ?? '-',
-    kapalPenelitianIndonesiaNama: toNameList(indonesianVesselNamesRaw),
-    kapalPenelitianAsingJumlah: foreignCountValue ?? derivedForeignCount ?? '-',
-    kapalPenelitianAsingNama: toNameList(foreignVesselNamesRaw),
-  };
 };
 
 const getResearcherIdentityParticipants = (ticket, ticketRow) => {
@@ -647,10 +507,6 @@ export default function InvoiceDetailPage() {
       })
     )
   ).join(', ');
-
-  const researcherInvoiceDetails = invoice.tickets
-    .filter((ticket) => isResearcherFeeCategory(ticket.feeCategory))
-    .map((ticket) => buildResearcherInvoiceDetail(getTicketById(ticket.ticketId), ticket));
 
   const hasResearcherTicket = invoice.tickets.some((ticket) =>
     isResearcherFeeCategory(ticket.feeCategory),
@@ -961,95 +817,6 @@ export default function InvoiceDetailPage() {
                 )}
               </CardContent>
             </Card>
-
-            {researcherInvoiceDetails.length > 0 && (
-              <Card className="card-ocean">
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-base font-semibold">Detail Peneliti</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  {researcherInvoiceDetails.map((detail) => {
-                    const formItems = [
-                      { label: 'Lokasi KKPN', value: detail.lokasiKkpn },
-                      { label: 'Nama Institusi', value: detail.namaInstitusi },
-                      { label: 'Asal Institusi', value: detail.asalInstitusi },
-                      { label: 'Alamat Institusi', value: detail.alamatInstitusi },
-                      { label: 'Provinsi', value: detail.provinsi },
-                      { label: 'Kabupaten/Kota', value: detail.kabupatenKota },
-                      { label: 'Nomor Telepon Institusi Peneliti', value: detail.teleponInstitusi },
-                      { label: 'Email Institusi Peneliti', value: detail.emailInstitusi },
-                      { label: 'Judul Penelitian', value: detail.judulPenelitian },
-                      { label: 'Tujuan Penelitian', value: detail.tujuanPenelitian },
-                      { label: 'Uraian Singkat Penelitian', value: detail.uraianSingkatPenelitian },
-                      { label: 'Tanggal Mulai Kegiatan', value: detail.tanggalMulaiKegiatan },
-                      { label: 'Tanggal Selesai Kegiatan', value: detail.tanggalSelesaiKegiatan },
-                      { label: 'Nama Lengkap Penanggung Jawab', value: detail.penanggungJawabNama },
-                      { label: 'Kewarganegaraan Penanggung Jawab', value: detail.penanggungJawabKewarganegaraan },
-                      { label: 'Nomor Seluler Penanggung Jawab', value: detail.penanggungJawabNomorSeluler },
-                    ];
-
-                    return (
-                      <div key={detail.ticketId} className="rounded-lg border border-border p-4">
-                        <div className="flex flex-wrap items-start justify-between gap-3">
-                          <div>
-                            <p className="text-sm font-semibold">{detail.ticketName}</p>
-                            <p className="text-xs text-muted-foreground">
-                              {detail.ticketId} - {detail.feeLabel}
-                            </p>
-                          </div>
-                          <Badge variant="outline">Form Peneliti</Badge>
-                        </div>
-
-                        <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-3">
-                          {formItems.map((item) => (
-                            <div key={`${detail.ticketId}-${item.label}`}>
-                              <p className="text-xs text-muted-foreground mb-1">{item.label}</p>
-                              <p className="text-sm font-medium whitespace-pre-wrap break-words">
-                                {item.value || '-'}
-                              </p>
-                            </div>
-                          ))}
-                        </div>
-
-                        <div className="mt-4 pt-4 border-t border-border">
-                          <p className="text-xs text-muted-foreground mb-2">Sarana Penelitian yang Digunakan</p>
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                            <div className="rounded-md bg-muted/40 p-3">
-                              <p className="text-xs text-muted-foreground mb-1">Sarana</p>
-                              <p className="text-sm font-medium whitespace-pre-wrap break-words">
-                                {detail.saranaPenelitian || '-'}
-                              </p>
-                            </div>
-                            <div className="rounded-md bg-muted/40 p-3">
-                              <p className="text-xs text-muted-foreground mb-1">
-                                Kapal Penelitian - Ekspedisi Berbendera Indonesia
-                              </p>
-                              <p className="text-sm font-medium">
-                                Jumlah: {detail.kapalPenelitianIndonesiaJumlah ?? '-'}
-                              </p>
-                              <p className="text-xs text-muted-foreground mt-1 whitespace-pre-wrap break-words">
-                                Nama Kapal: {detail.kapalPenelitianIndonesiaNama || '-'}
-                              </p>
-                            </div>
-                            <div className="rounded-md bg-muted/40 p-3 md:col-span-2">
-                              <p className="text-xs text-muted-foreground mb-1">
-                                Kapal Penelitian - Ekspedisi Berbendera Asing
-                              </p>
-                              <p className="text-sm font-medium">
-                                Jumlah: {detail.kapalPenelitianAsingJumlah ?? '-'}
-                              </p>
-                              <p className="text-xs text-muted-foreground mt-1 whitespace-pre-wrap break-words">
-                                Nama Kapal: {detail.kapalPenelitianAsingNama || '-'}
-                              </p>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </CardContent>
-              </Card>
-            )}
 
             {/* TICKETS TABLE */}
             <Card className="card-ocean">
