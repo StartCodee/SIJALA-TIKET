@@ -7,6 +7,7 @@ import OverviewPage from "./pages/OverviewPage";
 import TicketListPage from "./pages/TicketListPage";
 import TicketDetailPage from "./pages/TicketDetailPage";
 import ApprovalQueuePage from "./pages/ApprovalQueuePage";
+import ApprovalDetailPage from "./pages/ApprovalDetailPage";
 import PaymentsPage from "./pages/PaymentsPage";
 import ServiceRatesPage from "./pages/ServiceRatesPage";
 import GateMonitorPage from "./pages/GateMonitorPage";
@@ -56,6 +57,7 @@ const App = () => (
             <Route path="/ticket-designer" element={<TicketDesignerPage />} />
             <Route path="/tickets/:ticketId" element={<TicketDetailPage />} />
             <Route path="/approval" element={<ApprovalQueuePage />} />
+            <Route path="/persetujuan/:ticketId" element={<ApprovalDetailPage />} />
             <Route path="/payments" element={<PaymentsPage />} />
             <Route path="/tarif" element={<ServiceRatesPage />} />
             <Route path="/gate" element={<GateMonitorPage />} />

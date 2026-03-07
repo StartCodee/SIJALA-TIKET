@@ -146,11 +146,9 @@ export default function TicketListPage() {
     if (field === "targetPengunjung") return getTargetPengunjungLabel(ticket);
     return ticket[field];
   };
-  const isPublishedTicket = (ticket) =>
-    ticket.paymentStatus === "sudah_bayar" ||
-    ticket.gateStatus === "masuk" ||
-    ticket.gateStatus === "keluar";
-  const allTickets = getAllTickets().filter((ticket) => !isChildVisitorTicket(ticket)).filter(isPublishedTicket);
+  const allTickets = getAllTickets().filter(
+    (ticket) => !isChildVisitorTicket(ticket),
+  );
 
   // Filter tickets
   const filteredTickets = allTickets.filter((ticket) => {

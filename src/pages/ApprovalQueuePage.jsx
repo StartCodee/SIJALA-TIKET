@@ -7,7 +7,6 @@ import { ApprovalStatusChip } from '@/components/StatusChip';
 import {
   getAllTickets,
   saveTicketOverride,
-  getInvoiceIdForTicket,
   formatRupiah,
   formatDateTime,
   formatShortId,
@@ -62,18 +61,10 @@ export default function ApprovalQueuePage() {
   );
 
   const getDetailLink = (ticket) => {
-    const invoiceId = getInvoiceIdForTicket(ticket.id);
-    if (!invoiceId) return `/invoices`;
-
     const params = new URLSearchParams({
-      from: 'approval',
       tab: activeTab,
-      ticketId: ticket.id,
     });
-    if (ticket.approvalStatus === 'menunggu') {
-      params.set('approval', 'pending');
-    }
-    return `/invoices/${invoiceId}?${params.toString()}`;
+    return `/persetujuan/${encodeURIComponent(ticket.id)}?${params.toString()}`;
   };
 
   const handleApprove = (ticketId) => {

@@ -9,6 +9,7 @@ import {
   getAllTickets,
   getTicketById,
   getInvoiceIdForTicket,
+  getTicketIdsByInvoiceId,
   saveTicketOverride,
   dummyRefunds,
   dummyAdminUsers,
@@ -44,6 +45,11 @@ import {
   getTicketIdentityType,
 } from "@/features/visitors/visitorUtils";
 import {
+  buildResearcherDetail,
+  isResearcherFeeCategory,
+  resolveSharedResearcherTicket,
+} from "@/features/researchers/researcherDetailUtils";
+import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -51,6 +57,31 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
+
+const buildResearcherFormItems = (detail) => [
+  { label: "Lokasi KKPN", value: detail.lokasiKkpn },
+  { label: "Nama Institusi", value: detail.namaInstitusi },
+  { label: "Asal Institusi", value: detail.asalInstitusi },
+  { label: "Alamat Institusi", value: detail.alamatInstitusi },
+  { label: "Provinsi", value: detail.provinsi },
+  { label: "Kabupaten/Kota", value: detail.kabupatenKota },
+  { label: "Nomor Telepon Institusi Peneliti", value: detail.teleponInstitusi },
+  { label: "Email Institusi Peneliti", value: detail.emailInstitusi },
+  { label: "Judul Penelitian", value: detail.judulPenelitian },
+  { label: "Tujuan Penelitian", value: detail.tujuanPenelitian },
+  { label: "Uraian Singkat Penelitian", value: detail.uraianSingkatPenelitian },
+  { label: "Tanggal Mulai Kegiatan", value: detail.tanggalMulaiKegiatan },
+  { label: "Tanggal Selesai Kegiatan", value: detail.tanggalSelesaiKegiatan },
+  { label: "Nama Lengkap Penanggung Jawab", value: detail.penanggungJawabNama },
+  {
+    label: "Kewarganegaraan Penanggung Jawab",
+    value: detail.penanggungJawabKewarganegaraan,
+  },
+  {
+    label: "Nomor Seluler Penanggung Jawab",
+    value: detail.penanggungJawabNomorSeluler,
+  },
+];
 
 export default function TicketDetailPage() {
   const { ticketId } = useParams();
@@ -190,6 +221,7 @@ export default function TicketDetailPage() {
   const identityType = getTicketIdentityType(ticket);
   const identityLabel = getIdentityTypeLabel(identityType);
   const identityNumber = getTicketIdentityNumber(ticket);
+  const isResearcherTicket = isResearcherFeeCategory(ticket.feeCategory);
   const isOnlinePayment = ticket.operatorType === "doku";
   const petugasTiketName = ticket.gateOfficerName || getDefaultGateOfficerName(ticket);
   const gerbangValue = isOnlinePayment ? "DOKU" : petugasTiketName;
@@ -247,9 +279,72 @@ export default function TicketDetailPage() {
         ),
     [ticket.id],
   );
+  const siblingTickets = useMemo(
+    () =>
+      ticket.parentTicketId
+        ? getAllTickets()
+            .filter(
+              (item) =>
+                item.parentTicketId === ticket.parentTicketId && item.id !== ticket.id,
+            )
+            .sort((a, b) =>
+              String(a.namaLengkap || "").localeCompare(String(b.namaLengkap || "")),
+            )
+        : [],
+    [ticket.id, ticket.parentTicketId],
+  );
+  const relatedResearchTickets = useMemo(() => {
+    const related = [];
+
+    if (ticket.parentTicketId) {
+      const parentTicket = getTicketById(ticket.parentTicketId);
+      if (parentTicket) related.push(parentTicket);
+    }
+
+    related.push(...childTickets);
+    related.push(...siblingTickets);
+
+    if (invoiceId) {
+      getTicketIdsByInvoiceId(invoiceId).forEach((relatedTicketId) => {
+        if (relatedTicketId === ticket.id) return;
+        const relatedTicket = getTicketById(relatedTicketId);
+        if (relatedTicket) related.push(relatedTicket);
+      });
+    }
+
+    return Array.from(new Map(related.map((item) => [item.id, item])).values());
+  }, [childTickets, invoiceId, siblingTickets, ticket.id, ticket.parentTicketId]);
+  const sharedResearcherSourceTicket = useMemo(
+    () =>
+      isResearcherFeeCategory(ticket.feeCategory)
+        ? resolveSharedResearcherTicket(ticket, relatedResearchTickets)
+        : null,
+    [relatedResearchTickets, ticket],
+  );
+  const researcherDetail = useMemo(() => {
+    if (!sharedResearcherSourceTicket) return null;
+
+    return buildResearcherDetail(sharedResearcherSourceTicket, {
+      ticketId: ticket.id,
+      namaLengkap: ticket.namaLengkap,
+      feeLabel:
+        FEE_PRICING[ticket.feeCategory]?.label ||
+        FEE_PRICING[sharedResearcherSourceTicket.feeCategory]?.label ||
+        ticket.feeCategory ||
+        "-",
+      noHP: ticket.noHP,
+    });
+  }, [sharedResearcherSourceTicket, ticket.feeCategory, ticket.id, ticket.namaLengkap, ticket.noHP]);
+  const researcherFormItems = useMemo(
+    () => (researcherDetail ? buildResearcherFormItems(researcherDetail) : []),
+    [researcherDetail],
+  );
   const displayTotalBiaya = isGroupInvoice
     ? ticket.hargaPerOrang
     : ticket.totalBiaya;
+  const canStartRefund = ticket.paymentStatus === "sudah_bayar" &&
+    ticket.gateStatus === "belum_masuk" &&
+    Boolean(invoiceId);
   const searchParams = new URLSearchParams(location.search);
   const fromInvoiceId = searchParams.get("invoiceId");
   const backHref =
@@ -298,24 +393,34 @@ export default function TicketDetailPage() {
               Edit Tiket
             </Button>
 
-            {ticket.needsApproval && ticket.approvalStatus === "menunggu" && (
+            {isResearcherTicket ? (
+              canStartRefund ? (
+                <Link to="/refund-request">
+                  <Button variant="outline" className="gap-2">
+                    <RotateCcw className="w-4 h-4" />
+                    Mulai Pengembalian Dana
+                  </Button>
+                </Link>
+              ) : (
+                <Button variant="outline" className="gap-2" disabled>
+                  <RotateCcw className="w-4 h-4" />
+                  Mulai Pengembalian Dana
+                </Button>
+              )
+            ) : ticket.needsApproval && ticket.approvalStatus === "menunggu" && (
               <>
-                <Button className="gap-2 bg-status-approved hover:bg-status-approved/90 text-white">
+                <Button variant="outline" className="gap-2">
                   <CheckCircle className="w-4 h-4" />
                   Setujui
                 </Button>
-                <Button
-                  variant="outline"
-                  className="gap-2 border-status-rejected text-status-rejected"
-                >
+                <Button variant="outline" className="gap-2">
                   <XCircle className="w-4 h-4" />
                   Tolak
                 </Button>
               </>
             )}
 
-            {ticket.paymentStatus === "sudah_bayar" &&
-              ticket.gateStatus === "belum_masuk" && (
+            {!isResearcherTicket && canStartRefund && (
                 <Button variant="outline" className="gap-2">
                   <RotateCcw className="w-4 h-4" />
                   Mulai Pengembalian Dana
@@ -389,6 +494,86 @@ export default function TicketDetailPage() {
                         </p>
                       </div>
                     ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {researcherDetail && (
+              <Card className="card-ocean">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-sm font-semibold">
+                    Detail Peneliti
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="rounded-lg border border-border p-4">
+                    <div className="flex flex-wrap items-start justify-between gap-3">
+                      <div>
+                        <p className="text-sm font-semibold">{researcherDetail.ticketName}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {researcherDetail.ticketId} - {researcherDetail.feeLabel}
+                        </p>
+                      </div>
+                      <Badge variant="outline">Form Peneliti</Badge>
+                    </div>
+
+                    {sharedResearcherSourceTicket?.id !== ticket.id && (
+                      <p className="mt-3 text-xs text-muted-foreground">
+                        Detail penelitian menggunakan data bersama dari tiket{" "}
+                        <span className="font-medium text-foreground">
+                          {sharedResearcherSourceTicket.id}
+                        </span>{" "}
+                        dalam grup/invoice yang sama.
+                      </p>
+                    )}
+
+                    <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-3">
+                      {researcherFormItems.map((item) => (
+                        <div key={`${researcherDetail.ticketId}-${item.label}`}>
+                          <p className="text-xs text-muted-foreground mb-1">{item.label}</p>
+                          <p className="text-sm font-medium whitespace-pre-wrap break-words">
+                            {item.value || "-"}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+
+                    <div className="mt-4 pt-4 border-t border-border">
+                      <p className="text-xs text-muted-foreground mb-2">
+                        Sarana Penelitian yang Digunakan
+                      </p>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <div className="rounded-md bg-muted/40 p-3">
+                          <p className="text-xs text-muted-foreground mb-1">Sarana</p>
+                          <p className="text-sm font-medium whitespace-pre-wrap break-words">
+                            {researcherDetail.saranaPenelitian || "-"}
+                          </p>
+                        </div>
+                        <div className="rounded-md bg-muted/40 p-3">
+                          <p className="text-xs text-muted-foreground mb-1">
+                            Kapal Penelitian - Ekspedisi Berbendera Indonesia
+                          </p>
+                          <p className="text-sm font-medium">
+                            Jumlah: {researcherDetail.kapalPenelitianIndonesiaJumlah ?? "-"}
+                          </p>
+                          <p className="text-xs text-muted-foreground mt-1 whitespace-pre-wrap break-words">
+                            Nama Kapal: {researcherDetail.kapalPenelitianIndonesiaNama || "-"}
+                          </p>
+                        </div>
+                        <div className="rounded-md bg-muted/40 p-3 md:col-span-2">
+                          <p className="text-xs text-muted-foreground mb-1">
+                            Kapal Penelitian - Ekspedisi Berbendera Asing
+                          </p>
+                          <p className="text-sm font-medium">
+                            Jumlah: {researcherDetail.kapalPenelitianAsingJumlah ?? "-"}
+                          </p>
+                          <p className="text-xs text-muted-foreground mt-1 whitespace-pre-wrap break-words">
+                            Nama Kapal: {researcherDetail.kapalPenelitianAsingNama || "-"}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
