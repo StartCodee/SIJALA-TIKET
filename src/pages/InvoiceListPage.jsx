@@ -72,7 +72,7 @@ const getInvoiceStatusView = (status) => {
     },
     refund_selesai: {
       label: "Pengembalian Selesai",
-      className: "bg-status-approved-bg text-status-approved",
+      className: "bg-status-rejected-bg text-status-rejected",
     },
   };
 

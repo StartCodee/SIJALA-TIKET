@@ -234,7 +234,7 @@ export default function TicketDetailPage() {
     }
     if (String(feeCategory).startsWith("peneliti_")) {
       return [
-        "foto_diri",
+        "foto_identitas_penanggung_jawab",
         "dokumen_identitas",
         "surat_izin_penelitian",
         "surat_permohonan_penelitian",
@@ -246,6 +246,15 @@ export default function TicketDetailPage() {
     foto_diri: {
       label: "Foto Diri",
       url: ticket.selfieUrl || "/placeholder.svg",
+    },
+    foto_identitas_penanggung_jawab: {
+      label: "Foto Identitas Penanggung Jawab",
+      url:
+        ticket.fotoIdentitasPenanggungJawabUrl ||
+        ticket.personInChargeIdentityUrl ||
+        ticket.identityDocumentUrl ||
+        ticket.ktmUrl ||
+        "/placeholder.svg",
     },
     dokumen_identitas: {
       label: "KTP/SIM/PASPOR/KITAS/KITAP",

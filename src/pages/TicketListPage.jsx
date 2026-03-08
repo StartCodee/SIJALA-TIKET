@@ -10,6 +10,7 @@ import {
   BOOKING_TYPE_LABELS,
   formatDate,
   isChildVisitorTicket,
+  isTicketIssued,
 } from "@/data/dummyData";
 import {
   Search,
@@ -147,7 +148,7 @@ export default function TicketListPage() {
     return ticket[field];
   };
   const allTickets = getAllTickets().filter(
-    (ticket) => !isChildVisitorTicket(ticket),
+    (ticket) => !isChildVisitorTicket(ticket) && isTicketIssued(ticket),
   );
 
   // Filter tickets
