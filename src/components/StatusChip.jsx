@@ -93,7 +93,7 @@ export function PaymentStatusChip({ status }) {
     belum_bayar: { variant: 'pending', label: 'Belum Bayar', icon: CreditCard },
     sudah_bayar: { variant: 'approved', label: 'Sudah Bayar', icon: CheckCircle },
     refund_diproses: { variant: 'revision', label: 'Pengembalian Diproses', icon: RefreshCw },
-    refund_selesai: { variant: 'info', label: 'Pengembalian Selesai', icon: CheckCircle },
+    refund_selesai: { variant: 'rejected', label: 'Pengembalian Selesai', icon: CheckCircle },
   };
   
   const { variant, label } = config[status] || { variant: 'info', label: status };

@@ -764,14 +764,6 @@ export default function InvoiceDetailPage() {
                       ? <Badge variant="outline">Pembayaran Campuran</Badge>
                       : <PaymentStatusChip status={invoice.paymentStatus} />
                     }
-                    {isApprovalPending && (
-                      <Badge
-                        variant="outline"
-                        className="border-status-pending text-status-pending"
-                      >
-                        Pending Persetujuan
-                      </Badge>
-                    )}
                     {invoice.refundFlag && <Badge variant="outline">Refund</Badge>}
                   </div>
                 </CardTitle>
@@ -810,11 +802,6 @@ export default function InvoiceDetailPage() {
                   <p className="text-sm font-medium">{invoice.billedTo.name}</p>
                   <p className="text-xs text-muted-foreground">{invoice.billedTo.email} {invoice.billedTo.phone}</p>
                 </div>
-                {isApprovalPending && (
-                  <p className="mt-3 text-xs text-status-pending">
-                    Invoice dikirim ke email pengaju setelah tiket disetujui.
-                  </p>
-                )}
               </CardContent>
             </Card>
 
@@ -835,7 +822,7 @@ export default function InvoiceDetailPage() {
                         <th>Kategori</th>
                         <th className="text-right">Jumlah Rp</th>
                         {/* <th>Approval</th> */}
-                        <th>Pembayaran</th>
+                        {/* <th>Pembayaran</th> */}
                         <th>Pengembalian</th>
                         <th className="text-center no-print">Aksi</th>
                       </tr>
@@ -857,7 +844,7 @@ export default function InvoiceDetailPage() {
                           <td className="text-sm">{t.feeLabel}</td>
                           <td className="text-right text-sm font-semibold">{formatNominal(t.amount)}</td>
                           {/* <td><ApprovalStatusChip status={t.approvalStatus} /></td> */}
-                            <td>
+                            {/* <td>
                               {isPaymentPendingForApproval(t) ? (
                                 <Badge
                                   variant="outline"
@@ -868,8 +855,8 @@ export default function InvoiceDetailPage() {
                               ) : (
                                 <PaymentStatusChip status={t.paymentStatus} />
                               )}
-                            </td>
-                            <td className="text-sm">{hasRefundForTicket(t) ? 'Ya' : 'Tidak'}</td>
+                            </td> */}
+                            <td className="text-center">{hasRefundForTicket(t) ? 'Ya' : 'Tidak'}</td>
                             <td className="text-center no-print">
                               <Link
                                 to={`/tickets/${t.ticketId}?from=invoice&invoiceId=${encodeURIComponent(invoice.invoiceId)}`}

@@ -3,6 +3,8 @@ import { Link, useLocation, useParams } from "react-router-dom";
 import {
   ArrowLeft,
   CheckCircle,
+  Download,
+  Eye,
   FileText,
   XCircle,
 } from "lucide-react";
@@ -113,6 +115,59 @@ const buildResearcherParticipantRows = (ticket, researcherDetail) => {
   }));
 };
 
+const SUPPORTING_DOCUMENT_LABELS = {
+  surat_izin_penelitian: "Surat Izin Penelitian (Institusi Indonesia)",
+  surat_permohonan_penelitian: "Surat Permohonan Resmi Penelitian",
+  foto_identitas_penanggung_jawab: "Foto Identitas (KTP/SIM/Paspor) Penanggung Jawab",
+};
+
+const buildApprovalSupportingDocumentGroups = (ticket, participantRows) => [
+  {
+    id: "surat_izin_penelitian",
+    ownerLabel: SUPPORTING_DOCUMENT_LABELS.surat_izin_penelitian,
+    docs: ["Dokumen pengajuan peneliti"],
+    items: [
+      {
+        id: `${ticket?.id || "ticket"}-surat-izin`,
+        label: SUPPORTING_DOCUMENT_LABELS.surat_izin_penelitian,
+        name: ticket?.namaLengkapPenanggungJawab || ticket?.namaLengkap || "Penanggung Jawab",
+        url: ticket?.researchPermitUrl || "/placeholder.svg",
+      },
+    ],
+  },
+  {
+    id: "surat_permohonan_penelitian",
+    ownerLabel: SUPPORTING_DOCUMENT_LABELS.surat_permohonan_penelitian,
+    docs: ["Dokumen pengajuan peneliti"],
+    items: [
+      {
+        id: `${ticket?.id || "ticket"}-surat-permohonan`,
+        label: SUPPORTING_DOCUMENT_LABELS.surat_permohonan_penelitian,
+        name: ticket?.namaLengkapPenanggungJawab || ticket?.namaLengkap || "Penanggung Jawab",
+        url: ticket?.researchRequestLetterUrl || "/placeholder.svg",
+      },
+    ],
+  },
+  {
+    id: "foto_identitas_penanggung_jawab",
+    ownerLabel: SUPPORTING_DOCUMENT_LABELS.foto_identitas_penanggung_jawab,
+    docs: ["Dokumen identitas penanggung jawab"],
+    items: [
+      {
+        id: `${ticket?.id || "ticket"}-penanggung-jawab`,
+        label: SUPPORTING_DOCUMENT_LABELS.foto_identitas_penanggung_jawab,
+        name: ticket?.namaLengkapPenanggungJawab || ticket?.namaLengkap || "Penanggung Jawab",
+        url:
+          ticket?.fotoIdentitasPenanggungJawabUrl ||
+          ticket?.personInChargeIdentityUrl ||
+          ticket?.identityDocumentUrl ||
+          ticket?.ktmUrl ||
+          "/placeholder.svg",
+      },
+    ],
+  },
+].filter((group) => group.items.length);
+
 export default function ApprovalDetailPage() {
   const { ticketId } = useParams();
   const location = useLocation();
@@ -123,6 +178,8 @@ export default function ApprovalDetailPage() {
   const [showRejectDialog, setShowRejectDialog] = useState(false);
   const [rejectNotes, setRejectNotes] = useState("");
   const [previewImage, setPreviewImage] = useState(null);
+  const [showDocumentsDialog, setShowDocumentsDialog] = useState(false);
+  const [selectedDocGroup, setSelectedDocGroup] = useState(null);
 
   useEffect(() => {
     if (!ticketId) return;
@@ -144,6 +201,30 @@ export default function ApprovalDetailPage() {
     () => (ticket && researcherDetail ? buildResearcherParticipantRows(ticket, researcherDetail) : []),
     [researcherDetail, ticket],
   );
+  const supportingDocumentGroups = useMemo(
+    () =>
+      ticket && isResearcherTicket
+        ? buildApprovalSupportingDocumentGroups(ticket, researcherParticipantRows)
+        : [],
+    [isResearcherTicket, researcherParticipantRows, ticket],
+  );
+
+  const openDocumentsDialog = (group) => {
+    setSelectedDocGroup(group);
+    setShowDocumentsDialog(true);
+  };
+
+  const handleDocumentDownload = (url, filename = "document") => {
+    if (!url) return;
+    const link = document.createElement("a");
+    link.href = url;
+    link.target = "_blank";
+    link.download = filename;
+    link.rel = "noreferrer";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
   const handleApprove = () => {
     if (!ticket) return;
@@ -405,9 +486,43 @@ export default function ApprovalDetailPage() {
                 </CardContent>
               </Card>
             )}
+
           </div>
 
           <div className="space-y-6">
+            {supportingDocumentGroups.length > 0 && (
+              <Card className="card-ocean">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-base font-semibold">
+                    Dokumen Pendukung
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  {supportingDocumentGroups.map((group) => (
+                    <div key={group.id} className="rounded-lg border border-border p-3">
+                      <p className="text-xs font-semibold text-foreground mb-2">
+                        {group.ownerLabel}
+                      </p>
+                      <div className="flex items-center justify-between gap-3">
+                        <p className="text-xs text-muted-foreground line-clamp-2">
+                          {group.docs.join(", ")}
+                        </p>
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="outline"
+                          className="shrink-0"
+                          onClick={() => openDocumentsDialog(group)}
+                        >
+                          Lihat Dokumen
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </CardContent>
+              </Card>
+            )}
+
             <Card className="card-ocean">
               <CardHeader className="pb-3">
                 <CardTitle className="text-base font-semibold">
@@ -418,18 +533,8 @@ export default function ApprovalDetailPage() {
                 <div className="flex items-center justify-between gap-3">
                   <span className="text-muted-foreground">Invoice</span>
                   <span className="font-medium">
-                    {ticket.approvalStatus === "disetujui" && invoiceId
-                      ? formatShortId(invoiceId)
-                      : "Belum dibuat"}
+                    {invoiceId ? formatShortId(invoiceId) : "-"}
                   </span>
-                </div>
-                <div className="flex items-center justify-between gap-3">
-                  <span className="text-muted-foreground">Status Pembayaran</span>
-                  <PaymentStatusChip status={ticket.paymentStatus} />
-                </div>
-                <div className="flex items-center justify-between gap-3">
-                  <span className="text-muted-foreground">QR Tiket</span>
-                  <span className="font-medium">{ticket.qrActive ? "Aktif" : "Inactive"}</span>
                 </div>
                 <div className="flex items-center justify-between gap-3">
                   <span className="text-muted-foreground">Diputuskan Oleh</span>
@@ -501,6 +606,68 @@ export default function ApprovalDetailPage() {
               Tutup
             </Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={showDocumentsDialog}
+        onOpenChange={(open) => {
+          setShowDocumentsDialog(open);
+          if (!open) setSelectedDocGroup(null);
+        }}
+      >
+        <DialogContent className="bg-card border-border max-w-4xl w-[95vw] max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Dokumen Pendukung Persetujuan</DialogTitle>
+            <DialogDescription>
+              {selectedDocGroup
+                ? selectedDocGroup.items.length > 1
+                  ? `${selectedDocGroup.ownerLabel} - pratinjau per peneliti`
+                  : selectedDocGroup.ownerLabel
+                : "Pilih dokumen pendukung"}
+            </DialogDescription>
+          </DialogHeader>
+
+          {selectedDocGroup?.items?.length ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {selectedDocGroup.items.map((doc) => (
+                <div key={doc.id} className="space-y-2 rounded-lg border border-border p-3">
+                  <p className="text-xs font-medium text-foreground">{doc.name}</p>
+                  <div className="w-full aspect-video bg-muted rounded-lg overflow-hidden">
+                    <img
+                      src={doc.url || "/placeholder.svg"}
+                      alt={`Pratinjau ${doc.label} ${doc.name}`}
+                      className="w-full h-full object-contain"
+                    />
+                  </div>
+                  <div className="flex items-center justify-end gap-2">
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      onClick={() => window.open(doc.url, "_blank", "noopener,noreferrer")}
+                    >
+                      <Eye className="w-4 h-4 mr-2" />
+                      Preview
+                    </Button>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handleDocumentDownload(doc.url, `${doc.id}-${selectedDocGroup.id}`)}
+                    >
+                      <Download className="w-4 h-4 mr-2" />
+                      Unduh
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="rounded-lg border border-dashed border-border p-6 text-center text-sm text-muted-foreground">
+              Dokumen pendukung belum tersedia.
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </AdminLayout>
